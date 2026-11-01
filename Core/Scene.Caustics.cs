@@ -977,8 +977,8 @@ public partial class Scene
                         : RgbSpectrum.White * (reflectance * masking);
 
                     // What the facets mirror among themselves, made up for at the angle the photon met them, so that
-                    // facets mirroring all of it keep all of it; see Microfacets.Compensation.  Not rough glass's,
-                    // whose facets let through a share of what they send one another.
+                    // facets mirroring all of it keep all of it; see Microfacets.Compensation.  Rough glass's by its
+                    // own albedo, as what it lets through is, below.
                     double albedo = facets?.AlbedoFor(eye) ?? Microfacets.Albedo(eye.Z, alpha);
 
                     if (metal is { } tinted)
@@ -986,7 +986,9 @@ public partial class Scene
                         mirrored *= Microfacets.CompensationFor(
                             albedo, tinted.MirrorsFromAround<RgbSpectrum>(material.ReflectanceFromAround));
                     }
-                    else if (!transmits)
+                    else if (transmits)
+                        mirrored *= Microfacets.GlassCompensation(eye.Z, alpha, hit.N1, hit.N2);
+                    else
                         mirrored *= Microfacets.CompensationFor(albedo, material.ReflectanceFromAround);
                 }
             }
@@ -998,7 +1000,9 @@ public partial class Scene
                 if (through is not null)
                 {
                     passRay = RefractedRay(hit, through);
-                    passed = RgbSpectrum.White * (weight * transparency);
+                    passed = RgbSpectrum.White *
+                             (weight * transparency *
+                              Microfacets.GlassCompensation(hit.Eye.Dot(hit.Normal), alpha, hit.N1, hit.N2));
                 }
             }
         }

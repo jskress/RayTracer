@@ -548,13 +548,16 @@ public abstract class Light : NamedThing
                         : share * Microfacets.Highlight(normal, eye, vector, alpha, reflectance);
 
                 // What the facets give back of the lamp after mirroring it among themselves, which the highlight
-                // of a single mirroring leaves out; see Microfacets.Compensation.  Not rough glass's, whose facets
-                // let through a share of what they send one another.
+                // of a single mirroring leaves out; see Microfacets.Compensation.  Rough glass's facets let through
+                // what they do not mirror, and are made up for by the glass's own albedo, the two together.
+                if (factor != 0 && glass is { } faces)
+                    factor *= Microfacets.GlassCompensation(eye.Dot(normal), alpha, faces.Near, faces.Far);
+
                 double albedo = factor == 0 || glass is not null
                     ? 1
                     : facets?.AlbedoFor(facets.ToLocal(eye), spread) ?? Microfacets.Albedo(eye.Dot(normal), alpha);
 
-                if (metal is null)
+                if (metal is null && glass is null)
                     factor *= Microfacets.CompensationFor(albedo, material.ReflectanceFromAround);
 
                 // The light along this sample, not the light's own color: a glowing volume's samples
@@ -718,8 +721,12 @@ public abstract class Light : NamedThing
         (double Near, double Far) sides, double share)
         where TS : struct, ISpectrum<TS>
     {
-        double factor = share * Microfacets.TransmittedHighlight(
-            normal, eye, sample.Direction, material.Roughness * material.Roughness, sides.Near, sides.Far);
+        double alpha = material.Roughness * material.Roughness;
+        // Made up for what the facets let through to one another rather than on, as the glass's own rays are; see
+        // Microfacets.GlassCompensation.
+        double factor = share *
+                        Microfacets.TransmittedHighlight(normal, eye, sample.Direction, alpha, sides.Near, sides.Far) *
+                        Microfacets.GlassCompensation(eye.Dot(normal), alpha, sides.Near, sides.Far);
 
         if (factor <= 0)
             return TS.Black;

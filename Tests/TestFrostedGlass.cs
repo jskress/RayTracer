@@ -72,8 +72,9 @@ public class TestFrostedGlass
 
             double seen = scene.GetRefractedColor(Hit(floor, cos), 2).Red;
             double expected = OverCap(straight, halfAngle,
-                light => Microfacets.TransmittedHighlight(new Vector(0, 1, 0), eye, light, 0.09, 1, 1.5)) /
-                Math.PI;
+                                  light => Microfacets.TransmittedHighlight(
+                                      new Vector(0, 1, 0), eye, light, 0.09, 1, 1.5)) / Math.PI *
+                              Microfacets.GlassCompensation(cos, 0.09, 1, 1.5);
 
             Assert.IsTrue(expected > 0.1, $"nothing to compare at a cosine of {cos}: {expected}");
             Assert.AreEqual(expected, seen, expected * 0.03, $"seen at a cosine of {cos}");
@@ -111,7 +112,8 @@ public class TestFrostedGlass
 
         double seen = scene.GetRefractedColor(hit, 2).Red;
         double expected = OverCap(straight, halfAngle,
-            light => Microfacets.TransmittedHighlight(down, eye, light, 0.25, 1.5, 1)) / Math.PI;
+                              light => Microfacets.TransmittedHighlight(down, eye, light, 0.25, 1.5, 1)) / Math.PI *
+                          Microfacets.GlassCompensation(eye.Dot(down), 0.25, 1.5, 1);
 
         Assert.IsTrue(expected > 0.05, $"nothing to compare: {expected}");
         Assert.AreEqual(expected, seen, expected * 0.03, "leaving the glass");
@@ -120,7 +122,8 @@ public class TestFrostedGlass
     /// <summary>
     /// What rough glass mirrors of a broad bright patch of sky is the facets' reflection of it by the
     /// glass's own index -- not the share the surface's own angle would give -- added up over the patch.
-    /// The patch is overhead and the eye low, where the two differ most.
+    /// The patch is overhead and the eye low, where the two differ most.  Made up for, as every rough lobe of glass
+    /// is, for what the facets mirror and let through to one another rather than on.
     /// </summary>
     [TestMethod]
     public void TestRoughGlassMirrorsByItsOwnIndex()
@@ -140,8 +143,9 @@ public class TestFrostedGlass
 
             double seen = scene.GetReflectionColor(Hit(floor, cos), 2).Red;
             double expected = OverCap(toward, halfAngle,
-                light => Microfacets.Highlight(new Vector(0, 1, 0), eye, light, alpha,
-                    c => Microfacets.GlassReflectance(c, 1, 1.5))) / Math.PI;
+                                  light => Microfacets.Highlight(new Vector(0, 1, 0), eye, light, alpha,
+                                      c => Microfacets.GlassReflectance(c, 1, 1.5))) / Math.PI *
+                              Microfacets.GlassCompensation(cos, alpha, 1, 1.5);
 
             Assert.IsTrue(expected > 0.002, $"nothing to compare at a cosine of {cos}: {expected}");
             Assert.AreEqual(expected, seen, expected * 0.05, $"seen at a cosine of {cos}");
@@ -176,8 +180,9 @@ public class TestFrostedGlass
 
             double lit = scene.GetHitColor(Hit(floor, cos), 2).Red;
             double expected = OverCap(straight, halfAngle,
-                light => Microfacets.TransmittedHighlight(new Vector(0, 1, 0), eye, light, 0.16, 1, 1.5)) /
-                Math.PI;
+                                  light => Microfacets.TransmittedHighlight(
+                                      new Vector(0, 1, 0), eye, light, 0.16, 1, 1.5)) / Math.PI *
+                              Microfacets.GlassCompensation(cos, 0.16, 1, 1.5);
 
             Assert.IsTrue(expected > 0.001, $"nothing to compare at a cosine of {cos}: {expected}");
             Assert.AreEqual(expected, lit, expected * 0.02, $"seen at a cosine of {cos}: expected {expected}, lit {lit}");

@@ -141,17 +141,83 @@ public static class Microfacets
         if (alpha <= 0)
             return 1;
 
-        double[] albedos = Albedos.Value;
-        double across = Math.Sqrt(Math.Clamp(cos, 0, 1)) * AlbedoSteps;
-        double up = Math.Min(Math.Sqrt(alpha), 1) * AlbedoSteps;
-        int column = Math.Min((int) across, AlbedoSteps - 1);
-        int row = Math.Min((int) up, AlbedoSteps - 1);
+        return Read(Albedos.Value, AlbedoSteps, cos, alpha);
+    }
+
+    /// <summary>
+    /// This method returns how much of the light from all round meeting a rough surface of glass its facets give
+    /// back toward a direction at the given angle in ONE meeting, mirrored and let through together: the glass's
+    /// own albedo, <c>E</c>, as <see cref="Albedo"/> is a mirror's.
+    /// <para>
+    /// **Glass absorbs nothing at its surface**, so all that its facets lose, they lose to one another: what one
+    /// mirrors or lets through and another meets is dropped.  Little is lost going in, the light bent in steeply;
+    /// a great deal coming out, the light leaving bent toward a graze and hidden by the facets round it, and some
+    /// turned back where it cannot get out.  From inside glass of index 1.5 a single meeting gives back 0.76 at
+    /// roughness 0.7, and 0.42 at roughness 1; from outside, 0.97 and 0.90.  So a frosted ball, every ray going in
+    /// and out of it, came out not half as bright as the light round it.
+    /// </para>
+    /// <para>
+    /// **It is read from tables worked out for exactly what the glass's rays are counted by**: facets picked as
+    /// <see cref="SampleVisibleNormal"/> picks them, each mirroring <see cref="GlassReflectance"/> of the light and
+    /// letting the rest through, bent by <see cref="Refract"/>, each way counted by how much of the surface it can
+    /// see.  Each runs as the mirror's does, but in half as many steps each way: within 0.1% of the answer on
+    /// average, and far worse only within a hundredth of a degree of a graze.
+    /// </para>
+    /// <para>
+    /// **Only the ratio of the two indices counts**, and the tables stand at steps of 5% in it, each worked out the
+    /// first time it is needed, and are read between: within 0.15% of a table for the ratio itself.  A table for
+    /// every pair of indices met, a dispersing glass's every band and every photon's own wavelength each made one,
+    /// and a spectral render's caustics never finished.
+    /// </para>
+    /// </summary>
+    /// <param name="cos">The cosine of the angle between the direction and the surface normal.</param>
+    /// <param name="alpha">How far the facets lean: the square of the roughness.</param>
+    /// <param name="n1">The index of refraction on the direction's side.</param>
+    /// <param name="n2">The index of refraction on the far side.</param>
+    /// <returns>The share given back in a single meeting, from nought to one; one for clear glass.</returns>
+    public static double GlassAlbedo(double cos, double alpha, double n1, double n2)
+    {
+        if (alpha <= 0)
+            return 1;
+
+        double place = Math.Log(n2 / n1) / RatioStep;
+        int below = (int) Math.Floor(place);
+        double fraction = place - below;
+        double albedo = Read(GlassAlbedosAt(below), GlassSteps, cos, alpha);
+
+        return fraction == 0
+            ? albedo
+            : albedo * (1 - fraction) + Read(GlassAlbedosAt(below + 1), GlassSteps, cos, alpha) * fraction;
+    }
+
+    /// <summary>
+    /// This method returns what rough glass's light, met once by its facets, is to be multiplied by to give back what
+    /// the facets lose to one another: one over its albedo, glass losing nothing of its own (Turquin, 2019).  It
+    /// multiplies what the glass mirrors and what it lets through alike, so how it shares the light between the two
+    /// stands as one meeting has it.
+    /// </summary>
+    /// <param name="cos">The cosine of the angle between the eye and the surface normal.</param>
+    /// <param name="alpha">How far the facets lean.</param>
+    /// <param name="n1">The index of refraction on the eye's side.</param>
+    /// <param name="n2">The index of refraction on the far side.</param>
+    /// <returns>What to multiply the glass's light by; one for clear glass.</returns>
+    public static double GlassCompensation(double cos, double alpha, double n1, double n2) =>
+        alpha <= 0 ? 1 : 1 / GlassAlbedo(cos, alpha, n1, n2);
+
+    // A table's value at the given cosine and lean, read between its steps in the square root of the cosine and in
+    // the roughness.
+    private static double Read(double[] table, int steps, double cos, double alpha)
+    {
+        double across = Math.Sqrt(Math.Clamp(cos, 0, 1)) * steps;
+        double up = Math.Min(Math.Sqrt(alpha), 1) * steps;
+        int column = Math.Min((int) across, steps - 1);
+        int row = Math.Min((int) up, steps - 1);
         double x = across - column;
         double y = up - row;
-        int at = column * (AlbedoSteps + 1) + row;
+        int at = column * (steps + 1) + row;
 
-        return (albedos[at] * (1 - x) + albedos[at + AlbedoSteps + 1] * x) * (1 - y) +
-               (albedos[at + 1] * (1 - x) + albedos[at + AlbedoSteps + 2] * x) * y;
+        return (table[at] * (1 - x) + table[at + steps + 1] * x) * (1 - y) +
+               (table[at + 1] * (1 - x) + table[at + steps + 2] * x) * y;
     }
 
     /// <summary>
@@ -250,6 +316,16 @@ public static class Microfacets
 
     private static readonly ConcurrentDictionary<(double, double), double> GlassFromAround = new ();
 
+    // How many steps the glass's tables take across each of their two ways, and the step between them in the
+    // logarithm of the ratio of the indices.
+    private const int GlassSteps = 32;
+    private const double RatioStep = 0.05;
+
+    // The glass's albedo, for each step of the ratio of the indices needed so far.
+    private static readonly ConcurrentDictionary<int, double[]> GlassAlbedos = new ();
+
+    private static double[] GlassAlbedosAt(int step) => GlassAlbedos.GetOrAdd(step, MeasureGlassAlbedos);
+
     // How many steps the albedo table takes across each of its two ways, and how many places each step is worked out
     // from each way.
     private const int AlbedoSteps = 64;
@@ -302,6 +378,62 @@ public static class Microfacets
                 }
 
                 albedos[column * (AlbedoSteps + 1) + row] = sum / (AlbedoPlaces * AlbedoPlaces);
+            }
+        });
+
+        return albedos;
+    }
+
+    // The share glass gives back in a single meeting at every step of its table, as MeasureAlbedos works the mirror's
+    // out: each facet the eye sees mirrors its share, counted by how much of the surface its mirror image can see,
+    // and lets the rest through, bent, counted by how much of the surface the bent way can see from beneath -- as
+    // GetRoughReflection's and Bend's rays are counted.
+    private static double[] MeasureGlassAlbedos(int step)
+    {
+        const double n1 = 1;
+        double n2 = Math.Exp(step * RatioStep);
+        double[] albedos = new double[(GlassSteps + 1) * (GlassSteps + 1)];
+
+        Parallel.For(0, GlassSteps + 1, column =>
+        {
+            double root = (double) column / GlassSteps;
+            double cos = root * root;
+            Vector eye = new (Math.Sqrt(1 - cos * cos), 0, cos);
+
+            for (int row = 0; row <= GlassSteps; row++)
+            {
+                double roughness = (double) row / GlassSteps;
+                double alpha = roughness * roughness;
+                double sum = 0;
+
+                if (alpha == 0)
+                {
+                    albedos[column * (GlassSteps + 1) + row] = 1;
+
+                    continue;
+                }
+
+                for (int outward = 0; outward < AlbedoPlaces; outward++)
+                {
+                    double t = (outward + 0.5) / AlbedoPlaces;
+                    double first = 1 - (1 - t) * (1 - t) * (1 - t);
+                    double weight = 3 * (1 - t) * (1 - t);
+
+                    for (int round = 0; round < AlbedoPlaces; round++)
+                    {
+                        Vector facet = SampleVisibleNormal(eye, alpha, first, (round + 0.5) / AlbedoPlaces);
+                        double cosFacet = eye.Dot(facet);
+                        double mirrored = GlassReflectance(cosFacet, n1, n2);
+                        double given = mirrored * Masking(2 * cosFacet * facet.Z - eye.Z, alpha);
+
+                        if (mirrored < 1 && Refract(eye, facet, n1 / n2) is { Z: < 0 } bent)
+                            given += (1 - mirrored) * Masking(-bent.Z, alpha);
+
+                        sum += weight * given;
+                    }
+                }
+
+                albedos[column * (GlassSteps + 1) + row] = sum / (AlbedoPlaces * AlbedoPlaces);
             }
         });
 

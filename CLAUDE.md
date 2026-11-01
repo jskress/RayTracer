@@ -323,7 +323,12 @@ masking, by visible-normal quadrature crowded toward the disc's edge (even, a na
 mean lean kept 0.71 at roughness 1); F_avg `Material.ReflectanceFromAround` (Schlick: F0 + (1 - F0)/21),
 `BareMetal.MirrorsFromAround` per band, `GlassReflectanceFromAround` for coats.  In a white furnace a single
 mirroring kept 0.69/0.42/0.31 at roughness 0.7/0.9/1.  A smooth coat's point-lamp glint is left alone; an area
-light's widened highlight is made up for at the widened lean.  Rough glass is not (yet). Lights a ray can meet (`Light.CanBeSeen`) are not counted
+light's widened highlight is made up for at the widened lean.  Rough GLASS (reflection fan, refraction fan with its
+aimed glow, a lamp's highlight and glow through it, photons) is multiplied by 1/E, `Microfacets.GlassCompensation`:
+E = mirrored F G1 + passed (1-F) G1 of the bent way, exactly as `Bend` counts them, tabled 33x33 at steps of 5% in
+ln(n2/n1) and read between (only the ratio counts; a table per index pair met hung a spectral render's caustics, every
+photon's wavelength making one).  Met once, coming OUT of 1.5 glass kept 0.76/0.42 at roughness 0.7/1, going in
+0.97/0.90; a frosted ball in white now 1.00-1.02 (`GetColorFor`'s depth defaults to 4: pass one). Lights a ray can meet (`Light.CanBeSeen`) are not counted
 twice: the sky reaches a rough surface through its reflection only, and a glowing volume is shared between
 its own samples and the reflection by Veach's balance heuristic (`Scene.HighlightShareOf` /
 `ReflectionShareAt`), which is what keeps a lantern's streak on a wet road from glittering; a glow's weight is

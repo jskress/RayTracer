@@ -1,0 +1,87 @@
+// Sea glass on wet sand at the end of the day: pieces of broken bottle the sea has tumbled smooth and frosted --
+// green, amber, white, aqua and a rare cobalt -- with the sun low behind them, shining through.
+//
+// **Frosted glass keeps its light.**  The sea has roughened every face, and each tiny facet mirrors a little of
+// the light reaching it and lets the rest through; much of either lands on another facet before it gets away.
+// Followed for one meeting only, that light was lost, and most of it where the light leaves the glass, bent
+// toward a graze and hidden by the facets round it: pieces this rough came out gray, a dull glass where sea glass
+// glows.  What the facets send one another is given back now, so each piece lets the sun through as brightly as
+// it should, colored by its glass.
+//
+// **The sand takes the light the glass lets through**, in each piece's own color, spread soft by its frosting:
+// `caustics` follows the sun's light through the glass and keeps it where it lands.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.2
+    trace depth 10
+    caustics photons 2000000
+    info {
+        title 'Sea Glass'
+        author 'J. Stephen Kress'
+        description 'Frosted sea glass in green, amber, white, aqua and cobalt on wet sand, the low sun shining through it.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0.005, 0.05, -0.17]
+    look at [0.005, 0.006, 0.03]
+    field of view 42
+    exposure 0
+}
+
+// The sun low ahead and to the right, so that it shines through the glass toward the camera.
+background physical sky { sun elevation 7  sun azimuth 158  turbidity 3  brightness 3 }
+sky light { samples 32 }
+
+// -- The sand -------------------------------------------------------------------------------------
+
+// Wet, so a little glossy.
+plane {
+    material {
+        pigment granite { [0, [0.36, 0.30, 0.22], 0.5, [0.46, 0.39, 0.29], 1, [0.30, 0.25, 0.18]]  scale 0.004 }
+        roughness 0.6
+    }
+}
+
+// -- The glass ------------------------------------------------------------------------------------
+
+// Glass the sea has frosted, colored through: what passes it takes its color.
+primitive SeaGlass(tint) -> material {
+    return material {
+        pigment tint  ambient 0  diffuse 0.05
+        transparency 1  roughness 0.75
+        interior { ior 1.52  filter 1 }
+    }
+}
+
+// A piece, its corners worn round, lying flat: so long, so wide, turned, and where.
+primitive Piece(tint, long, wide, turned, x, z) -> superellipsoid {
+    return superellipsoid {
+        east 0.55
+        north 0.4
+        material SeaGlass(tint)
+        scale [long / 2, 0.0035, wide / 2]
+        rotate Y turned
+        translate [x, 0.0035, z]
+    }
+}
+
+Green = color [0.45, 0.80, 0.50]
+Amber = color [0.86, 0.58, 0.28]
+White = color [0.94, 0.97, 0.95]
+Aqua = color [0.62, 0.90, 0.86]
+Cobalt = color [0.34, 0.48, 0.92]
+
+object Piece(Green, 0.034, 0.022, 20, -0.052, 0.02)
+object Piece(White, 0.026, 0.018, -35, -0.012, -0.012)
+object Piece(Amber, 0.03, 0.02, 60, 0.03, 0.018)
+object Piece(Aqua, 0.022, 0.015, 5, 0.062, -0.018)
+object Piece(Cobalt, 0.02, 0.014, -70, 0.006, 0.05)
+object Piece(Green, 0.018, 0.012, 45, -0.085, 0.07)
+object Piece(White, 0.02, 0.012, 80, 0.078, 0.075)
+object Piece(Amber, 0.016, 0.011, -15, -0.04, 0.095)
