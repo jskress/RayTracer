@@ -1,0 +1,298 @@
+// A clinker-built rowing boat tied up at a jetty on a still morning, its hull lofted from station
+// sections the way a boatbuilder's lines plan draws one: an outline at the transom, a few amidships, a
+// few narrowing to the stem, and the planking stretched smoothly through all of them.
+//
+// **Every station is drawn with the same number of segments**, so each place on one corresponds to the
+// same place on the next: the edge of every plank runs the length of the boat as a line, and the steps
+// where one plank laps over the one below stay steps from transom to stem.  Seven outlines of three
+// shapes make the whole hull.
+//
+// The oars are lofts too, of outlines that do NOT match: a ring at the loom flowing into a flat blade,
+// matched by how far round each one is.
+
+import 'water' { Water, SeaWater }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    info {
+        title 'A Boat at the Jetty'
+        author 'J. Stephen Kress'
+        description 'A clinker-built rowing boat lofted from its stations, tied up on still water.'
+        copyright true
+        software __software__
+    }
+}
+
+// From the open water, forward of the bow, with the low sun on the same side raking along the planking,
+// so each lap shows as a line down the length of the hull.
+camera {
+    location [3.3, 1.6, 6.0]
+    look at [-0.3, 0.2, 1.9]
+    field of view 50
+}
+
+background physical sky { sun elevation 14  sun azimuth 75  turbidity 3  brightness 4 }
+sky light { samples 24 }
+
+// -- The hull's stations --------------------------------------------------------------------------
+
+// Three shapes of section, each drawn from the port sheer down to the keel and up to the starboard
+// sheer and normalized so the sheer stands at (1, 1): a keel, five planks a side, each a straight run
+// leaning a little further out than the one below, a step outward by a plank's thickness wherever one
+// laps over the next, and a rubbing strake along the top.  Flat-floored aft, slack-bilged amidships,
+// sharp and V'd forward.  Open outlines, so the hull is a sheet: planking, with nothing across the top.
+
+Transom = path {
+    move to -0.9800, 1.0500
+    line to -1.0450, 1.0500
+    line to -1.0450, 0.9900
+    line to -1.0000, 1.0000
+    line to -0.9470, 0.6688
+    line to -0.9327, 0.6789
+    line to -0.8023, 0.3528
+    line to -0.7919, 0.3693
+    line to -0.5790, 0.1319
+    line to -0.5735, 0.1521
+    line to -0.3124, 0.0258
+    line to -0.3101, 0.0471
+    line to -0.0579, 0
+    line to -0.0579, -0.1539
+    line to 0.0579, -0.1539
+    line to 0.0579, 0
+    line to 0.3101, 0.0471
+    line to 0.3124, 0.0258
+    line to 0.5735, 0.1521
+    line to 0.5790, 0.1319
+    line to 0.7919, 0.3693
+    line to 0.8023, 0.3528
+    line to 0.9327, 0.6789
+    line to 0.9470, 0.6688
+    line to 1.0000, 1.0000
+    line to 1.0450, 0.9900
+    line to 1.0450, 1.0500
+    line to 0.9800, 1.0500
+}
+
+Midships = path {
+    move to -0.9800, 1.0500
+    line to -1.0450, 1.0500
+    line to -1.0450, 0.9900
+    line to -1.0000, 1.0000
+    line to -0.9694, 0.7133
+    line to -0.9517, 0.7190
+    line to -0.8531, 0.4199
+    line to -0.8385, 0.4312
+    line to -0.6420, 0.1833
+    line to -0.6327, 0.1992
+    line to -0.3564, 0.0420
+    line to -0.3525, 0.0599
+    line to -0.0665, 0
+    line to -0.0665, -0.1310
+    line to 0.0665, -0.1310
+    line to 0.0665, 0
+    line to 0.3525, 0.0599
+    line to 0.3564, 0.0420
+    line to 0.6327, 0.1992
+    line to 0.6420, 0.1833
+    line to 0.8385, 0.4312
+    line to 0.8531, 0.4199
+    line to 0.9517, 0.7190
+    line to 0.9694, 0.7133
+    line to 1.0000, 1.0000
+    line to 1.0450, 0.9900
+    line to 1.0450, 1.0500
+    line to 0.9800, 1.0500
+}
+
+Bow = path {
+    move to -0.9800, 1.0500
+    line to -1.0450, 1.0500
+    line to -1.0450, 0.9900
+    line to -1.0000, 1.0000
+    line to -0.9396, 0.7751
+    line to -0.9185, 0.7796
+    line to -0.8013, 0.5426
+    line to -0.7817, 0.5494
+    line to -0.6035, 0.3294
+    line to -0.5861, 0.3384
+    line to -0.3524, 0.1420
+    line to -0.3376, 0.1528
+    line to -0.0791, 0
+    line to -0.0791, -0.1038
+    line to 0.0791, -0.1038
+    line to 0.0791, 0
+    line to 0.3376, 0.1528
+    line to 0.3524, 0.1420
+    line to 0.5861, 0.3384
+    line to 0.6035, 0.3294
+    line to 0.7817, 0.5494
+    line to 0.8013, 0.5426
+    line to 0.9185, 0.7796
+    line to 0.9396, 0.7751
+    line to 1.0000, 1.0000
+    line to 1.0450, 0.9900
+    line to 1.0450, 1.0500
+    line to 0.9800, 1.0500
+}
+
+// The transom board is the aft station closed across the top.
+TransomBoard = path {
+    move to -0.9800, 1.0500
+    line to -1.0450, 1.0500
+    line to -1.0450, 0.9900
+    line to -1.0000, 1.0000
+    line to -0.9470, 0.6688
+    line to -0.9327, 0.6789
+    line to -0.8023, 0.3528
+    line to -0.7919, 0.3693
+    line to -0.5790, 0.1319
+    line to -0.5735, 0.1521
+    line to -0.3124, 0.0258
+    line to -0.3101, 0.0471
+    line to -0.0579, 0
+    line to -0.0579, -0.1539
+    line to 0.0579, -0.1539
+    line to 0.0579, 0
+    line to 0.3101, 0.0471
+    line to 0.3124, 0.0258
+    line to 0.5735, 0.1521
+    line to 0.5790, 0.1319
+    line to 0.7919, 0.3693
+    line to 0.8023, 0.3528
+    line to 0.9327, 0.6789
+    line to 0.9470, 0.6688
+    line to 1.0000, 1.0000
+    line to 1.0450, 0.9900
+    line to 1.0450, 1.0500
+    line to 0.9800, 1.0500
+    close
+}
+
+// Varnished wood: a smooth, faint mirror that grows toward a graze.  Rough wood under a clear coat, the
+// other way to write it, took three times as long.
+Planking = material {
+    pigment wood { turbulence 0.1  [0, [0.46, 0.27, 0.12], 0.5, [0.55, 0.34, 0.16], 1, [0.40, 0.23, 0.10]]  scale [0.02, 0.02, 1.5] }
+    specular 0.5  shininess 60  reflective 0.05  fresnel
+}
+
+// The stations stand along Z from the transom at nought to the stem, each sized and raised to give the
+// hull its sheer: the gunwale sweeps up toward both ends, more at the bow.
+group {
+    loft {
+        section { path Transom   scale [0.52, 0.40, 1]  translate [0, 0.16, 0.00] }
+        section { path Midships  scale [0.64, 0.50, 1]  translate [0, 0.06, 0.55] }
+        section { path Midships  scale [0.74, 0.56, 1]  translate [0, 0.00, 1.35] }
+        section { path Midships  scale [0.74, 0.57, 1]  translate [0, 0.00, 2.20] }
+        section { path Bow       scale [0.60, 0.60, 1]  translate [0, 0.02, 3.00] }
+        section { path Bow       scale [0.33, 0.64, 1]  translate [0, 0.07, 3.60] }
+        section { path Bow       scale [0.05, 0.70, 1]  translate [0, 0.15, 3.95] }
+        material Planking
+    }
+    loft {
+        section { path TransomBoard  scale [0.52, 0.40, 1]  translate [0, 0.16, -0.02] }
+        section { path TransomBoard  scale [0.52, 0.40, 1]  translate [0, 0.16, 0.02] }
+        straight
+        material Planking
+    }
+    // Two thwarts to sit on.
+    cube { scale [0.66, 0.015, 0.11]  translate [0, 0.40, 1.15]  material Planking }
+    cube { scale [0.62, 0.015, 0.10]  translate [0, 0.42, 2.55]  material Planking }
+    translate Y -0.22
+}
+
+// -- The oars -----------------------------------------------------------------------------------
+
+// Round at the loom, flat at the blade: two outlines that differ, matched by how far round each is.
+Ring = path {
+    move to 1, 0
+    curve 1, 0.5523, 0.5523, 1 to 0, 1
+    curve -0.5523, 1, -1, 0.5523 to -1, 0
+    curve -1, -0.5523, -0.5523, -1 to 0, -1
+    curve 0.5523, -1, 1, -0.5523 to 1, 0
+    close
+}
+
+Blade = path {
+    move to 1, 0
+    line to 1, 0.08
+    line to -1, 0.08
+    line to -1, -0.08
+    line to 1, -0.08
+    close
+}
+
+Oar = loft {
+    section { path Ring   scale 0.017  translate Z 0 }
+    section { path Ring   scale 0.017  translate Z 0.13 }
+    section { path Ring   scale 0.024  translate Z 0.22 }
+    section { path Ring   scale 0.022  translate Z 1.30 }
+    section { path Ring   scale [0.026, 0.018, 1]  translate Z 1.52 }
+    section { path Blade  scale [0.075, 0.075, 1]  translate Z 1.78 }
+    section { path Blade  scale [0.078, 0.075, 1]  translate Z 2.10 }
+    material Planking
+}
+
+group {
+    // Shipped: lying fore and aft along the thwarts, blades forward.
+    object Oar { rotate Y 2   translate [0.16, 0.43, 0.35] }
+    object Oar { rotate Y -3  translate [-0.14, 0.45, 0.40] }
+    translate Y -0.22
+}
+
+// The painter, from the stem head to the nearest post, slack.
+tube {
+    radius 0.009 at [0, 0.61, 3.93]
+    curve radius 0.009 at [-0.2, 0.42, 3.86]  radius 0.009 at [-0.65, 0.40, 3.60]  radius 0.009 at [-0.83, 0.64, 3.50]
+    material { pigment [0.55, 0.47, 0.33]  specular 0.05 }
+}
+
+// -- The water, the far shore and the jetty -------------------------------------------------------
+
+// Deep water, dark enough to show what stands in it.
+object Water(400, 400, 'glassy') { material SeaWater }
+
+Woods = pigment bozo { [0, [0.07, 0.12, 0.05], 0.5, [0.11, 0.17, 0.07], 1, [0.16, 0.20, 0.09]]  scale [0.01, 4, 0.01] }
+
+// Wooded hills a hundred and thirty meters off all round, so the still water has something to mirror,
+// and the lake bed thirty meters down.  `open`: ground running out past the edge of the water wants no
+// walls round it.
+heightfield {
+    function {
+        -30 + (40 + 6 * (noise(x * 9, 0, z * 9) - 0.5) + 2 * (noise(x * 31, 0, z * 31) - 0.5))
+            / (1 + exp(-(sqrt((x - 0.5) * (x - 0.5) + (z - 0.5) * (z - 0.5)) - 0.33) / 0.01))
+    }
+    samples 400
+    open
+    material {
+        // Woods above the water, dark silt below it.  Drawn before the field is stretched four hundred
+        // times across, so a pattern's sizes are written across in four hundredths.  The gradient runs
+        // from forty under to forty over: run from the bed's own level, the bed sat where it wraps, and
+        // came out half silt and half woods.
+        pigment linear Y gradient {
+            [0, [0.03, 0.03, 0.02], 0.49, [0.03, 0.03, 0.02], 0.51, Woods, 1, Woods]
+            scale [1, 80, 1]  translate Y -40
+        }
+        specular 0  diffuse 0.8
+    }
+    translate [-0.5, 0, -0.5]
+    scale [400, 1, 400]
+}
+
+Boards = material { pigment wood { [0, [0.42, 0.37, 0.30], 1, [0.30, 0.26, 0.21]]  scale [0.03, 0.03, 2] }  roughness 0.7 }
+
+// Running back toward the shore it comes from, past the edge of the picture: planks on two stringers,
+// and posts standing up past the deck either side to tie to.
+group {
+    for plank in [0, 8] {
+        cube { scale [0.066, 0.022, 17]  translate [-1.10 - plank * 0.15, 0.60, -13.4]  material Boards }
+    }
+    for side in [0, 1] {
+        cube { scale [0.04, 0.08, 17]  translate [-1.12 - side * 1.18, 0.50, -13.4]  material Boards }
+        for post in [0, 13] {
+            cylinder { min Y -1  max Y 0.74  scale [0.1, 1, 0.1]  translate [-0.93 - side * 1.54, 0, 3.5 - post * 2.5]  material Boards }
+        }
+    }
+}

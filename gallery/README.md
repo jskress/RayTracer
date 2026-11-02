@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 173 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 174 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -1024,9 +1024,17 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Marine</b> &mdash; 1 image &middot; what floats, and what it floats on</summary>
+<summary><b>Marine</b> &mdash; 2 images &middot; what floats, and what it floats on</summary>
 
 <table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/marine/a-boat-at-the-jetty.png">
+      <img alt="A Boat at the Jetty" height="120" src="Local/marine/a-boat-at-the-jetty.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/marine/a-boat-at-the-jetty.igl">A Boat at the Jetty</a>
+    </td>
+  </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/marine/a-working-morning.png">
       <img alt="A Working Morning" height="120" src="Local/marine/a-working-morning.png" width="160"/>

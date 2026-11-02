@@ -1020,6 +1020,72 @@ or not, having no way to go at all.
 
 The complete scene is [`docs/examples/advanced/sweep.igl`](examples/advanced/sweep.igl).
 
+### Loft
+
+A skin stretched through several cross-sections, each an outline placed where it belongs — the way a
+boat's hull is drawn from its station lines, a fuselage from its bulkheads, or a bottle from a few rings.
+A [sweep](#sweep) carries one outline along a path, and a [lathe](#lathe) turns one; a loft changes shape
+as it goes.
+
+![A loft](images/figures/adv-loft.png)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/loftClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/loftClause.svg">
+  <img alt="A loft" src="images/advanced/loftClause.svg">
+</picture>
+
+```
+loft {
+    section { path Transom }
+    section { path Midships  scale 1.15  translate Z 2.4 }
+    section { path Forward  scale [0.7, 1, 1]  translate Z 4.2 }
+    section { path Stem  scale [0.05, 0.9, 1]  rotate X -8  translate Z 5 }
+}
+```
+
+Each `section` is an outline — a [path](#paths), written out or named — drawn in its own X/Y plane, and
+moved, turned and sized to where it stands by the transforms written with it.  The skin runs through
+every section in the order they are written, **smoothly** through each, so a few sections make a fair
+curve; `straight` runs it in straight lines from one to the next instead, for a ruled shape — a cut gem,
+a blade's bevel, a chamfered box.
+
+**Along a spline.**  Given a `spline`, written out or named as a sweep's is, the sections stand along it,
+each square to it at the share of its length its `at` says, from 0 at its start to 1 at its end, the
+outline's X and Y laid across the spline and its own transforms applied first.  A horn, a limb or a
+tusk curves with the spline and narrows section by section:
+
+```
+loft {
+    section { path Ring  scale 0.55  at 0 }
+    section { path Ring  scale 0.38  at 0.5 }
+    section { path Ring  scale 0.01  at 1 }
+    spline Curl
+}
+```
+
+**Which places correspond.**  Outlines drawn with as many segments each correspond segment for segment:
+the corner drawn into every station of a hull runs straight down it as its chine.  Outlines that differ
+are matched by how far round each one is — each is cut, exactly, wherever another has a join, at the
+same share of its own length — so a square flowing into a circle meets it with its corners at the
+circle's eighths.  Every outline is followed from where it was begun, so where each is begun says
+which places on one go to which on the next; begun on different sides, the skin twists.  A corner in a
+section runs the length of the loft as a crease.
+
+**A solid, or a sheet.**  Outlines that close make a solid, capped flat at its two ends by its first and
+last sections, which may be [combined](surfaces.md#combining-surfaces), filled with glass or a medium,
+or anything a solid may.  `open` leaves the ends off — a sleeve, a lampshade, a hull's planking with no
+deck — and outlines that do not close make a sheet whatever is said.  Outlines that close and ones that
+do not cannot be lofted together, and each section is one outline: no holes.
+
+**It is exact.**  Each band between two sections is made of cubic patches, one for each segment of the
+outlines, and a ray finds them as a [parametric surface](#parametric) is found: the box round each
+patch's control points holds all of it, so a ray missing it misses the patch, and on the smallest pieces
+the crossing is solved for exactly.  Nothing is cut into triangles, so the shading is smooth however few
+sections there are and the outline against the sky is as smooth as the shape.
+
+The complete scene is [`docs/examples/advanced/loft.igl`](examples/advanced/loft.igl).
+
 ### Tube
 
 A pipe threaded through a series of points, each with a radius of its own, so it may taper
@@ -1668,10 +1734,12 @@ the function form — a picture brings its own size with it — and `clip` to th
 picture's pixels cannot be reached from the scene while a function can simply say `max(..., 0)`.
 Saying otherwise is refused rather than quietly ignored.
 
-**A closed field stands on a floor at height nought**, whichever form it takes: its walls run down
-from the edge of the terrain to nought, and its underside is the unit square there.  An image's
-heights never go below it, but a function's may, and where one does the terrain dips through its own
-floor — so lift such a function clear of nought, or make the field `open`.  A `clip` on a closed
+**A closed field stands on a floor**, whichever form it takes: its walls run down from the edge of
+the terrain to the floor, and its underside is the unit square there.  The floor is at height nought,
+which an image's heights never go below.  A function's may, and when one takes the ground under
+nought — a lake bed, a valley cut below the plain — the floor goes down with it, to a hundredth of the
+ground's height below its lowest point, so the field is closed beneath its ground rather than lidded
+over at nought, and a flat bottom does not lie on the underside face to face.  A `clip` on a closed
 field raises everything darker than the clip to the height the clip's brightness stands for — a
 quarter of it, as with any brightness — in a level plain; `open`, the field leaves that plain out,
 and the terrain stops at the clip with nothing beneath it.

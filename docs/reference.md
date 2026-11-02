@@ -59,7 +59,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `are` | The second word of `angles are …`. | [Context](context.md#angles) |
 | `area` | An `area light` (soft-edged). | [Lights](lights.md#area-lights) |
 | `around` | Material: the axis a brushed surface's grooves run round, as circles. | [Brushed metal](materials.md#brushed-metal) |
-| `at` | Follows `look at`, `point at`, a tube's `radius … at`, a ribbon's or strand's `width … at`, parallelogram `at`; a blob plane's point.  `along <spline> at <share>`.  A joint's `aim at`, where a `mark` stands, and a swarm's `falls at` and when it bursts, `burst … at`. | [Cameras](cameras.md#placing-a-camera), [Ribbon](advanced-surfaces.md#ribbon), [Along a Spline](animation.md#along-a-spline) |
+| `at` | Follows `look at`, `point at`, a tube's `radius … at`, a ribbon's or strand's `width … at`, parallelogram `at`; a blob plane's point.  `along <spline> at <share>`.  A joint's `aim at`, where a `mark` stands, and a swarm's `falls at` and when it bursts, `burst … at`.  A loft's section, `at` a share of the loft's spline. | [Cameras](cameras.md#placing-a-camera), [Ribbon](advanced-surfaces.md#ribbon), [Along a Spline](animation.md#along-a-spline), [Loft](advanced-surfaces.md#loft) |
 | `author` | Info: who made it. | [Context](context.md#image-information) |
 | `axiom` | L-system: the starting string.  Shape grammar: the rule its first scope is handed to. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Shape Grammar](advanced-surfaces.md#shape-grammar) |
 | `axis` | Joint: what it turns about, through its pivot: `X`, `Y`, `Z` or a direction. | [Joints](animation.md#joints) |
@@ -269,6 +269,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `line` | Path/spline: a straight segment; also `line gap` and the line scanner. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `linear` | Pattern qualifier: a `linear` stripe or gradient along an axis.  Quadric: the coefficients of `x`, `y` and `z`.  Keys: the value comes to the key at an even pace. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Surfaces](surfaces.md#quadric), [Keys](animation.md#keys) |
 | `location` | Camera/light: where it sits. | [Cameras](cameras.md#placing-a-camera) |
+| `loft` | Surface: a skin stretched through cross-sections, each an outline placed where it stands. | [Loft](advanced-surfaces.md#loft) |
 | `look` | Camera: `look at`, the point aimed at. | [Cameras](cameras.md#placing-a-camera) |
 | `loop` | Keys: begin again once the last key is reached. | [Keys](animation.md#keys) |
 | `loose` | Fracture: the pieces are separate stones, each in a place of its own in its pattern. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
@@ -308,7 +309,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `offset` | Field: how far to the left of the path it follows its rows lie. | [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `on` | Places a surface on top of another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `once` | Image map: show the image once rather than tiling it. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
-| `open` | Leaves the end caps off a cylinder, cone, extrusion, sweep or text, and the sides and underside off a height field. | [Surfaces](surfaces.md#cylinder-and-conic), [Height Field](advanced-surfaces.md#height-field) |
+| `open` | Leaves the end caps off a cylinder, cone, extrusion, sweep, loft or text, and the sides and underside off a height field. | [Surfaces](surfaces.md#cylinder-and-conic), [Height Field](advanced-surfaces.md#height-field), [Loft](advanced-surfaces.md#loft) |
 | `or` | True when either condition is; the same operator as `\|\|`. | [Scene Files](scene-files.md#expressions) |
 | `orthographic` | Camera projection: parallel, with no perspective shrink. | [Cameras](cameras.md#projections) |
 | `out` | Keys: `ease out`, slowing as it arrives. | [Keys](animation.md#keys) |
@@ -383,6 +384,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `scattering` | Medium: how much light it turns aside per unit of distance. | [Scene Files](scene-files.md#scattering) |
 | `scene` | Groups a camera, lights and surfaces into a named scene. | [Scene Files](scene-files.md#scenes-and-cameras) |
 | `sdf` | Surface: a shape written as a signed distance function. | [Surfaces](advanced-surfaces.md#signed-distance-surface) |
+| `section` | Loft: one cross-section — its `path`, its transforms, and how far along the loft's spline it stands, `at`. | [Loft](advanced-surfaces.md#loft) |
 | `seed` | Fixes the random start of a pattern, light, camera or hair. | [Pigments & Patterns](pigments-and-patterns.md#seeding), [Cameras](cameras.md#depth-of-field), [Lights](lights.md#area-lights) |
 | `serial` | Context: the single-threaded `serial scanner`. | [Context](context.md#scanners) |
 | `shadow` | `no shadow`: the surface casts none. | [Surfaces](surfaces.md#no-shadow) |
@@ -427,6 +429,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `step` | Grown tree: how far a twig grows each round. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `steps` | Sweep/area light: how finely it is sampled. | [Sweep](advanced-surfaces.md#sweep), [Lights](lights.md#area-lights) |
 | `still` | Context's `animation`: the frame that stands for it as a still. | [Saying How Long](animation.md#saying-how-long) |
+| `straight` | Loft: run the skin in straight lines from section to section rather than smoothly through them. | [Loft](advanced-surfaces.md#loft) |
 | `strand` | Surface: a single fiber running smoothly through a series of points. | [Advanced Surfaces](advanced-surfaces.md#strand) |
 | `strength` | Blob component: how strongly it pulls. | [Surfaces](surfaces.md#blob) |
 | `stretched` | Fracture: how much longer the pieces come out along each axis.  Span: scaled along X by the distance between its places. | [Advanced Surfaces](advanced-surfaces.md#fracture), [Marks and Spans](animation.md#marks-and-spans) |

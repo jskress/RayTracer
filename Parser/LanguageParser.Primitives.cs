@@ -259,6 +259,7 @@ public partial class LanguageParser
             "strand" => ParseStrandClause(clause),
             "field" => ParseFieldClause(clause),
             "sweep" => ParseSweepClause(clause),
+            "loft" => ParseLoftClause(clause),
             "grown" => ParseGrownClause(clause),
             "fracture" => ParseFractureClause(clause),
             "shapes" => ParseShapesClause(clause),
@@ -392,6 +393,8 @@ public partial class LanguageParser
                 "fieldEntryClause", HandleFieldEntryClause, validate: false),
             "sweep" => ParseObjectResolver<SweepResolver>(
                 "sweepEntryClause", HandleSweepEntryClause, validate: false),
+            "loft" => ParseObjectResolver<LoftResolver>(
+                "loftEntryClause", HandleLoftEntryClause, validate: false),
             "grown" => ParseObjectResolver<GrownTreeResolver>(
                 "grownEntryClause", HandleGrownEntryClause, validate: false),
             "fracture" => ParseObjectResolver<FractureResolver>(
@@ -467,6 +470,7 @@ public partial class LanguageParser
             "strand" => "startStrandClause",
             "field" => "startFieldClause",
             "sweep" => "startSweepClause",
+            "loft" => "startLoftClause",
             "grown" => "startGrownClause",
             "fracture" => "startFractureClause",
             "shapes" => "startShapesClause",

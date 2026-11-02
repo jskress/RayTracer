@@ -81,6 +81,7 @@ public partial class LanguageParser
             "strand" => ParseStrandClause(clause),
             "field" => ParseFieldClause(clause),
             "sweep" => ParseSweepClause(clause),
+            "loft" => ParseLoftClause(clause),
             "grown" => ParseGrownClause(clause),
             "fracture" => ParseFractureClause(clause),
             "shapes" => ParseShapesClause(clause),
