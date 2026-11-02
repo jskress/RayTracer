@@ -165,6 +165,9 @@ public partial class LanguageParser
                 case "sweep":
                     resolver.SurfaceResolvers.Add(ParseSweepClause(clause));
                     break;
+                case "loft":
+                    resolver.SurfaceResolvers.Add(ParseLoftClause(clause));
+                    break;
                 case "grown":
                     resolver.SurfaceResolvers.Add(ParseGrownClause(clause));
                     break;

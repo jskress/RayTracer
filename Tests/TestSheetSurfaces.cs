@@ -141,6 +141,9 @@ public class TestSheetSurfaces
             "Isosurface", "Extrusion", "Lathe", "Tube", "TubeSegment", "TubeQuadSegment",
             "TubeCubicSegment", "CsgSurface", "Group", "Instance", "HeightField", "LSystem",
             "Sweep", "TextSolid",
+            // A loft is a solid of closed outlines, and a sheet of open ones or when it says `open`; TestLoft holds
+            // it to both.  Made with no sections, as here, it is the solid.
+            "Loft",
             // A ribbon is a strip of sheets and never answers a ray itself -- what does is one of the
             // patches inside it, and those say they are sheets.  It sits here with `Sweep` and
             // `TextSolid` for the same reason: what a holder says about itself is never asked.

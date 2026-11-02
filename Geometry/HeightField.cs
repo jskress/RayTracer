@@ -43,7 +43,8 @@ public class HeightField : Group
     public double Clip { get; set; } = -1;
 
     /// <summary>
-    /// This property notes whether the height field has walls and a bottom.
+    /// This property notes whether the height field has walls and a bottom: at nought, or under the lowest ground
+    /// when a function takes it below nought.
     /// </summary>
     public bool Closed { get; set; } = true;
 
@@ -71,6 +72,9 @@ public class HeightField : Group
     // whose pixels the scene cannot reach; for a function there is no such level, since the author
     // writes whatever floor they want into the expression and every height they ask for is meant.
     private double _floor;
+
+    // The level a closed field's walls come down to and its underside lies at.
+    private double _base;
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
@@ -167,11 +171,13 @@ public class HeightField : Group
 
         if (Closed)
         {
+            _base = BaseUnder();
+
             count += CreateWallTriangles(scaleX, scaleY);
 
-            Point point0 = Point.Zero;
-            Point point2 = new Point(1, 0, 0);
-            Point point1 = new Point(0, 0, 1);
+            Point point0 = new Point(0, _base, 0);
+            Point point2 = new Point(1, _base, 0);
+            Point point1 = new Point(0, _base, 1);
 
             Add(new Parallelogram
             {
@@ -397,8 +403,29 @@ public class HeightField : Group
         double z2 = py2 * sy;
 
         AddTriangles(group,
-            new Point(x1, 0, z1), new Point(x1, y1, z1),
-            new Point(x2, y2, z2), new Point(x2, 0, z2));
+            new Point(x1, _base, z1), new Point(x1, y1, z1),
+            new Point(x2, y2, z2), new Point(x2, _base, z2));
+    }
+
+    /// <summary>
+    /// This method works out the level a closed field is closed at.  It is nought, where a picture's darkest pixel
+    /// stands, unless the ground dips below that -- which only a function's can -- and then it is a hundredth of the
+    /// ground's height under its lowest point: closed at nought, a lake bed below it had a lid over it at the water
+    /// line, and closed AT its lowest point, a flat bed would lie on the underside, face on face.
+    /// </summary>
+    /// <returns>The level to close the field at.</returns>
+    private double BaseUnder()
+    {
+        double lowest = double.PositiveInfinity;
+        double highest = double.NegativeInfinity;
+
+        foreach (double height in _heights)
+        {
+            lowest = Math.Min(lowest, height);
+            highest = Math.Max(highest, height);
+        }
+
+        return lowest < 0 ? lowest - Math.Max(highest - lowest, -lowest) / 100 : 0;
     }
 
     /// <summary>

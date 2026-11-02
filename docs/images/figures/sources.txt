@@ -52,6 +52,7 @@ anim-along.png|docs/examples/animation/along.igl|640|300
 anim-forces.png|docs/examples/animation/forces.igl|640|300
 anim-joints.png|docs/examples/animation/joints.igl|640|300
 adv-sweep.png|docs/examples/advanced/sweep.igl|320|240
+adv-loft.png|docs/examples/advanced/loft.igl|640|300
 adv-text-along-a-path.png|docs/examples/advanced/text-along-a-path.igl|640|240
 adv-text.png|docs/examples/advanced/text.igl|320|240
 adv-tube.png|docs/examples/advanced/tube.igl|320|240

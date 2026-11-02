@@ -264,6 +264,22 @@ A lathe's segment is solved only for a ray that, while within the segment's heig
 axis (`LathePathSurface.MayCross`: its control points' bands, padded far past rounding and the hair a crossing may
 fall beyond an end; a segment drawn across the axis reaches it): pixel-identical, an Eagle command module close-up
 with four windows cut from 21-segment lathes 26.8 s -> 4.6 s.
+A `Loft` (`loft { section { path P <transforms> [at s] } ... [spline S] [straight] [open] }`, `Geometry/Loft.cs`)
+stretches a skin through outlines: each turned into cubics (lines and quads raised, zero-length segments dropped, a
+closed run made CCW), outlines of as many segments corresponding segment for segment (a hull's plank edges run its
+length), others each cut exactly (de Casteljau) at every outline's join shares by arc length (16-point
+Gauss-Legendre, bisection), so a square meets a circle at its eighths.  Across sections the nets run non-uniform
+Catmull-Rom spaced by the sections' middles (`straight`: thirds of the straight run), one bicubic patch per segment
+per band; along a spline a section stands in its rotation-minimizing frame at share `at`, its own transforms first.
+Found exactly: a box tree over the patches, each patch's de Casteljau pieces built ahead (control-point boxes, leaves
+0.02 of the loft's diagonal, 14 deep), Newton on (t, u, v) at a leaf to 1e-12, repeats within size x 1e-9 dropped.
+Closed outlines are a solid capped flat (plane + `GeneralPath.Contains`), open ones (or `open`) a sheet; which way
+is out is voted at the first section.  `gallery/Local/marine/a-boat-at-the-jetty.igl` lofts a clinker hull from
+seven stations of three shapes, and oars from a ring into a blade.
+A closed `HeightField` has walls down to a floor and an underside there (`BaseUnder`): nought, or for a function's
+ground below nought, a hundredth of its height under its lowest point.  Until 2026-11-01 it was always nought, a lid
+over any ground below it: a lake bed showed through ripples at the water line, and Tatooine's wheel tracks, cut 3 cm
+into a disc of sand whose top is 2 mm above nought (the desert dipped 6 cm under it), were 2 mm deep, thin lines.
 A CSG of many things written as one (`union { a b c ... }`) is a chain of links (`CsgSurface.IsChainLink`), each
 holding all before it on its left; the top link lists the whole chain ONCE (`ListTheChain`: which thing written each
 surface stands in, shared by every link, a link's left being the things before its place), where per-link side

@@ -1,0 +1,57 @@
+// A loft: a skin stretched through cross-sections, each an outline placed where it belongs.  A square flowing into a
+// circle, a bottle drawn through four rings, and a horn grown along a curving spline.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3.6, -9.4]
+    look at [0, 1.5, 0]
+    field of view 52
+}
+
+point light { location [-6, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.6, 0.6, 0.64], color [0.2, 0.2, 0.25] scale 1.2 } }
+}
+
+Ring = path {
+    move to 1, 0
+    curve 1, 0.5523, 0.5523, 1 to 0, 1
+    curve -0.5523, 1, -1, 0.5523 to -1, 0
+    curve -1, -0.5523, -0.5523, -1 to 0, -1
+    curve 0.5523, -1, 1, -0.5523 to 1, 0
+    close
+}
+Square = path { move to 1, 0  line to 1, 1  line to -1, 1  line to -1, -1  line to 1, -1  close }
+
+// A square base flowing into a round mouth: the two are matched by how far round each is, so the square's corners
+// rise as creases to the circle's eighths.  Each section is drawn flat and stood up by its own transforms.
+loft {
+    section { path Square  scale 0.7  rotate X 90 }
+    section { path Ring  scale 0.6  rotate X 90  translate Y 1.2 }
+    section { path Ring  scale 0.8  rotate X 90  translate Y 2.2 }
+    material { pigment color [0.80, 0.48, 0.30]  specular 0.4  shininess 60 }
+    translate X -3
+}
+
+// A bottle: the skin runs smoothly through every ring.
+loft {
+    section { path Ring  scale 0.75  rotate X 90 }
+    section { path Ring  scale 0.8  rotate X 90  translate Y 1.4 }
+    section { path Ring  scale 0.28  rotate X 90  translate Y 2.3 }
+    section { path Ring  scale 0.26  rotate X 90  translate Y 3 }
+    material { pigment color [0.30, 0.55, 0.42]  specular 0.6  shininess 120  reflective 0.15 }
+}
+
+// A horn: rings standing square to a spline at shares of its length, narrowing to a point.
+Curl = spline { move to 0, 0, 0  curve 0, 1.5, 0, 0.4, 2.6, 0 to 2, 3, 0 }
+
+loft {
+    section { path Ring  scale 0.55  at 0 }
+    section { path Ring  scale 0.38  at 0.5 }
+    section { path Ring  scale 0.01  at 1 }
+    spline Curl
+    material { pigment color [0.92, 0.88, 0.76]  specular 0.5  shininess 40 }
+    translate [2.1, 0, 0.6]
+}

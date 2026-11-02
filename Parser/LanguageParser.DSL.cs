@@ -105,7 +105,7 @@ public partial class LanguageParser
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
             'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span', 'falls', 'burst',
             'channel', 'red', 'green', 'blue', 'alpha', 'map', 'directx', 'vignetting', 'distortion', 'chromatic',
-            'aberration',
+            'aberration', 'loft', 'section', 'straight',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -1538,6 +1538,34 @@ public partial class LanguageParser
             open | surfaceEntryClause
         ]
 
+        // Loft clauses: a skin stretched through cross-sections, each an outline with its own placing.
+        startLoftClause:
+        {
+            loft > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "loft" here.'
+        }
+        loftEntryClause:
+        [
+            { section > openBrace ?? 'Expecting an open brace to follow "section" here.' } |
+            {
+                discontinuous{?} > spline >
+                [ openBrace | _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
+            } |
+            straight | open | surfaceEntryClause
+        ]
+        // A section's outline and how far along the loft's spline it stands; anything else in it is tried as a
+        // transform, as a decal's entries are.
+        loftSectionEntryClause:
+        [
+            {
+                path > [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting an outline, or the name of one, to follow "path" here.'
+            } |
+            { at > _expression }
+        ]
+
         // Grown tree clauses: a tree grown into the space it is given.
         startGrownClause:
         {
@@ -1970,6 +1998,7 @@ public partial class LanguageParser
             startStrandClause => 'strand' |
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
+            startLoftClause => 'loft' |
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
@@ -2061,6 +2090,7 @@ public partial class LanguageParser
             startStrandClause => 'strand' |
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
+            startLoftClause => 'loft' |
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
@@ -2127,6 +2157,7 @@ public partial class LanguageParser
             startStrandClause => 'strand' |
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
+            startLoftClause => 'loft' |
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
@@ -2229,7 +2260,7 @@ public partial class LanguageParser
                 startConicClause | startTorusClause | startExtrusionClause |
                 startTaperedExtrusionClause | startLatheClause |
                 startBlobClause | startSwellsClause | startTubeClause | startRibbonClause | startStrandClause | startFieldClause |
-                startSweepClause | startGrownClause | startFractureClause | startShapesClause | startSwarmClause | startJointClause | startTextClause |
+                startSweepClause | startLoftClause | startGrownClause | startFractureClause | startShapesClause | startSwarmClause | startJointClause | startTextClause |
                 startTaperedTextClause | startLsystemClause | startHeightFieldClause |
                 startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
@@ -2268,7 +2299,7 @@ public partial class LanguageParser
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
                 isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
-                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | grown | fracture | shapes | swarm | joint | extrusion | text | lsystem |
+                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | loft | grown | fracture | shapes | swarm | joint | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
                 { bilinear > patch } |
@@ -2390,6 +2421,7 @@ public partial class LanguageParser
             startStrandClause => 'HandleStartStrandClause' |
             startFieldClause => 'HandleStartFieldClause' |
             startSweepClause          => 'HandleStartSweepClause' |
+            startLoftClause           => 'HandleStartLoftClause' |
             startGrownClause          => 'HandleStartGrownClause' |
             startFractureClause       => 'HandleStartFractureClause' |
             startShapesClause         => 'HandleStartShapesClause' |

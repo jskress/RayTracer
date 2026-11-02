@@ -1,5 +1,6 @@
 using Lex.Tokens;
 using RayTracer.Basics;
+using RayTracer.Core;
 using RayTracer.Fields;
 using RayTracer.General;
 using RayTracer.Geometry;
@@ -315,6 +316,53 @@ public class TestHeightField
             Assert.IsFalse(wall.Surfaces.OfType<SmoothTriangle>().Any(),
                 "a wall is flat, and should be left flat");
         }
+    }
+
+    /// <summary>
+    /// A closed field is closed under its ground: at nought, as it always was, when the ground stands on it or above
+    /// it, and when a function takes the ground below nought, under its lowest point.  Closed at nought, a lake bed
+    /// thirty meters down had a lid over it at the water line, which a ray looking down into the lake met first.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldIsClosedUnderItsGround()
+    {
+        // Ground falling from nought at x = 0 to minus one at x = 1.
+        HeightField dipping = new ()
+        {
+            Function = Expression(Multiply(Number(-1), Named("x"))), Samples = 9, Closed = true
+        };
+        List<Intersection> downward = [];
+        List<Intersection> upward = [];
+
+        // Looking between the grid's points, where only one triangle answers.
+
+        dipping.PrepareForRendering();
+        dipping.Intersect(new Ray(new Point(0.7, 5, 0.45), Directions.Down), downward);
+        dipping.Intersect(new Ray(new Point(0.7, -5, 0.45), Directions.Up), upward);
+
+        double down = downward.Select(i => i.Distance).Where(d => d > 0).Min();
+        double up = upward.Select(i => i.Distance).Where(d => d > 0).Min();
+
+        Assert.AreEqual(-0.7, 5 - down, 1e-9, "looking down, the first thing met is the ground");
+        Assert.IsLessThan(-1, -5 + up, "looking up, the first thing met is the underside, below the lowest ground");
+
+        double WallsReachDownTo(HeightField field) => field.Surfaces.OfType<Group>()
+            .SelectMany(wall => wall.Surfaces.OfType<Triangle>())
+            .SelectMany(triangle => new[] { triangle.Point1.Y, triangle.Point2.Y, triangle.Point3.Y })
+            .Min();
+
+        // A hundredth of the ground's height below its lowest point, so that a flat bed down there does not lie on
+        // the underside face on face.
+        Assert.AreEqual(-1.01, WallsReachDownTo(dipping), 1e-12, "the walls of ground below nought");
+
+        HeightField standing = new ()
+        {
+            Function = Expression(Multiply(Named("x"), Named("x"))), Samples = 9, Closed = true
+        };
+
+        standing.PrepareForRendering();
+
+        Assert.AreEqual(0, WallsReachDownTo(standing), "the walls of ground standing on nought");
     }
 
     /// <summary>
