@@ -1,6 +1,7 @@
 using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Fields;
 using RayTracer.General;
 using RayTracer.Geometry;
@@ -316,6 +317,57 @@ public class TestHeightField
             Assert.IsFalse(wall.Surfaces.OfType<SmoothTriangle>().Any(),
                 "a wall is flat, and should be left flat");
         }
+    }
+
+    /// <summary>
+    /// A ray leaving smooth ground sets off above it, wherever it was met, on a field stretched as the dunes are:
+    /// steep in its own space and laid flat by its transform.  Here a crest, gentle on one side and steep on the
+    /// other, on too few samples for its sharpness, and thirty times as high in the field's own space as in the
+    /// world.  Risen in the field's own space, along a crest's normal lying nearly flat there, a place on the slope
+    /// slid sideways under it, and nothing reached it: the dunes' crests were edged with black.
+    /// </summary>
+    [TestMethod]
+    public void TestARayLeavingStretchedSmoothGroundSetsOffAboveIt()
+    {
+        // 202.5 x^2 (1 - x): a crest of 7.5 at x = 2/3.
+        Term crest = Multiply(Multiply(Number(202.5), Multiply(Named("x"), Named("x"))),
+            new BinaryMinusOperation(Number(1), Named("x")));
+        HeightField field = new ()
+        {
+            Function = Expression(crest), Samples = 9, Closed = true, Smooth = true,
+            Transform = Transforms.Scale(1, 1.0 / 30, 1)
+        };
+        int met = 0;
+        List<string> buried = [];
+
+        field.PrepareForRendering();
+
+        for (double x = 0.01; x < 1; x += 0.005)
+        {
+            Ray down = new (new Point(x, 10, 0.4), Directions.Down);
+            List<Intersection> intersections = [];
+
+            field.Intersect(down, intersections);
+
+            Intersection hit = intersections.Hit();
+
+            if (hit is null)
+                continue;
+
+            hit.PrepareUsing(down, intersections);
+            met++;
+
+            List<Intersection> above = [];
+
+            field.Intersect(new Ray(hit.LitPoint, Directions.Up), above);
+
+            if (above.Any(crossing => crossing.Distance > 0))
+                buried.Add($"x = {x:F3}");
+        }
+
+        Assert.IsTrue(met > 150, $"only {met} rays met the ground");
+        Assert.AreEqual(0, buried.Count,
+            $"{buried.Count} of {met} rays left from under the ground, among them {string.Join(", ", buried.Take(5))}");
     }
 
     /// <summary>

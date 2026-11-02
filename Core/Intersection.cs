@@ -326,6 +326,13 @@ public class Intersection : IComparable<Intersection>
             ? Point + Eye * SelfOffset
             : OverPoint;
 
+        // **And for a surface shaded as rounder than it is, from where the round surface would be.**  Set off from
+        // the flat facet, a coarse mesh's shadow rays met the facets beside them wherever the light grazed it, and
+        // the edge of its shadow was a staircase of whole triangles (see SmoothTriangle.RiseAt).  Only on the side
+        // the surface faces: met from behind, or turned inside out by a CSG, it has no round side to rise to.
+        if (!Inside && !ShouldFlipInsideForOut && Surface.RiseAt(this) is { } rise)
+            LitPoint += rise;
+
         // **But what glass mirrors from inside stays inside.**  Set off from the over point, a ray mirrored
         // off the inner face of a pane began just outside it, met the same face again a hair away, and was
         // bent into the glass as if it had come from the air -- so the light a ball's rim or a prism's face

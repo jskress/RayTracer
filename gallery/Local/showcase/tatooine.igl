@@ -180,29 +180,30 @@ heightfield {
 
 // -- R2-D2, and the way he came --------------------------------------------------------------------------
 
-// A wheel track: a groove 10 cm wide and 3 cm deep in the sand, along an arc of radius `r` about
+// A wheel track: a groove 10 cm wide and 2 cm deep in the sand, along an arc of radius `r` about
 // [`cx`, `cz`], from straight across from its middle round `sweep` degrees -- a ring of a torus, cut to the
-// arc by two half-spaces.
+// arc by two half-spaces.  The sand's top is 2 mm up, so the tube is 7.25 cm round with its middle 5.45 cm up.
 primitive WheelTrack(cx, cz, r, sweep) -> group {
     return group {
         intersection {
-            torus { radii r, 0.057 }
+            torus { radii r, 0.0725 }
             cube { scale 20  translate Z 20 }
             cube { scale 20  translate X -20  rotate Y sweep - 90 }
-            translate [cx, 0.027, cz]
+            translate [cx, 0.0545, cz]
         }
     }
 }
 
 // The sand he stands on, a disc fifteen meters round lying a hair above the desert, so that his tracks can
-// be cut into something: three, one from each foot, curving away behind him the way he came, nine meters
-// long on arcs about a point fourteen meters to his left.
+// be cut into something: three, one from each foot, curving away behind him the way he came on arcs about a
+// point fourteen meters to his left, and round behind him again, where they end out of sight.  Past ten
+// meters the desert rises out of its dip under the disc and fills them with sand, so they fade as they go.
 difference {
     cylinder { min Y -0.3  max Y 0.002  scale [15, 1, 15] }
     group {
-        object WheelTrack(14, 0.1455, 13.7155, 36.8)
-        object WheelTrack(14, 0.1455, 14.2845, 36.8)
-        object WheelTrack(14, -0.1763, 14, 36.8)
+        object WheelTrack(14, 0.1455, 13.7155, 62)
+        object WheelTrack(14, 0.1455, 14.2845, 62)
+        object WheelTrack(14, -0.1763, 14, 62)
         rotate Y -70
     }
     material Sand
