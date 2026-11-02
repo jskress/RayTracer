@@ -143,6 +143,13 @@ public sealed class MaterialBlend
         if (inverse is not null)
             point = inverse * point;
 
+        // A picture laid by the way the surface faces is handed its bearing, carried into the pattern's space as the
+        // point is; see Bearing.
+        using Bearing.Scope held = pattern.SeesTheFacing
+            ? Bearing.Held(Bearing.At(surface, intersection.Normal, intersection.TimeIndex, intersection.Portals))
+            : default;
+        using Bearing.Scope carried = inverse is null ? default : Bearing.Into(inverse);
+
         if (pattern is ImagePattern)
         {
             Footprint patch = intersection.Footprint is { IsEmpty: false } footprint

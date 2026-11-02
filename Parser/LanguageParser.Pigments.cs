@@ -268,6 +268,7 @@ public partial class LanguageParser
             MapTypeResolver = new LiteralResolver<ImageMapType?> { Value = imageMapType },
             OnceResolver = new LiteralResolver<bool> { Value = once },
             BrightnessResolver = brightnessResolver,
+            LayingResolver = ImageLayingIn(clause, texts),
             TransformResolver = transformResolver
         };
     }

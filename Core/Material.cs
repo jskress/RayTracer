@@ -797,6 +797,25 @@ public class Material
     private Sight _looks;
 
     /// <summary>
+    /// This property reports whether this material's pigment is laid by which way the surface faces -- a triplanar
+    /// image -- worked out once for each pigment it has had.
+    /// </summary>
+    internal bool PigmentSeesTheFacing
+    {
+        get
+        {
+            Sight facing = _facing;
+
+            if (facing is null || !ReferenceEquals(facing.Pigment, Pigment))
+                _facing = facing = new Sight(Pigment, Pigment?.SeesTheFacing ?? false);
+
+            return facing.Sees;
+        }
+    }
+
+    private Sight _facing;
+
+    /// <summary>
     /// This method returns the color of this material where a ray met a surface wearing it.  See
     /// <see cref="GetColorFor(Surface, Point, Vector, Footprint, Surface)"/>.
     /// </summary>
@@ -840,6 +859,12 @@ public class Material
         Portals portals = default, Viewing viewing = default)
     {
         Color color;
+
+        // A pigment laid by the way the surface faces is handed its bearing, carried along with the point into
+        // whatever space it is read in.  See Bearing.
+        using Bearing.Scope _ = normal is not null && PigmentSeesTheFacing
+            ? Bearing.Held(Bearing.At(surface, normal, Scene.ShadingTime, portals))
+            : default;
 
         // A pigment that looks about the place is shown where it is: the scene, the point and the way the
         // surface faces there.  See Surroundings.

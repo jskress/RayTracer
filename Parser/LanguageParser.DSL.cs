@@ -105,7 +105,7 @@ public partial class LanguageParser
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
             'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span', 'falls', 'burst',
             'channel', 'red', 'green', 'blue', 'alpha', 'map', 'directx', 'vignetting', 'distortion', 'chromatic',
-            'aberration', 'loft', 'section', 'straight',
+            'aberration', 'loft', 'section', 'straight', 'triplanar', 'shuffled',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -610,9 +610,16 @@ public partial class LanguageParser
         }
         imageMapTypeClause:
         [
-            { planar > once{?} } | spherical |
-            { cylindrical > once{?} } | toroidal
+            { planar > [ once | shuffledClause ]{?} } | spherical |
+            { cylindrical > once{?} } | toroidal |
+            { triplanar > { blend > _expression }{?} > shuffledClause{?} }
         ]
+        // How a picture laid over a whole plane is cut into tiles and shuffled so that it never repeats: how far apart
+        // the tiles stand, as a share of the picture, and how far each may be turned either way.
+        shuffledClause:
+        {
+            shuffled > { size > _expression }{?} > { turned > _expression }{?}
+        }
         // A channel makes the picture a pattern, whose map of pigments follows in braces.
         imagePigmentClause:
         {

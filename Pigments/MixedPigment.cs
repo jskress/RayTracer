@@ -62,6 +62,11 @@ public class MixedPigment : Pigment
     public override bool SeesTheSurroundings => From.SeesTheSurroundings || To.SeesTheSurroundings;
 
     /// <summary>
+    /// This property reports whether either pigment is laid by which way the surface faces.
+    /// </summary>
+    public override bool SeesTheFacing => From.SeesTheFacing || To.SeesTheFacing;
+
+    /// <summary>
     /// This method returns the two pigments' colors at a point, mixed.
     /// </summary>
     public override Color GetColorFor(Point point) =>

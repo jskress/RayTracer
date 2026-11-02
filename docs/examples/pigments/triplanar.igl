@@ -1,0 +1,23 @@
+// One picture laid triplanar on three shapes: a ball, the same ball squashed into a boulder, and a turned cube.  The
+// picture is the glazed tiles the copper-on-luster-tiles gallery scene stands on; the path is relative to this file.
+//
+// Every tile is the same size on all three, however each shape is stretched, and none is stretched round a pole or
+// seamed down a side: each place takes the picture laid flat square to whichever way it faces, blended where it turns.
+context { angles are degrees }
+
+tiles = '../../../gallery/Local/materials/images/luster-tiles-color.png'
+
+Tiled = material { pigment image tiles triplanar { scale 1.5 }  specular 0.2  shininess 30 }
+
+camera {
+    location [0, 2.4, -10]
+    look at [0, 0, 0]
+    field of view 46
+}
+
+point light { location [-6, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [8, 4, -5]   color [0.3, 0.31, 0.36] }
+
+sphere { material Tiled  translate [-3.1, 0, 0] }
+sphere { material Tiled  scale [1.7, 0.6, 1.1]  translate [0, -0.3, 0] }
+cube { material Tiled  scale 0.8  rotate X 20  rotate Y 35  translate [3.1, 0, 0] }

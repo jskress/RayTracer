@@ -418,6 +418,7 @@ The mapping says how the flat picture is wrapped onto the surface:
 | `spherical` | Around a ball, the way a world map wraps a globe. |
 | `cylindrical` | Around an axis, like a label on a can.            |
 | `toroidal` | Around a ring.                                    |
+| `triplanar` | Flat three ways, square to each axis, and blended by the way the surface faces. |
 
 ![One picture, four mappings](images/figures/image-maps.png)
 
@@ -454,6 +455,76 @@ edge fades out over the width of a pixel rather than stopping on a texel.
 On a [height field](advanced-surfaces.md#height-field), with no mapping named, an image is laid as the
 field lays its heights, so a picture painted for a terrain lands pixel for pixel on the heights it was
 painted for.
+
+#### Laid by the way a surface faces
+
+A boulder, a log, a hillside: most of what wants a picture of stone or bark or earth has no shape a map
+can follow.  Laid round a ball a picture pinches at the poles, laid flat it smears down every side, and a
+shape squashed or stretched stretches its picture with it.  `triplanar` lays the picture flat three
+times instead, once square to each axis, and each place takes the three by how squarely its surface
+faces each one: a cliff takes the picture stood on its side, a ledge the picture laid flat, and the
+turn between them blends rather than smears.
+
+```
+pigment image 'granite.png' triplanar { scale 1.1 }
+```
+
+![One picture laid triplanar on a ball, a squashed ball and a cube](images/figures/image-triplanar.png)
+
+The same picture on a ball, the ball squashed into a boulder, and a turned cube.  The scene is
+[`docs/examples/pigments/triplanar.igl`](examples/pigments/triplanar.igl).
+
+**It is laid at the world's size.**  The picture is laid along the surface's own axes, so it turns and
+moves with the thing, but a unit across it is a unit in the world however the thing is stretched: the
+boulder above wears tiles the size of the ball's, and a height field stretched over seventy meters of
+ground wears a picture a meter across as a meter across on its cliffs as on its flats.  So the `scale`
+in its braces is the picture's size in the world.  On a face square to an axis the picture stands
+upright, its rows running down, and is not mirrored on the far side.
+
+`blend` says how wide the turns are, from more than nought (a sharp edge where a surface faces two
+axes alike) to one (the widest).  It is 0.25 unless said: each projection counts as the fourth power of
+how squarely the surface faces it.
+
+```
+pigment image 'bark.png' triplanar blend 0.5 { scale 0.4 }
+```
+
+A triplanar picture needs a surface to face some way, so it cannot be a background.  Read with no facing
+to go by — the root of a strand of hair, a shadow ray through a picture's clear parts — it takes its
+three projections alike.
+
+#### A picture that does not repeat
+
+A picture laid over a floor repeats, and however good the picture, the eye finds the grid it draws within
+a few repeats.  `shuffled` cuts the plane into tiles, each showing the picture shifted by an amount of its
+own, and blends each tile into the next so smoothly that every place shows an unbroken patch of the real
+picture and the repeat is gone (Mikkelsen 2022, *Practical Real-Time Hex-Tiling*).  Where two tiles meet,
+the blend leans toward whichever is brighter there, so that where two pebbles cross one lies over the
+other rather than both showing through.
+
+```
+pigment image 'pebbles.png' planar shuffled turned 180 { scale 1.2 }
+```
+
+![One picture of pebbles laid plainly and shuffled](images/figures/image-shuffled.png)
+
+The same picture laid plainly on the left and shuffled on the right.  The scene is
+[`docs/examples/pigments/shuffled.igl`](examples/pigments/shuffled.igl).
+
+`shuffled` may follow `planar` or `triplanar`: the two ways of laying a picture over a whole plane.
+
+| Written | Means |
+| --- | --- |
+| `size` *s* | How far apart the tiles' middles stand, as a share of the picture: about 0.29 unless said.  Smaller tiles break the repeat up more, larger ones keep more of the picture's features whole. |
+| `turned` *a* | How far each tile may be turned either way, in degrees unless the scene says otherwise; nought unless said.  Pebbles and gravel lie every way and want 180; wood grain, brick or a photograph lit from one side want none, since a turned tile turns its grain or its light with it. |
+
+```
+pigment image 'gravel.png' triplanar shuffled size 0.4 turned 180 { scale 2 }
+```
+
+Each tile's shift and turn come from the tile and the surface's seed, never from the order anything is
+asked, so the same tile shows the same patch whoever asks — and a color picture, its normal map and its
+roughness picture laid alike on one surface are shuffled alike, tile for tile.
 
 **An image lets light through only where its picture does**: where its alpha channel says it is less
 than opaque, or past the edges of one drawn `once`.  A surface colored by an opaque picture is as

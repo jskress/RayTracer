@@ -82,6 +82,29 @@ public class ImagePattern : Pattern
     public ImageChannel Channel { get; set; }
 
     /// <summary>
+    /// This property holds how wide a triplanar picture's turns from one projection to the next blend, from more than
+    /// nought to one; see <see cref="ImageTaps"/>.
+    /// </summary>
+    public double Blend { get; set; } = ImageTaps.DefaultBlend;
+
+    /// <summary>
+    /// This property holds how the picture is shuffled so that it does not repeat, or <c>null</c> if it repeats as it
+    /// is; see <see cref="ImageTaps"/>.
+    /// </summary>
+    public Shuffle Shuffle { get; set; }
+
+    /// <summary>
+    /// This property reports whether the picture is read more than once at a place -- laid triplanar, or shuffled --
+    /// rather than at one place in it; see <see cref="ImageTaps"/>.
+    /// </summary>
+    internal bool IsSpread => MapType == ImageMapType.Triplanar || Shuffle is not null;
+
+    /// <summary>
+    /// A triplanar picture is laid by which way its surface faces.
+    /// </summary>
+    public override bool SeesTheFacing => MapType == ImageMapType.Triplanar;
+
+    /// <summary>
     /// This property reports the number of discrete pigments this pattern supports: none, since its value runs from
     /// nought to one.
     /// </summary>
@@ -131,6 +154,14 @@ public class ImagePattern : Pattern
     /// <returns>The color there; clear where the picture is not laid.</returns>
     internal Color ColorAt(Point point, Footprint footprint)
     {
+        if (IsSpread)
+        {
+            Span<ImageTap> taps = stackalloc ImageTap[ImageTaps.Most];
+            int count = Gather(taps, point);
+
+            return ImageTaps.Read(Texture, taps[..count], footprint, ImageTaps.Contrast);
+        }
+
         Texture texture = Texture;
         ImageLaying laid = Laid();
         ImageMapType? map = laid.Map;
@@ -159,6 +190,9 @@ public class ImagePattern : Pattern
     /// <returns>The two rates, or <c>null</c> for a point the picture cannot be laid at.</returns>
     internal (Vector Across, Vector Down)? RatesAt(Point point)
     {
+        if (IsSpread)
+            throw new InvalidOperationException("A picture read more than once at a place has no one set of rates.");
+
         Texture texture = Texture;
         ImageLaying laid = Laid();
         ImageMapType? map = laid.Map;
@@ -191,6 +225,9 @@ public class ImagePattern : Pattern
     /// <returns>The gradient there, or <c>null</c> for a point the picture cannot be laid at.</returns>
     public override Vector SlopeAt(Point point, Footprint patch)
     {
+        if (IsSpread)
+            return SpreadSlopeAt(point, patch);
+
         if (RatesAt(point) is not var (across, down))
             return null;
 
@@ -229,6 +266,64 @@ public class ImagePattern : Pattern
     }
 
     /// <summary>
+    /// This method gathers the readings a picture read more than once at a place is made of there.
+    /// </summary>
+    /// <param name="taps">Where to put them; it must hold <see cref="ImageTaps.Most"/>.</param>
+    /// <param name="point">The point, in the pattern's own space.</param>
+    /// <returns>How many there are.</returns>
+    internal int Gather(Span<ImageTap> taps, Point point)
+    {
+        Texture texture = Texture;
+
+        return ImageTaps.Gather(
+            taps, point, MapType == ImageMapType.Triplanar, Blend, Shuffle, Pigment.WearersSeed ?? 0, texture.Width,
+            texture.Height);
+    }
+
+    /// <summary>
+    /// This method returns the color one reading of the picture gives, as the file holds it.
+    /// </summary>
+    /// <param name="tap">The reading.</param>
+    /// <param name="footprint">The patch to average over, if any.</param>
+    /// <returns>The color there.</returns>
+    internal Color ColorAt(in ImageTap tap, Footprint footprint) => tap.ColorIn(Texture, footprint);
+
+    /// <summary>
+    /// This method returns the way a picture read more than once at a place climbs there: each reading's slope taken
+    /// a texel either way along the picture's own axes, or as far as the patch reaches, and carried out of the
+    /// picture by how fast the reading moves, all weighed as the readings count.  How fast the weights themselves
+    /// change is left out, as a blend of normals leaves it out; they turn over a whole tile or a whole bend of the
+    /// surface, far slower than the picture's own detail.
+    /// </summary>
+    /// <param name="point">The point, in the pattern's own space.</param>
+    /// <param name="patch">The patch a ray covers there, in the pattern's own space, if any.</param>
+    /// <returns>The pattern's gradient there.</returns>
+    private Vector SpreadSlopeAt(Point point, Footprint patch)
+    {
+        Texture texture = Texture;
+        Span<ImageTap> taps = stackalloc ImageTap[ImageTaps.Most];
+        int count = Gather(taps, point);
+        double x = 0, y = 0, z = 0;
+
+        for (int index = 0; index < count; index++)
+        {
+            ImageTap tap = taps[index];
+            (double reachAcross, double reachDown) = tap.ReachOf(patch);
+            double slopeAcross = (ValueOf(tap.ColorIn(texture, patch, reachAcross)) -
+                                  ValueOf(tap.ColorIn(texture, patch, -reachAcross))) / (2 * reachAcross);
+            double slopeDown = (ValueOf(tap.ColorIn(texture, patch, 0, reachDown)) -
+                                ValueOf(tap.ColorIn(texture, patch, 0, -reachDown))) / (2 * reachDown);
+            double weight = tap.Projection * tap.Tile;
+
+            x += weight * (tap.AcrossX * slopeAcross + tap.DownX * slopeDown);
+            y += weight * (tap.AcrossY * slopeAcross + tap.DownY * slopeDown);
+            z += weight * (tap.AcrossZ * slopeAcross + tap.DownZ * slopeDown);
+        }
+
+        return new Vector(x, y, z);
+    }
+
+    /// <summary>
     /// This method returns the pattern's value from a color the picture holds, held under one.
     /// </summary>
     /// <param name="color">The color.</param>
@@ -252,6 +347,7 @@ public class ImagePattern : Pattern
         ImagePattern other = (ImagePattern) pattern;
 
         return base.DetailsMatch(pattern) && ImageReference.Matches(other.ImageReference) && MapType == other.MapType &&
-               Once == other.Once && Channel == other.Channel;
+               Once == other.Once && Channel == other.Channel && Blend == other.Blend &&
+               Equals(Shuffle, other.Shuffle);
     }
 }

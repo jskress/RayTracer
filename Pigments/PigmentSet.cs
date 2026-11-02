@@ -36,6 +36,11 @@ public class PigmentSet
     /// </summary>
     public bool SeesTheSurroundings => _pigments.Any(pigment => pigment.SeesTheSurroundings);
 
+    /// <summary>
+    /// This property reports whether any of the pigments is laid by which way the surface faces.
+    /// </summary>
+    public bool SeesTheFacing => _pigments.Any(pigment => pigment.SeesTheFacing);
+
     private readonly BreakValue<Pigment> _pigments = new (); 
 
     /// <summary>

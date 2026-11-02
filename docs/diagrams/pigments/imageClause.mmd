@@ -6,7 +6,10 @@ image = picture [ "{" { "brightness" number | transform } "}" ]
 
 picture = [ "uncached" ] "image" filename [ mapping ] ;
 
-mapping = "planar" [ "once" ] | "spherical" | "cylindrical" [ "once" ] | "toroidal" ;
+mapping = "planar" [ "once" | shuffle ] | "spherical" | "cylindrical" [ "once" ] | "toroidal"
+        | "triplanar" [ "blend" number ] [ shuffle ] ;
+
+shuffle = "shuffled" [ "size" number ] [ "turned" angle ] ;
 
 channel = "channel" ( "red" | "green" | "blue" | "alpha" ) ;
 

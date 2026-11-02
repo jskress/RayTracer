@@ -6,6 +6,7 @@ using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
 using RayTracer.Instructions.Patterns;
+using RayTracer.Instructions.Pigments;
 using RayTracer.Patterns;
 using RayTracer.Pigments;
 
@@ -350,6 +351,7 @@ public partial class LanguageParser
             },
             MapType = ImageMapTypeIn(texts),
             Once = texts.Contains("once"),
+            LayingResolver = ImageLayingIn(clause, texts),
             Channel = channel < 0
                 ? ImageChannel.Gray
                 : texts[channel + 1] switch
@@ -378,6 +380,56 @@ public partial class LanguageParser
         if (texts.Contains("cylindrical"))
             return ImageMapType.Cylindrical;
 
+        if (texts.Contains("triplanar"))
+            return ImageMapType.Triplanar;
+
         return texts.Contains("toroidal") ? ImageMapType.Toroidal : null;
+    }
+
+    /// <summary>
+    /// This method returns what an image clause says of how its picture is laid besides its map -- how wide a
+    /// triplanar picture's turns blend, and how a shuffled one is cut up -- or <c>null</c> if it says nothing.  The
+    /// numbers stand in the clause after the picture's own, in the order the grammar has them.
+    /// </summary>
+    /// <param name="clause">The clause naming the picture.</param>
+    /// <param name="texts">The words of the clause.</param>
+    /// <returns>The resolver for how the picture is laid, or <c>null</c>.</returns>
+    private static ImageLayingResolver ImageLayingIn(Clause clause, List<string> texts)
+    {
+        bool blend = texts.Contains("blend"), shuffled = texts.Contains("shuffled");
+        bool size = texts.Contains("size"), turned = texts.Contains("turned");
+
+        if (!blend && !shuffled)
+            return null;
+
+        int next = 1;
+
+        return new ImageLayingResolver
+        {
+            BlendResolver = blend
+                ? new TermResolver<double>
+                {
+                    Term = clause.Term(next++),
+                    Validator = value => value is > 0 and <= 1
+                        ? null
+                        : "A triplanar image's blend runs from more than nothing to one."
+                }
+                : null,
+            Shuffled = shuffled,
+            SizeResolver = size
+                ? new TermResolver<double>
+                {
+                    Term = clause.Term(next++),
+                    Validator = value => value > 0 ? null : "A shuffled image's size must be more than nothing."
+                }
+                : null,
+            TurnResolver = turned
+                ? new AngleResolver
+                {
+                    Term = clause.Term(next),
+                    Validator = value => value >= 0 ? null : "How far a shuffled image's tiles turn may not be less than nothing."
+                }
+                : null
+        };
     }
 }

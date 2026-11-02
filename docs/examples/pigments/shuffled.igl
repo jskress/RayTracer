@@ -1,0 +1,23 @@
+// One picture of pebbles laid over a floor twice: plainly on the left, where it repeats in a grid the eye finds at
+// once, and shuffled on the right, where it does not.  The picture is the riverbed gallery scene's; the path is
+// relative to this file.
+context { angles are degrees }
+
+pebbles = '../../../gallery/Local/terrain/images/riverbed-pebbles-color.png'
+
+camera {
+    location [0, 7, -3.5]
+    look at [0, 0, 1.6]
+    field of view 82
+}
+
+point light { location [-6, 12, -6] }
+
+intersection {
+    plane { material { pigment image pebbles planar { scale 0.7 }  ambient 0.3 } }
+    cube { scale 20  translate X -20.04 }
+}
+intersection {
+    plane { material { pigment image pebbles planar shuffled turned 180 { scale 0.7 }  ambient 0.3 } }
+    cube { scale 20  translate X 20.04 }
+}

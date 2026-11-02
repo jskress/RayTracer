@@ -36,6 +36,18 @@ public class ImagePigment : Pigment
     /// </summary>
     public double Brightness { get; set; } = 1;
 
+    /// <summary>
+    /// This property holds how wide a triplanar image's turns from one projection to the next blend, from more than
+    /// nought (a sharp edge where the surface faces two axes alike) to one; see <see cref="ImageTaps"/>.
+    /// </summary>
+    public double Blend { get; set; } = ImageTaps.DefaultBlend;
+
+    /// <summary>
+    /// This property holds how the image is shuffled so that it does not repeat, or <c>null</c> if it repeats as it is;
+    /// see <see cref="ImageTaps"/>.
+    /// </summary>
+    public Shuffle Shuffle { get; set; }
+
     private Texture _texture;
 
     // How the image is laid on the surface it was readied for, and the radius of the ring a toroidal map's tube runs
@@ -65,6 +77,10 @@ public class ImagePigment : Pigment
         if (MapType is null && surface is not null && !holder && ImageLaying.DefaultMapFor(surface) is null)
             throw new Exception("Cannot determine image map type for surface.");
 
+        // A triplanar image is laid by the way its surface faces, which a background has none of.
+        if (MapType == ImageMapType.Triplanar && surface is null)
+            throw new Exception("A triplanar image is laid by the way a surface faces, so it cannot be a background.");
+
         // Next, load the image.  The image is read as the light it stands for when the render turns its light back
         // into a picture's values at the end, and as the values it holds when the scene writes no gamma -- in such
         // a scene a color is the value that reaches the file, and an image's colors must mean what the scene's own
@@ -84,6 +100,17 @@ public class ImagePigment : Pigment
     /// <see cref="ImageLaying.On"/>.
     /// </summary>
     private ImageLaying Laid() => _readied.On(Wearer, MapType, Once);
+
+    /// <summary>
+    /// This property reports whether the image is read more than once at a place -- laid triplanar, or shuffled --
+    /// rather than at one place in the picture; see <see cref="ImageTaps"/>.
+    /// </summary>
+    private bool IsSpread => MapType == ImageMapType.Triplanar || Shuffle is not null;
+
+    /// <summary>
+    /// A triplanar image is laid by which way its surface faces.
+    /// </summary>
+    public override bool SeesTheFacing => MapType == ImageMapType.Triplanar;
 
     /// <summary>
     /// An image lets light through only where it is not opaque -- a picture whose alpha channel says so -- or past the
@@ -108,6 +135,9 @@ public class ImagePigment : Pigment
     /// <returns>The appropriate color at the given point.</returns>
     public override Color GetColorFor(Point point)
     {
+        if (IsSpread)
+            return Spread(point, null);
+
         ImageLaying laid = Laid();
         ImageMapType? map = laid.Map;
         (double u, double v) = map.GetTexelLocationFor(point, _texture.Width, _texture.Height, laid.Ring);
@@ -130,6 +160,9 @@ public class ImagePigment : Pigment
         if (footprint is null || footprint.IsEmpty)
             return GetColorFor(point);
 
+        if (IsSpread)
+            return Spread(point, footprint);
+
         ImageLaying laid = Laid();
         ImageMapType? map = laid.Map;
         int width = _texture.Width, height = _texture.Height;
@@ -144,6 +177,22 @@ public class ImagePigment : Pigment
         return Brightened(double.IsNaN(du0 + dv0 + du1 + dv1)
             ? _texture.Bilinear(u, v, laid.WrapAcross, laid.WrapDown)
             : _texture.Filtered(u, v, du0, dv0, du1, dv1, laid.WrapAcross, laid.WrapDown));
+    }
+
+    /// <summary>
+    /// This method produces the color of an image read more than once at a place, from all its readings there.
+    /// </summary>
+    /// <param name="point">The point to produce a color for.</param>
+    /// <param name="footprint">The patch of surface the ray is answerable for, if any.</param>
+    /// <returns>The image's color there.</returns>
+    private Color Spread(Point point, Footprint footprint)
+    {
+        Span<ImageTap> taps = stackalloc ImageTap[ImageTaps.Most];
+        int count = ImageTaps.Gather(
+            taps, point, MapType == ImageMapType.Triplanar, Blend, Shuffle, Seed ?? WearersSeed ?? 0, _texture.Width,
+            _texture.Height);
+
+        return Brightened(ImageTaps.Read(_texture, taps[..count], footprint, ImageTaps.Contrast));
     }
 
     /// <summary>
@@ -167,6 +216,8 @@ public class ImagePigment : Pigment
                MapType == pigmentation.MapType &&
                ImageReference.Matches(pigmentation.ImageReference) &&
                Once == pigmentation.Once &&
-               Brightness == pigmentation.Brightness;
+               Brightness == pigmentation.Brightness &&
+               Blend == pigmentation.Blend &&
+               Equals(Shuffle, pigmentation.Shuffle);
     }
 }

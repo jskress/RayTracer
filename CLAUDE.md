@@ -779,7 +779,9 @@ patches, `roughness`/`metallic a to b by`): read RAW (`TextureFor(false)`) as a 
 or one channel, held under one (a map wraps one round to its start: white read as black), filtered over the
 footprint, laid as an image pigment by the shared `ImageLaying`, where anything whose Parent is a `HeightField`
 defaults to `ImageMapType.Field` (texel i's middle at i/(n-1), the field's heights' own places; a planar map put each
-half a texel in) and no wearer is planar.  Its slope for `normal` is `Pattern.SlopeAt` (null for arithmetic patterns,
+half a texel in) and no wearer is planar.  A roughening picture's wearer is the surface it roughens (`Surface.NormalAt`
+holds `Pigment.WornBy(this)` round every picture-reading `PerturbAt`): until 2026-11-02 it had none, so a normal map or
+picture bump naming no mapping was laid planar round a ball and half a texel off a height field's heights.  Its slope for `normal` is `Pattern.SlopeAt` (null for arithmetic patterns,
 which keep the 0.001 gap): a texel either way ALONG THE PICTURE'S OWN AXES (steps from `RatesAt` by the 2x2
 inverse), widened to the ray's patch (`Surface.PatchAt`; `FootprintRadius` is set before `NormalAt` for it) -- at
 0.001 each texel showed as a facet, and one isotropic widest-texel gap found no slope on a one-texel-high picture.
@@ -792,7 +794,24 @@ how much of each place is bare.  `ImagePigment.MayTransmit` is the picture's own
 read when resolved (`Load`): until 2026-10-31 every image said it might, so `MetalApplies`, `CoatApplies`,
 `SheenApplies` and `FresnelApplies` were false for a picture-colored material, and a rough one defaulted to
 `reflective 1` and was shaded as glass of index one -- mirroring nothing.  An image takes `{ brightness b  <transforms> }`
-after it (parsed by hand in `ParseImagePigmentClause`).  A sky light carrying an image (`SkyLight.IsAPicture`) is
+after it (parsed by hand in `ParseImagePigmentClause`).  Two layings read a picture more than once at a place
+(`Pigments/ImageTaps.cs`: up to nine `ImageTap`s, each an affine map from the point to texels -- place, rates across
+and down, so footprints, bump slopes and normal-map frames all come from it -- with a projection share and a tile
+share), for image pigments, `image` patterns and normal maps alike; every other map keeps its one-place path, so
+scenes not saying them are bit-identical.  `triplanar [blend b]` (`ImageMapType.Triplanar`) lays the picture square to
+each axis, weights |n|^(1/b) normalized (b 0.25), upright on the sides, unmirrored on the far ones, at the WORLD'S size
+along the surface's own axes (the user's call): a `Bearing` (`Pigments/Bearing.cs`, thread-static) holds the surface's
+own axes as they stand in the space being read, their lengths in the world and its normal in its own axes -- set by
+`Material.GetColorFor` (only when `PigmentSeesTheFacing`), `MaterialBlend.PatternValueAt` and `Surface.NormalAt`, and
+turned by every pigment transform in `Pigment.GetTransformedColorFor` and the bump's and blend's own, since a picture is
+handed a point already carried through them; the picture's map is A S B (A the axes, B its inverse, S the stretch).
+No facing (a strand's root) takes the three alike; a background is refused.  `shuffled [size s] [turned a]` after
+`planar` or `triplanar` is Mikkelsen 2022's hex tiling: an equilateral grid of tile middles s apart in pictures (default
+1/(2 sqrt 3)), each shifted and turned (uniform within a either way) by `DrawFor(seed, column, row, purpose)` from the
+surface's seed, weights (barycentric)^7 normalized, colors leaning to the brighter by lerp(1, luminance, 0.6) per
+projection; normal maps and slopes take the geometric weights, so a texture set laid alike on one surface shifts tile
+for tile.  A spread normal map tilts per tap in that tap's frame and blends the tilted normals; a spread bump's slope
+is the weighted sum of each tap's texel-space slope.  A sky light carrying an image (`SkyLight.IsAPicture`) is
 image-based lighting: half its samples are picked by a `SkyMap` (luminance on a grid twice the image's width, at most
 4096, read at cell middles) and half evenly, each counted by the balance heuristic over both (`SkyLight.OddsToward`),
 and the pattern is turned per point (`Scene.ShiftFor`, salts 107/108) so a cloudy sky is grain, not blotches.  When it

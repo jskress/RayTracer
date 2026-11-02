@@ -103,6 +103,11 @@ public class BlobPigment : Pigment
     public override bool SeesTheSurroundings => Everything().Any(pigment => pigment.SeesTheSurroundings);
 
     /// <summary>
+    /// This property reports whether any of the pigments is laid by which way the surface faces.
+    /// </summary>
+    public override bool SeesTheFacing => Everything().Any(pigment => pigment.SeesTheFacing);
+
+    /// <summary>
     /// This method shares the color out among the components, each pigment told the directions the
     /// surface is being shaded between.
     /// </summary>

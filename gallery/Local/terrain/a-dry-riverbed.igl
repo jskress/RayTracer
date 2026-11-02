@@ -1,0 +1,148 @@
+// A river that has run dry: a bed of pebbles winding away between rocky banks, and boulders the floods left behind.
+//
+// Two ways of laying a picture over a whole plane carry the scene, and every picture it wears is made by
+// `images/make-riverbed-maps.py` from nothing but numbers.
+//
+// **The pebbles are shuffled.**  One picture of pebbles a meter across, laid plainly over a bed a hundred meters
+// long, repeats a hundred times, and the eye finds the grid it draws at once.  Laid `shuffled`, the bed is cut into
+// tiles each showing the picture shifted by an amount of its own, and turned, and the tiles give way to one another
+// so smoothly that the repeat is gone.  Its normal map is shuffled the same way -- the same tiles, the same seed --
+// so every pebble keeps its own bumps.
+//
+// **The rock is triplanar.**  A boulder is a ball squashed, stretched and roughened by noise, and a bank is a height
+// field stretched over seventy meters of ground: neither has any map round it a picture could follow.  Laid
+// `triplanar`, the picture of granite lies square to each of the three axes and each place takes the three by the
+// way it faces -- a cliff the one stood on its side, a ledge the one laid flat -- at the world's size, so the grain
+// is the same on a boulder as on the bank, however each is stretched.
+context {
+    antialiasing depth 1
+    antialiasing threshold 0.2
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Dry Riverbed'
+        author 'J. Stephen Kress'
+        description 'A dry riverbed of shuffled pebbles winding between triplanar granite banks, with boulders the floods left.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'undergrowth' { Grass }
+
+// Half a stop up: the sun stands ahead and low, so the camera sees most of what it lights from its shaded side.
+camera { location [1.4, 1.2, -6]  look at [-0.6, 0.35, 12]  field of view 54  exposure 0.5 }
+
+background physical sky { sun elevation 28  sun azimuth 125  turbidity 3  brightness 3 }
+sky light { samples 24 }
+
+// -- Materials -------------------------------------------------------------------------------------------------------
+
+// The pebbles, a picture 1.2 meters across, cut into tiles, shifted and turned any way at all: pebbles lie every way.
+Pebbles = material {
+    pigment image 'images/riverbed-pebbles-color.png' planar shuffled turned 180 { scale 1.2 }
+    normal map 'images/riverbed-pebbles-normal.png' planar shuffled turned 180 { depth 1  scale 1.2 }
+    specular 0.04
+    shininess 10
+}
+
+// The banks' dry earth, a picture 1.4 meters across laid square to each axis and shuffled, since a bank is a long way
+// of the same earth.
+Earth = material {
+    pigment image 'images/riverbed-earth-color.png' triplanar shuffled turned 180 { scale 1.4 }
+    normal map 'images/riverbed-earth-normal.png' triplanar shuffled turned 180 { depth 0.8  scale 1.4 }
+    specular 0.03
+    shininess 8
+}
+
+// Granite, a picture 1.1 meters across laid square to each axis, at the world's size.
+Granite = material {
+    pigment image 'images/riverbed-rock-color.png' triplanar { scale 1.1 }
+    normal map 'images/riverbed-rock-normal.png' triplanar { depth 0.8  scale 1.1 }
+    specular 0.05
+    shininess 12
+}
+
+// -- The bed and its banks -------------------------------------------------------------------------------------------
+
+plane { material Pebbles }
+
+// The banks: a height field 70 meters across and 150 along, rising out of the bed either side of a line that wanders
+// as a river's does.  In the field's unit square, the bed's middle wanders about x = 0.5 and is five or six meters
+// wide either side of it; over four and a half meters past that the bank rises, smoothly, to the ground above.
+heightfield {
+    function {
+        -0.05 + (0.82 + 0.3 * noise(9 * x, 0, 7 * z)) *
+            clamp((abs(x - 0.5 - (2.2 * sin((150 * z - 15) / 18) + 1.2 * sin((150 * z - 15) / 7.3 + 1)) / 70)
+                   - (5 + 1.5 * noise(0, 0, 9 * z)) / 70) * 70 / 4.5, 0, 1) *
+            clamp((abs(x - 0.5 - (2.2 * sin((150 * z - 15) / 18) + 1.2 * sin((150 * z - 15) / 7.3 + 1)) / 70)
+                   - (5 + 1.5 * noise(0, 0, 9 * z)) / 70) * 70 / 4.5, 0, 1) *
+            (3 - 2 * clamp((abs(x - 0.5 - (2.2 * sin((150 * z - 15) / 18) + 1.2 * sin((150 * z - 15) / 7.3 + 1)) / 70)
+                   - (5 + 1.5 * noise(0, 0, 9 * z)) / 70) * 70 / 4.5, 0, 1))
+        + 0.06 * noise(60 * x, 0, 40 * z)
+        // Crags on the banks' faces, coarse and fine, most where the river cut into them half way up.
+        + clamp(1 - abs(abs(x - 0.5) - 0.11) * 18, 0, 1) *
+          (0.45 * (noise(24 * x, 0, 14 * z) - 0.5) + 0.50 * (0.25 - abs(noise(60 * x, 0, 40 * z) - 0.5))
+           + 0.22 * (0.25 - abs(noise(150 * x, 0, 110 * z) - 0.5)))
+    }
+    samples 700
+    smooth
+    material Earth
+    named 'banks'
+    translate [-0.5, 0, 0]
+    scale [70, 3.8, 150]
+    translate Z -15
+}
+
+// -- Boulders --------------------------------------------------------------------------------------------------------
+
+// A boulder rolled smooth: a ball roughened by noise at three scales, squashed and stretched by the variant, and sunk
+// a little into the bed.
+primitive RiverBoulder(size, variant) -> group {
+    ox = random(variant, 11) * 40
+    oy = random(variant, 12) * 40
+    oz = random(variant, 13) * 40
+    flat = 0.55 + random(variant, 14) * 0.25
+
+    return group {
+        isosurface {
+            material Granite
+            function {
+                sqrt(x * x + y * y + z * z) - 1
+                    - 0.20 * (noise(x * 1.7 + ox, y * 1.7 + oy, z * 1.7 + oz) - 0.5)
+                    - 0.08 * (noise(x * 3.9 + ox, y * 3.9 + oy, z * 3.9 + oz) - 0.5)
+                    - 0.03 * (noise(x * 8.3 + ox, y * 8.3 + oy, z * 8.3 + oz) - 0.5)
+            }
+            bounded by [-1.5, -1.5, -1.5], [1.5, 1.5, 1.5]
+            scale [size * 0.5, size * 0.5 * flat, size * 0.5 * (0.8 + random(variant, 15) * 0.35)]
+            rotate Y random(variant, 16) * 360
+            translate Y size * 0.5 * flat * 0.6
+        }
+    }
+}
+
+object RiverBoulder(1.6, 1) { translate [-2.4, 0, 3.2] }
+object RiverBoulder(1.3, 2) { translate [2.2, 0, -2.3] }
+object RiverBoulder(2.3, 3) { translate [2.6, 0, 9.5] }
+object RiverBoulder(0.7, 4) { translate [-0.9, 0, 7.0] }
+object RiverBoulder(1.3, 5) { translate [-3.0, 0, 15.0] }
+object RiverBoulder(0.5, 6) { translate [0.4, 0, 4.4] }
+object RiverBoulder(1.8, 7) { translate [0.8, 0, 24.0] }
+
+// Where the middle of the bed lies, along it: the line the banks' function wanders about, in meters.
+function RiverMiddle(z) -> number {
+    return 2.2 * sin(z / 18) + 1.2 * sin(z / 7.3 + 1)
+}
+
+// Rock showing through the banks half way up, where the river cut down to it.
+object RiverBoulder(2.6, 8) { translate [RiverMiddle(6.5) - 8.0, 0.5, 6.5] }
+object RiverBoulder(3.2, 9) { translate [RiverMiddle(12) + 8.1, 0.6, 12.0] }
+object RiverBoulder(2.2, 10) { translate [RiverMiddle(20) - 7.7, 0.7, 20.0] }
+object RiverBoulder(2.8, 11) { translate [RiverMiddle(2.5) + 7.7, 0.4, 2.5] }
+
+// Dry grass along the tops of the banks, dropped onto them and kept above the cut.
+LeftBank = path { move to -24, -8  line to -8, -8  line to -8, 55  line to -24, 55  close }
+RightBank = path { move to 8, -8  line to 24, -8  line to 24, 55  line to 8, 55  close }
+
+object Grass(LeftBank, 'autumn', 1, 0.4, 0.8) { over 'banks' tilted  above 2.7 }
+object Grass(RightBank, 'autumn', 2, 0.4, 0.8) { over 'banks' tilted  above 2.7 }

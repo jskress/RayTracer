@@ -214,6 +214,7 @@ public abstract class Pigment
     public Color GetTransformedColorFor(Point point)
     {
         Point patternPoint = InverseTransform * point;
+        using Bearing.Scope _ = Bearing.Into(InverseTransform);
 
         return GetColorFor(patternPoint);
     }
@@ -288,6 +289,8 @@ public abstract class Pigment
     /// <returns>The appropriate color for that patch.</returns>
     public Color GetTransformedColorFor(Point point, Footprint footprint)
     {
+        using Bearing.Scope _ = Bearing.Into(InverseTransform);
+
         return GetColorFor(InverseTransform * point, footprint.TransformedBy(InverseTransform));
     }
 
@@ -313,6 +316,13 @@ public abstract class Pigment
     public virtual bool SeesTheSurroundings => false;
 
     /// <summary>
+    /// This property reports whether this pigment's color depends on which way the surface faces where it is asked
+    /// about -- whether it holds a triplanar image anywhere -- and so must be handed a <see cref="Bearing"/>.  Nearly
+    /// every pigment does not, and is never asked any differently.
+    /// </summary>
+    public virtual bool SeesTheFacing => false;
+
+    /// <summary>
     /// This method accepts a point in the pigment's own space, how much of the surface the ray covers,
     /// and the directions the surface is being shaded between, and produces the color.
     /// </summary>
@@ -328,6 +338,8 @@ public abstract class Pigment
                 ? GetTransformedColorFor(point)
                 : GetTransformedColorFor(point, footprint);
         }
+
+        using Bearing.Scope _ = Bearing.Into(InverseTransform);
 
         return GetColorFor(
             InverseTransform * point,
