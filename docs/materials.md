@@ -964,6 +964,11 @@ sinks.
 normal image 'tiles-height.png' { depth 0.4 }
 ```
 
+Naming no mapping, a picture roughening a surface is laid by that surface's shape, as an
+[image pigment](pigments-and-patterns.md#image-pigments) is: flat on a cube or a plane, round a ball, and on
+a height field as the field lays its heights, so a picture of a terrain's bumps lands on the heights it was
+drawn for.  Until 2026-11-02 one naming no mapping was laid flat whatever it roughened.
+
 `depth` means what it means for any pattern: white stands an eighth of the depth above black, in the
 units the picture is laid in.  A picture's slope is taken a pixel either side of each place, along the
 picture's own rows and columns: between its pixels a picture is read along straight lines, and its
@@ -981,7 +986,8 @@ tilts a surface by one directly.
 normal map 'tiles-normal.png' { }
 ```
 
-It takes a mapping as an image pigment does, and is read in the frame the picture is laid in there —
+It takes a mapping as an image pigment does — naming none, it is laid by the surface's shape — and is read
+in the frame the picture is laid in there —
 the way across the picture, the way up it and the way the surface faces — found from how the picture
 lies, so it is right flat on a floor, round a ball or over a height field's hills.  A normal map is
 drawn one of two ways, its green pointing up the picture, OpenGL's way, or down it, DirectX's; this
@@ -993,6 +999,17 @@ normal map 'tiles-normal-dx.png' directx { depth 0.6 }
 
 `depth` scales how far across the surface the map tilts it: 1, the default, is the map as drawn.
 Transforms in the braces place the picture, as they place a pattern.
+
+A normal map, or a picture's bumps, may be laid [`triplanar` or `shuffled`](pigments-and-patterns.md#laid-by-the-way-a-surface-faces)
+as its color picture is.  Laid triplanar, each projection tilts the normal in the frame it lies in on that
+face, and the tilts are blended — so the bumps stand out of every face of a boulder alike.  Shuffled,
+each tile tilts it in its own frame, turned as the tile is.  Laid alike on one surface, a color picture
+and its normal map are shuffled alike, tile for tile, so every pebble keeps its own bumps:
+
+```
+pigment image 'pebbles.png' planar shuffled turned 180 { scale 1.2 }
+normal map 'pebbles-normal.png' planar shuffled turned 180 { scale 1.2 }
+```
 
 ### Blending Materials
 

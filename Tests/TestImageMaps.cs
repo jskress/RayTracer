@@ -282,6 +282,84 @@ public class TestImageMaps
     }
 
     /// <summary>
+    /// A normal map, or a picture's bumps, naming no mapping is laid by the shape of the surface it roughens, as an
+    /// image pigment is: round a ball, and on a height field as the field lays its heights.  Until 2026-11-02 the
+    /// surface being roughened was never the picture's wearer, and every one was laid planar.
+    /// </summary>
+    [TestMethod]
+    public void TestAPictureNamingNoMappingRoughensASurfaceByItsShape()
+    {
+        string map = Picture(16, 8, (x, y) => new Color(
+            0.5 + 0.4 * Math.Sin(2 * Math.PI * x / 16), 0.5 + 0.4 * Math.Cos(2 * Math.PI * y / 8), 0.85));
+        Func<ImageMapType?, Sphere> ball = mapping => new Sphere
+        {
+            Material = new Material { SurfaceNormal = new SurfaceNormal { NormalMap = PatternOf(map, mapping) } }
+        };
+        Sphere unmapped = ball(null), spherical = ball(ImageMapType.Spherical), planar = ball(ImageMapType.Planar);
+        int places = 0, likePlanar = 0;
+
+        for (int index = 0; index < 40; index++)
+        {
+            Point point = Point.Zero + new Vector(Math.Sin(index * 1.3), Math.Cos(index * 0.7), Math.Sin(index * 0.9 + 1)).Unit;
+            Vector normal = unmapped.NormalAt(point, null);
+
+            Assert.IsTrue(normal.Matches(spherical.NormalAt(point, null)), $"laid round the ball at {point}");
+
+            places++;
+
+            if (normal.Matches(planar.NormalAt(point, null)))
+                likePlanar++;
+        }
+
+        Assert.IsTrue(likePlanar < places / 4, $"{likePlanar} of {places} places were roughened as a planar map would");
+
+        // A height field's bumps lie on its heights, texel for texel, which a planar map puts half a texel off.
+        const int Columns = 7, Rows = 5;
+        string heights = Picture(Columns, Rows, (x, y) => Gray(((x * 37 + y * 101) % 64 + 16) / 255.0));
+        string bumps = Picture(Columns, Rows, (x, y) => Gray((x * 53 + y * 29) % 7 / 6.0));
+        HeightField field = new ()
+        {
+            ImageReference = new ImageReference { ImageName = heights, SourceDirectory = _directory }, Closed = false
+        };
+        Material unmappedBumps = new () { SurfaceNormal = new SurfaceNormal { Pattern = PatternOf(bumps, null) } };
+        Material fieldBumps = new ()
+        {
+            SurfaceNormal = new SurfaceNormal { Pattern = PatternOf(bumps, ImageMapType.Field) }
+        };
+        Material planarBumps = new ()
+        {
+            SurfaceNormal = new SurfaceNormal { Pattern = PatternOf(bumps, ImageMapType.Planar) }
+        };
+        int triangles = 0, offTheHeights = 0;
+
+        field.PrepareForRendering();
+
+        foreach (Triangle triangle in field.Surfaces.OfType<Triangle>())
+        {
+            Point middle = new (
+                (triangle.Point1.X + triangle.Point2.X + triangle.Point3.X) / 3,
+                (triangle.Point1.Y + triangle.Point2.Y + triangle.Point3.Y) / 3,
+                (triangle.Point1.Z + triangle.Point2.Z + triangle.Point3.Z) / 3);
+
+            triangle.Material = unmappedBumps;
+
+            Vector normal = triangle.NormalAt(middle, null);
+
+            triangle.Material = fieldBumps;
+
+            Assert.IsTrue(normal.Matches(triangle.NormalAt(middle, null)), $"laid on the heights at {middle}");
+
+            triangle.Material = planarBumps;
+            triangles++;
+
+            if (!normal.Matches(triangle.NormalAt(middle, null)))
+                offTheHeights++;
+        }
+
+        Assert.IsTrue(offTheHeights > triangles / 2, $"a planar map differed at only {offTheHeights} of {triangles}");
+    }
+
+    /// <summary>
     /// This helper returns a hit on a floor wearing the given material, from straight above the given place.
     /// </summary>
     private static Intersection HitOn(Material material, double x, double z)

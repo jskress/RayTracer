@@ -100,6 +100,11 @@ public class MottledPigment : Pigment
     public override bool SeesTheSurroundings => Pigment.SeesTheSurroundings;
 
     /// <summary>
+    /// This property reports whether the pigment mottled is laid by which way the surface faces.
+    /// </summary>
+    public override bool SeesTheFacing => Pigment.SeesTheFacing;
+
+    /// <summary>
     /// This method mottles the pigment's color, the pigment told the directions the surface is being
     /// shaded between.
     /// </summary>

@@ -2,6 +2,7 @@ using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Patterns;
+using RayTracer.Pigments;
 
 namespace RayTracer.Core;
 
@@ -79,6 +80,12 @@ public class SurfaceNormal
     public bool ReadsAPicture => NormalMap is not null || Pattern is ImagePattern;
 
     /// <summary>
+    /// This property reports whether the picture the surface is roughened by is laid by which way the surface faces,
+    /// and so must be handed a <see cref="Bearing"/>.
+    /// </summary>
+    public bool SeesTheFacing => (NormalMap ?? Pattern)?.SeesTheFacing ?? false;
+
+    /// <summary>
     /// This property holds the transform applied to a point before the pattern is asked about it,
     /// which is how a scene scales and turns the roughening without disturbing the shape or the
     /// coloring.  It is the pigment's arrangement exactly, and deliberately so: the two are
@@ -126,6 +133,12 @@ public class SurfaceNormal
     /// <returns>The tilted normal.</returns>
     public Vector PerturbAt(Vector normal, Point point, Footprint patch = null)
     {
+        // A picture laid by the way the surface faces, asked about with no surface to go by, goes by the normal
+        // it is handed, unstretched.
+        using Bearing.Scope own = SeesTheFacing && Bearing.Current is null
+            ? Bearing.Held(Bearing.Unstretched(normal))
+            : default;
+
         if (NormalMap is not null)
             return MappedAt(normal, point, patch);
 
@@ -133,6 +146,7 @@ public class SurfaceNormal
             return normal;
 
         Point patternPoint = _inverseTransform.Value * point;
+        using Bearing.Scope _ = Bearing.Into(_inverseTransform.Value);
         Vector gradient = Pattern.SlopeAt(patternPoint, patch?.TransformedBy(_inverseTransform.Value)) ??
                           GradientAt(patternPoint);
 
@@ -201,6 +215,9 @@ public class SurfaceNormal
     {
         Point patternPoint = _inverseTransform.Value * point;
 
+        if (NormalMap.IsSpread)
+            return SpreadMappedAt(normal, patternPoint, patch?.TransformedBy(_inverseTransform.Value));
+
         if (NormalMap.RatesAt(patternPoint) is not var (across, down))
             return normal;
 
@@ -210,23 +227,74 @@ public class SurfaceNormal
         if (color.Alpha <= 0)
             return normal;
 
+        Vector tilted = TiltedBy(color, across, down, (_toPattern.Value * normal).Unit);
+
+        return tilted is null || tilted.Magnitude.Near(0) ? normal : (_toSurface.Value * tilted).Unit;
+    }
+
+    /// <summary>
+    /// This method tilts the given normal by a normal map read more than once at a place -- laid triplanar, or
+    /// shuffled: each reading tilts the normal in the frame its own projection or tile is laid in there, and the
+    /// tilted normals are blended as the readings count.  Blending the tilts in the pattern's space rather than the
+    /// colors in the picture's is what keeps a triplanar map's bumps standing out of the surface on every face.
+    /// </summary>
+    /// <param name="normal">The surface's own normal, in surface space.</param>
+    /// <param name="point">The point being shaded, in the pattern's space.</param>
+    /// <param name="patch">The patch the ray covers there, in the pattern's space, if any.</param>
+    /// <returns>The tilted normal, in surface space.</returns>
+    private Vector SpreadMappedAt(Vector normal, Point point, Footprint patch)
+    {
+        using Bearing.Scope _ = Bearing.Into(_inverseTransform.Value);
+        Span<ImageTap> taps = stackalloc ImageTap[ImageTaps.Most];
+        int count = NormalMap.Gather(taps, point);
         Vector patternNormal = (_toPattern.Value * normal).Unit;
+        double x = 0, y = 0, z = 0;
+
+        for (int index = 0; index < count; index++)
+        {
+            ImageTap tap = taps[index];
+            Color color = NormalMap.ColorAt(tap, patch);
+
+            if (color.Alpha <= 0 || TiltedBy(color, tap.Across, tap.Down, patternNormal) is not { } tilted ||
+                tilted.Magnitude.Near(0))
+                continue;
+
+            tilted = tilted.Unit * (tap.Projection * tap.Tile);
+            x += tilted.X;
+            y += tilted.Y;
+            z += tilted.Z;
+        }
+
+        Vector blended = new (x, y, z);
+
+        return blended.Magnitude.Near(0) ? normal : (_toSurface.Value * blended).Unit;
+    }
+
+    /// <summary>
+    /// This method returns a normal tilted by one color of a normal map, in the frame the picture is laid in where it
+    /// was read: the way across it and the way up it, each laid flat on the surface, and the way the surface faces.
+    /// </summary>
+    /// <param name="color">The normal map's color.</param>
+    /// <param name="across">How fast the reading moves across the picture along each axis, in the pattern's space.</param>
+    /// <param name="down">How fast it moves down the picture.</param>
+    /// <param name="patternNormal">The surface's normal in the pattern's space, as a unit.</param>
+    /// <returns>The tilted normal, not made a unit, or <c>null</c> where the picture lies edge on.</returns>
+    private Vector TiltedBy(Color color, Vector across, Vector down, Vector patternNormal)
+    {
         Vector tangent = across - patternNormal * across.Dot(patternNormal);
         Vector bitangent = down - patternNormal * down.Dot(patternNormal);
 
         if (tangent.Magnitude.Near(0) || bitangent.Magnitude.Near(0))
-            return normal;
+            return null;
 
         tangent = tangent.Unit;
 
         // A picture's rows are counted down it, and OpenGL's green points up it.
         bitangent = (bitangent - tangent * bitangent.Dot(tangent)).Unit * (GreenDown ? 1 : -1);
 
-        Vector tilted = tangent * ((color.Red * 2 - 1) * Depth) +
-                        bitangent * ((color.Green * 2 - 1) * Depth) +
-                        patternNormal * (color.Blue * 2 - 1);
-
-        return tilted.Magnitude.Near(0) ? normal : (_toSurface.Value * tilted).Unit;
+        return tangent * ((color.Red * 2 - 1) * Depth) +
+               bitangent * ((color.Green * 2 - 1) * Depth) +
+               patternNormal * (color.Blue * 2 - 1);
     }
 
     /// <summary>

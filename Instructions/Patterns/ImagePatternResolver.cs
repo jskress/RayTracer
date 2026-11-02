@@ -1,5 +1,6 @@
 using RayTracer.General;
 using RayTracer.ImageIO;
+using RayTracer.Instructions.Pigments;
 using RayTracer.Patterns;
 using RayTracer.Pigments;
 
@@ -31,6 +32,11 @@ public class ImagePatternResolver : PatternResolver<ImagePattern>
     public ImageChannel Channel { get; init; }
 
     /// <summary>
+    /// This property holds the resolver for how the picture is laid besides its map, if anything was said of it.
+    /// </summary>
+    public ImageLayingResolver LayingResolver { get; init; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a pattern.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -42,6 +48,9 @@ public class ImagePatternResolver : PatternResolver<ImagePattern>
         value.MapType = MapType;
         value.Once = Once;
         value.Channel = Channel;
+
+        if (LayingResolver is not null)
+            (value.Blend, value.Shuffle) = LayingResolver.Resolve(context, variables);
 
         base.SetProperties(context, variables, value);
 

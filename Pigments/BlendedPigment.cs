@@ -94,6 +94,11 @@ public class BlendedPigment : Pigment
     public override bool SeesTheSurroundings => Pigments.Any(pigment => pigment.SeesTheSurroundings);
 
     /// <summary>
+    /// This property reports whether any of the pigments is laid by which way the surface faces.
+    /// </summary>
+    public override bool SeesTheFacing => Pigments.Any(pigment => pigment.SeesTheFacing);
+
+    /// <summary>
     /// This method blends the pigments, each told the directions the surface is being shaded between.
     /// </summary>
     /// <param name="point">The point, in the pigment's own space.</param>

@@ -30,6 +30,11 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
     public Resolver<double> BrightnessResolver { get; init; }
 
     /// <summary>
+    /// This property holds the resolver for how the image is laid besides its map, if anything was said of it.
+    /// </summary>
+    public ImageLayingResolver LayingResolver { get; init; }
+
+    /// <summary>
     /// This method is used to execute the resolver to produce a value.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -44,6 +49,10 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
         };
 
         BrightnessResolver.AssignTo(pigment, target => target.Brightness, context, variables);
+
+        if (LayingResolver is not null)
+            (pigment.Blend, pigment.Shuffle) = LayingResolver.Resolve(context, variables);
+
         SetProperties(context, variables, pigment);
         pigment.Load(context);
 

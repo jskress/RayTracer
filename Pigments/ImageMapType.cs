@@ -35,7 +35,14 @@ public enum ImageMapType
     /// texel's middle half a texel in from its corner instead, which set a picture painted for a terrain half
     /// a texel off the heights it was painted for, and stretched it by a texel over the whole.
     /// </summary>
-    Field
+    Field,
+
+    /// <summary>
+    /// This entry notes a triplanar image map: the picture laid flat square to each axis and blended by the way the
+    /// surface faces, at the world's size.  It is read through <see cref="ImageTaps"/>, never placed by
+    /// <see cref="ImageMapTypeExtensions.GetTexelLocationFor"/>, since no one place in the picture is what it shows.
+    /// </summary>
+    Triplanar
 }
 
 /// <summary>
@@ -102,6 +109,7 @@ public static class ImageMapTypeExtensions
             ImageMapType.Toroidal => (TextureWrap.Repeat, TextureWrap.Repeat),
             // A height field stands on its image once, and its walls go down from its edges.
             ImageMapType.Field => (TextureWrap.Clamp, TextureWrap.Clamp),
+            ImageMapType.Triplanar => (TextureWrap.Repeat, TextureWrap.Repeat),
             _ => throw new ArgumentOutOfRangeException(nameof(imageMapType), imageMapType, null)
         };
     }

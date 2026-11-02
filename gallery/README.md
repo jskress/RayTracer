@@ -1688,9 +1688,17 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Terrain</b> &mdash; 5 images &middot; ground, drawn or described</summary>
+<summary><b>Terrain</b> &mdash; 6 images &middot; ground, drawn or described</summary>
 
 <table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/terrain/a-dry-riverbed.png">
+      <img alt="A Dry Riverbed" height="120" src="Local/terrain/a-dry-riverbed.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/terrain/a-dry-riverbed.igl">A Dry Riverbed</a>
+    </td>
+  </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/terrain/dunes.png">
       <img alt="Dunes" height="120" src="Local/terrain/dunes.png" width="160"/>

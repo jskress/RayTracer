@@ -77,7 +77,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `bilinear` | Surface: the warped quadrilateral four corners span, optionally shaded from corner normals. | [Surfaces](surfaces.md#bilinear-patch) |
 | `black` | Font weight: the heaviest.  (The color is `Black`, capitalized.) | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `blades` | Camera: how many blades its opening is made of, shaping what is out of focus and the rays of its glare. | [Cameras](cameras.md#blades) |
-| `blend` | Pigment: average several pigments together.  Material: `material blend <pattern>`, whole materials chosen and mixed by a pattern. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering), [Blending Materials](materials.md#blending-materials) |
+| `blend` | Pigment: average several pigments together.  Material: `material blend <pattern>`, whole materials chosen and mixed by a pattern.  Image map: `triplanar blend b`, how wide the turns between its projections are. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering), [Blending Materials](materials.md#blending-materials), [Laid by the way a surface faces](pigments-and-patterns.md#laid-by-the-way-a-surface-faces) |
 | `blob` | Surface: metaballs that melt together. | [Surfaces](surfaces.md#blob) |
 | `blue` | Image pattern: `channel blue`, the picture's blue alone. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `blur` | Camera: `blur samples`, rays per pixel for the lens. | [Cameras](cameras.md#depth-of-field) |
@@ -394,12 +394,13 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `shear` | Transform: slant one axis along another. | [Transforms](transforms.md#shear) |
 | `sheen` | Material: the soft shine of cloth toward a graze; `color` and `roughness` go in it. | [Cloth](materials.md#cloth) |
 | `shininess` | Finish: how tight the highlight is. | [Materials](materials.md#ambient-diffuse-and-specular) |
+| `shuffled` | Image map: after `planar` or `triplanar`, cut the picture into tiles each shifted (and turned) by an amount of its own, so that it never repeats. | [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat) |
 | `shutter` | Camera: how long the shutter is open, for motion blur. | [Cameras](cameras.md#motion-blur) |
 | `sides` | Parallelogram: its two edge vectors. | [Surfaces](surfaces.md#parallelogram) |
 | `since` | Swarm: when it began throwing, before nought for one already in full flow; a `burst` says `at` instead. | [Swarms](animation.md#swarms) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `sink` | Field: how far a dropped copy is sunk into the ground. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
-| `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's.  Image map: `shuffled size s`, how far apart its tiles stand. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar), [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat) |
 | `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`, and `by <pattern>` to set them by one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals.  Height field: shaded as the smooth surface it stands for.  Keys: `keys smooth` passes through every key without stopping. | [Surfaces](surfaces.md#triangle-and-smooth-triangle), [Height Field](advanced-surfaces.md#height-field), [Keys](animation.md#keys) |
@@ -469,6 +470,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `transparency` | Finish: how much light passes through. | [Materials](materials.md#transparency-and-interiors) |
 | `triangle` | Shape: a flat triangle (also a wave shape). | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `triangular` | Pattern: a six-color triangular tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `triplanar` | Image map: lay the picture flat square to each axis and blend the three by the way the surface faces, at the world's size. | [Laid by the way a surface faces](pigments-and-patterns.md#laid-by-the-way-a-surface-faces) |
 | `tropism` | L-system control or grown tree: the direction growth bends toward. | [Advanced Surfaces](advanced-surfaces.md#bending-with-tropism), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `true` | Boolean literal. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `tube` | Surface: a round tube of varying radius along a path. | [Advanced Surfaces](advanced-surfaces.md#tube) |
@@ -477,7 +479,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turbidity` | `physical sky`: how hazy the air is; 1 is clean air, 2-3 a clear day. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `turbulence` | Stirs a pattern with noise. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `turned` | Field: how far its copies may be turned about the up axis, the whole spread.  Camera: `blades n turned a`, how far the blades are turned.  Light: `profile … turned a`, how far a profile is turned about its straight down. | [Advanced Surfaces](advanced-surfaces.md#field), [Cameras](cameras.md#blades), [Light Profiles](lights.md#light-profiles) |
+| `turned` | Field: how far its copies may be turned about the up axis, the whole spread.  Camera: `blades n turned a`, how far the blades are turned.  Light: `profile … turned a`, how far a profile is turned about its straight down.  Image map: `shuffled turned a`, how far each tile may be turned either way. | [Advanced Surfaces](advanced-surfaces.md#field), [Cameras](cameras.md#blades), [Light Profiles](lights.md#light-profiles), [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `twig` | Grown tree: how thick the end of a twig is. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |

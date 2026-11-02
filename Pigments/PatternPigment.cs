@@ -159,6 +159,12 @@ public class PatternPigment : Pigment
         Pattern.SeesTheSurroundings || (PigmentSet?.SeesTheSurroundings ?? false);
 
     /// <summary>
+    /// This property reports whether the pattern or any of the pigments it picks among is laid by which way the
+    /// surface faces.
+    /// </summary>
+    public override bool SeesTheFacing => Pattern.SeesTheFacing || (PigmentSet?.SeesTheFacing ?? false);
+
+    /// <summary>
     /// This method produces the color at a point, told the directions the surface is being shaded
     /// between: the pattern is asked with them, and so is whatever it maps to.
     /// </summary>

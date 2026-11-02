@@ -82,6 +82,12 @@ public abstract class Pattern
     public virtual bool SeesTheSurroundings => false;
 
     /// <summary>
+    /// This property reports whether this pattern's value depends on which way the surface faces where it is asked
+    /// about -- a triplanar image -- and so must be handed a <see cref="Pigments.Bearing"/>.
+    /// </summary>
+    public virtual bool SeesTheFacing => false;
+
+    /// <summary>
     /// This method is the same, told how much of the surface one ray covers there.
     /// <para>
     /// It falls back on the point-sampled answer, which is right for every pattern whose own detail

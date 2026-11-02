@@ -1,6 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Core;
+using RayTracer.Pigments;
 
 namespace RayTracer.Geometry;
 
@@ -812,9 +813,22 @@ public abstract class Surface : NamedThing
         // coloring along with it.
         if (Material?.SurfaceNormal is { } roughening)
         {
-            normal = roughening.ReadsAPicture
-                ? roughening.PerturbAt(normal, surfacePoint, PatchAt(normal, intersection, timeIndex, portals))
-                : roughening.PerturbAt(normal, surfacePoint);
+            if (roughening.ReadsAPicture)
+            {
+                // A picture is worn by the surface it roughens, as a pigment is by the surface it colors: naming no
+                // mapping it is laid by this surface's shape, shuffled it is shuffled by this surface's seed, and
+                // triplanar it is laid by the way this surface faces.  Until 2026-11-02 the surface was the wearer
+                // of no picture here, so one naming no mapping was laid planar round a ball, and half a texel off a
+                // height field's heights.
+                using Pigment.WornScope _ = Pigment.WornBy(this);
+                using Bearing.Scope __ = roughening.SeesTheFacing
+                    ? Bearing.Held(Bearing.Of(this, normal, timeIndex, portals))
+                    : default;
+
+                normal = roughening.PerturbAt(normal, surfacePoint, PatchAt(normal, intersection, timeIndex, portals));
+            }
+            else
+                normal = roughening.PerturbAt(normal, surfacePoint);
         }
 
         return NormalToWorld(normal, timeIndex, portals);
