@@ -786,6 +786,16 @@ Both `at` and `sides` are required.
 Three points.  A plain `triangle` is flat; a `smooth triangle` additionally takes a normal at
 each corner and blends between them, so a mesh of them looks curved rather than faceted.
 
+A smooth triangle is still flat, though, and where the light grazes a mesh of them, a facet whose
+shading faces the light can be turned away from it itself.  A shadow ray leaving that facet would
+go straight into the mesh, and the edge of the light across a coarse ball would be a staircase of
+whole facets.  So every ray leaving a smooth triangle on the side its normals face (shadow rays,
+reflections, bounced light) sets off from about where the curved surface its normals describe would
+be, up to the plane each corner's normal stands square to (Hanika's "Hacking the Shadow
+Terminator").  The rise is only ever outward: a hollow, a triangle whose corners all face as it
+does, and the back of the mesh set rays off where they always did.  What it cannot change is the
+outline: the shadow a coarse mesh casts on other things is still the shape of its facets.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/triangleClause-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="images/surfaces/triangleClause.svg">

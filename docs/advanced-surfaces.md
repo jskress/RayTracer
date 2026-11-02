@@ -1819,7 +1819,10 @@ less than half the time.  Rugged terrain — the two island scenes — hides its
 never to ask.
 
 What `smooth` does **not** do is change the geometry: the silhouette against the sky, and the edge
-of every shadow, are still the mesh's own outline.  Those are what a finer grid still buys.
+of every shadow the ground casts, are still the mesh's own outline.  Those are what a finer grid
+still buys.  Where the light leaves a smooth slope, though, it follows the smooth surface: the
+triangles are [smooth triangles](surfaces.md#triangle-and-smooth-triangle), whose shadow rays set
+off from where that surface would be rather than from the flat cells.
 
 A height field cannot make an overhang or a cave: there is exactly one height for each point
 on the ground, because there is exactly one pixel.  That is the limit of the technique rather

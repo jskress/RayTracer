@@ -280,6 +280,17 @@ A closed `HeightField` has walls down to a floor and an underside there (`BaseUn
 ground below nought, a hundredth of its height under its lowest point.  Until 2026-11-01 it was always nought, a lid
 over any ground below it: a lake bed showed through ripples at the water line, and Tatooine's wheel tracks, cut 3 cm
 into a disc of sand whose top is 2 mm above nought (the desert dipped 6 cm under it), were 2 mm deep, thin lines.
+A `SmoothTriangle` (an OBJ with normals, a `smooth` height field) sets every ray leaving it on the side its normals
+face off from about where its round surface would be (`Surface.RiseAt`, added to `Intersection.LitPoint` -- so
+`MirrorPoint` too; Hanika 2021, "Hacking the Shadow Terminator": the place carried up onto each corner's tangent plane,
+weighed by its barycentric, only ever up, never along a corner's normal facing behind the flat triangle).  Set off from
+the flat facet, a shadow ray at a graze went into the mesh and the edge of the light across a coarse ball was a
+staircase of facets (`TestACoarseBallIsLitWhereverItFacesTheLight`: 496 of 19548 lit-facing places dark on a 12-around
+ball; with the light on the mesh's symmetry no facet straddles the edge and the test passed without the fix).  It is
+worked out IN THE WORLD (corner offsets by `DirectionToWorld`, normals by `NormalToWorld`): a stretched height field is
+steep in its own space (the dunes 54x), a crest's normal lay nearly flat there, a place risen along it slid under the
+slope beside it, and the crests were edged with black.  The rounding is Phong tessellation's: on a ball it lies about
+as far outside as the flat facet lies inside.
 A CSG of many things written as one (`union { a b c ... }`) is a chain of links (`CsgSurface.IsChainLink`), each
 holding all before it on its left; the top link lists the whole chain ONCE (`ListTheChain`: which thing written each
 surface stands in, shared by every link, a link's left being the things before its place), where per-link side

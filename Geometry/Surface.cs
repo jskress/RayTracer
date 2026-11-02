@@ -556,6 +556,15 @@ public abstract class Surface : NamedThing
     internal virtual double SelfOffsetAt(int timeIndex, Portals portals) => DoubleExtensions.Epsilon * SelfOffsetScale;
 
     /// <summary>
+    /// This method returns how far above the place a ray met it a ray leaving this surface, on the side it faces,
+    /// should set off, in the world and over and above the usual nudge: nothing, unless the surface is shaded as
+    /// something rounder than it is (see <see cref="SmoothTriangle.RiseAt"/>).
+    /// </summary>
+    /// <param name="intersection">Where the ray met it.</param>
+    /// <returns>How far to rise, or <c>null</c> for not at all.</returns>
+    internal virtual Vector RiseAt(Intersection intersection) => null;
+
+    /// <summary>
     /// This method returns how much this surface's own space is stretched in the world, at its most: the longest
     /// of its three axes carried out to the world, through its parents and the instances it was found through.
     /// </summary>
