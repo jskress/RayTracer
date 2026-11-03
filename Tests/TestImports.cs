@@ -366,6 +366,46 @@ public class TestImports
             """));
     }
 
+    /// <summary>
+    /// A mistake in the scene after an import is reported where it is, as what it is.  Every file read shared one
+    /// record of the furthest place reading had failed, so the library's last look ahead -- further down its own
+    /// file than the scene's mistake lies down the scene -- was reported in its place: past the scene's end, the
+    /// report fell over looking for a line the scene does not have; within it, it named a line of the scene with
+    /// nothing wrong and said what the library had been expecting there.
+    /// </summary>
+    [TestMethod]
+    public void TestAMistakeAfterAnImportIsReportedWhereItIs()
+    {
+        // A library longer than the scene, each line a sum, so reading it last looks ahead on its last line.
+        Write("long.igl", string.Join("\n", Enumerable.Range(0, 40).Select(n => $"Long{n} = {n} + 1")));
+
+        string past = ErrorFrom("""
+            import 'long' { Long39 }
+            cylinder { closed }
+            """);
+
+        Assert.IsNotNull(past, "the mistake was not reported");
+        StringAssert.Contains(past, "scene.igl: [4:12]");
+        StringAssert.Contains(past, "a keyword of \"open\"");
+        Assert.IsFalse(past.Contains("operator"), $"the library's expectations were reported for the scene's mistake: {past}");
+
+        // A library whose last line lies within the scene, below its mistake.
+        Write("short.igl", string.Join("\n", Enumerable.Range(0, 7).Select(n => $"Short{n} = {n} + 1")));
+
+        string within = ErrorFrom("""
+            import 'short' { Short6 }
+            cylinder { closed }
+            sphere { }
+            sphere { }
+            sphere { }
+            sphere { }
+            """);
+
+        Assert.IsNotNull(within, "the mistake was not reported");
+        StringAssert.Contains(within, "scene.igl: [4:12]");
+        Assert.IsFalse(within.Contains("operator"), $"the library's expectations were reported for the scene's mistake: {within}");
+    }
+
     [TestMethod]
     public void TestSeveralLibrariesMayBeImported()
     {

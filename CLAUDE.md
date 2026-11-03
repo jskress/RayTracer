@@ -64,7 +64,10 @@ method in the relevant `LanguageParser.<Topic>.cs` partial file, and register it
 
 `include '<file>'` is handled by pushing/popping a stack of `(fileName, LexicalParser)`
 entries, so multiple `.igl` files can be composed; a file already being read is refused (an
-include cycle).  `import 'library' { Names }` reads a library (definitions and imports only, see
+include cycle).  Each entry's parser has its OWN Lex `FailureTracker` (`CurrentFailureTracker`), which a message about
+unexpected input is built from: shared until 2026-11-02, a library read to its end left its furthest failure standing
+for the scene's mistake -- the library's expectations, at a line of the library, reported against the scene (and past
+the scene's end, `ShowError` fell over with an IndexOutOfRangeException).  `import 'library' { Names }` reads a library (definitions and imports only, see
 `InstructionContext.HoldsOnlyDefinitions`) from `~/.rayTracer/Libraries`.  Values go over whole; functions and
 primitives only when asked for.  An imported value is a recipe made among the SCENE's names (so a scene may add to
 it), so every call written in a library -- a primitive call of any kind, a function call -- is stamped with the
