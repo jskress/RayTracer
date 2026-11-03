@@ -92,7 +92,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `box` | Body: `shape box`, striking the scene as its own box rather than as a ball. | [Bodies](animation.md#bodies) |
 | `boxed` | Pattern: nested square boxes. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `bozo` | Pattern: smooth value noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
-| `brick` | Pattern: running-bond brickwork. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `brick` | Pattern: running-bond brickwork, its first color the mortar's and its second the bricks'. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `brightness` | Light: what its color or temperature is multiplied by; `physical sky`: what the whole sky and its sun are multiplied by; an image pigment's `{ brightness b }`: what its colors are multiplied by. | [Lights](lights.md#color-temperature), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky), [Image Pigments](pigments-and-patterns.md#image-pigments) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
 | `burst` | Swarm: `burst <count> [at <time>] [over <time>]`, its copies thrown all at once, or evenly over a while, rather than in a steady flow. | [Swarms](animation.md#swarms) |

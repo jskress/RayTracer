@@ -47,7 +47,7 @@ That "either" is the important division, and it decides how you write a pattern.
 
 #### Discrete patterns
 
-These pick among a fixed number of sub-patterns (yes, patterns can be nexted).  You give
+These pick among a fixed number of sub-patterns (yes, patterns can be nested).  You give
 exactly as many as the pattern needs, separated by commas:
 
 | Pattern | Colors |
@@ -103,9 +103,11 @@ have nothing to do with one another.  The scene is
 pigment brick {
     brick size [0.5, 0.25, 0.25]
     mortar size 0.04
-    color [0.7, 0.3, 0.25], Gray70
+    Gray70, color [0.7, 0.3, 0.25]
 }
 ```
+
+**The first color is the mortar's and the second the bricks'** — gray joints round red bricks, here.
 
 #### Continuous patterns
 

@@ -21,7 +21,7 @@ sphere {
     material { pigment brick {
             brick size [0.5, 0.25, 0.25]
             mortar size 0.04
-            color [0.7, 0.3, 0.25], Gray70
+            Gray70, color [0.7, 0.3, 0.25]
             scale 0.55
         }  specular 0.3 }
     translate [-3, 0, 0]
