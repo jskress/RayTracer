@@ -73,7 +73,7 @@ public partial class LanguageParser
         logicalNot: _operator("!")
         conditional: _operator("?")
 
-        _keywords: 'absorption', 'accuracy', 'agate', 'agx', 'alignment', 'along', 'ambient', 'amplitude', 'and',
+        _keywords: 'absorption', 'accuracy', 'agate', 'agx', 'alignment', 'all', 'along', 'ambient', 'amplitude', 'and',
             'above', 'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'antialiasing', 'apart', 'are', 'around', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blades', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
@@ -1465,6 +1465,11 @@ public partial class LanguageParser
             cycle | { turned > _expression } |
             { sized > _expression > { to > _expression }{?} } |
             { over > _expression ?? 'Expecting the name of the ground to drop onto here.' } |
+            {
+                all > over ?? 'Expecting "over" to follow "all" here.' >
+                _expression ?? 'Expecting the name of the surface to cover here.'
+            } |
+            upright | { facing > _expression > { by > _expression }{?} } |
             tilted | { above > _expression } | { below > _expression } |
             { steepest > _expression } | { sink > _expression } |
             surfaceEntryClause

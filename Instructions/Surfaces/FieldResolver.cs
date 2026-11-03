@@ -1,3 +1,4 @@
+using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
@@ -100,6 +101,26 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     public Resolver<string> OverResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the name of the surface the copies cover all over.
+    /// </summary>
+    public Resolver<string> AllOverResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for whether a copy covering a surface all over stands upright.
+    /// </summary>
+    public Resolver<bool> UprightResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the way the surface a field covers all over must face.
+    /// </summary>
+    public Resolver<Vector> FacingResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how strongly copies favor that facing.
+    /// </summary>
+    public Resolver<double> FacingPowerResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for whether a dropped copy leans with the ground.
     /// </summary>
     public Resolver<bool> TiltedResolver { get; set; }
@@ -172,9 +193,15 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
         PickedByResolver.AssignTo(value, target => target.PickedBy, context, variables);
         SizedByResolver.AssignTo(value, target => target.SizedBy, context, variables);
         OverResolver.AssignTo(value, target => target.Over, context, variables);
+        AllOverResolver.AssignTo(value, target => target.AllOver, context, variables);
+        UprightResolver.AssignTo(value, target => target.Upright, context, variables);
+        FacingResolver.AssignTo(value, target => target.Facing, context, variables);
+        FacingPowerResolver.AssignTo(value, target => target.FacingPower, context, variables);
         TiltedResolver.AssignTo(value, target => target.Tilted, context, variables);
-        SteepestResolver.AssignTo(value, target => target.Steepest, context, variables);
         SinkResolver.AssignTo(value, target => target.Sink, context, variables);
+
+        if (SteepestResolver is not null)
+            value.Steepest = SteepestResolver.Resolve(context, variables);
 
         if (AboveResolver is not null)
             value.Above = AboveResolver.Resolve(context, variables);
@@ -249,8 +276,8 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     /// <returns>The text of an error message or <c>null</c>.</returns>
     public string Validate()
     {
-        if (OutlineResolver is null && AlongResolver is null)
-            return "Either the \"within\" or the \"along\" property is required.";
+        if (OutlineResolver is null && AlongResolver is null && AllOverResolver is null)
+            return "One of the \"within\", \"along\" or \"all over\" properties is required.";
 
         return ChoiceResolvers.Count == 0 ? "The \"of\" property is required." : null;
     }

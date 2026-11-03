@@ -301,7 +301,7 @@ The complete scene is
 ### Field
 
 An area of the X/Z plane, given by a 2D outline, filled with copies of one surface — or a line in it,
-given by a path, laid with them.
+given by a path, laid with them, or the whole of another surface covered with them.
 
 ```
 Blade = ribbon { width 0.03 at [0, 0, 0]  width 0.002 at [0.16, 0.36, 0] }
@@ -337,8 +337,9 @@ that is one thing in many places over an area, and none of it needing a loop.
 | --- | --- |
 | `within` | The outline to fill, in the X/Z plane. |
 | `along` | A path to lay the copies along instead, in the X/Z plane; see [Laying a field along a path](#laying-a-field-along-a-path). |
+| `all over '<name>'` | Cover the whole of the surface of that name standing beside the field instead, every face of it; see [Covering a surface all over](#covering-a-surface-all-over). |
 | `of` | The surface to fill it with, by name or by a call of a primitive — or several, after commas, each with an optional `weight`.  A call may take a block after it, as a call anywhere may ([Things of Your Own](scene-files.md#things-of-your-own)): `of Tuft(2) { material Straw }`. |
-| `spacing` | How far apart the copies stand, before any jitter. |
+| `spacing` | How far apart the copies stand, before any jitter.  All over a surface, its area holds one copy for every square of this side. |
 | `jitter` | How far a copy may stray from the grid, as a fraction of the spacing. |
 | `turned` | How far each copy may be turned about the up axis: the whole spread, centered on the way it faces as made.  `turned 360` faces each any way at all. |
 | `sized` | `sized 0.8 to 1.2` stands each copy at a size from the first to the second, as a scale of it as made; `sized 2` stands all of them at that size.  `sized 0.8 to 1.2 by <pattern> { … }` sets each by a pattern rather than chance; a pattern needs both sizes, so it is refused after one alone. |
@@ -347,9 +348,11 @@ that is one thing in many places over an area, and none of it needing a loop.
 | `patches <pattern> { … }` | A pattern saying where the field stands anything, its value the chance; `from <a> to <b>` gives it an edge. |
 | `over '<name>'` | Drop every copy straight down onto the surface of that name standing beside the field. |
 | `tilted` | A dropped copy leans with the ground under it, rather than standing upright. |
-| `above`, `below` | The lowest and highest ground a dropped copy may stand on. |
-| `steepest` | The steepest ground a dropped copy may stand on, as an angle from level. |
-| `sink` | How far a dropped copy is sunk into the ground, along its own up. |
+| `upright` | A copy all over a surface stands upright, rather than out of the surface. |
+| `facing` | The way a surface covered all over must face for a copy to stand there: `facing vector [0, 1, 0]` keeps copies to what faces up, thinning toward the sides, and `by 3` to what faces nearly that way, as [hair](#hair)'s does. |
+| `above`, `below` | The lowest and highest ground a copy may stand on, dropped or all over. |
+| `steepest` | The steepest ground a copy may stand on, as an angle from level: past 90, ground overhanging, which only a field all over meets. |
+| `sink` | How far a copy is sunk into the ground, dropped or all over, along its own up. |
 | `rows <n> apart <d>` | Along a path: lay that many rows side by side, that far apart, centered on it. |
 | `offset` | Along a path: how far to its left, as it is walked, the rows lie; to its right, if less than nought. |
 | `index in <name>` | Name each copy's number, and give each place its own surface rather than an instance of one shape.  The `in <name>` is not optional. |
@@ -503,6 +506,73 @@ transforms.
 
 The grid is laid out level, so ground that slopes away holds its copies a little further apart along
 its surface than level ground does — at thirty degrees, by about fifteen percent.
+
+#### Covering a surface all over
+
+A field dropped `over` the ground stands its copies wherever a straight drop from above lands.  `all
+over` covers the whole of a surface instead — every face of it, its sides and its underside as well as
+its top — with barnacles on a rock, studs on a ball, crystals lining a hollow:
+
+```
+object Boulder(1.2) { named 'rock' }
+
+field {
+    of Barnacle(1), Barnacle(2), Barnacle(3), Limpet weight 0.2
+    all over 'rock'
+    spacing 0.012
+    turned 360  sized 0.6 to 1.3
+    below 0.4
+}
+```
+
+![One stone covered three ways: pegs standing out of it, the same pegs upright, and crusts favoring its top](images/figures/adv-all-over.png)
+
+The same stone covered with pegs standing out of it, with the same pegs `upright`, and with flat crusts
+that favor its top, in patches.  The scene is
+[`docs/examples/advanced/all-over.igl`](examples/advanced/all-over.igl).
+
+**The copies are spread evenly over the surface's whole area**, as many as it holds at the spacing —
+one for every square of that side, as a grid holds — and none crowding another.  However the surface is
+made — a ball, a box stretched flat, a marched rock, a group of parts, a stone with a piece cut out of
+it — each part of it holds as many as its area does.  (The places are found by the straight lines
+[hair](#hair) finds its roots by, five times as many as are wanted, and the most crowded taken away
+until as many are left as the area holds: what is left lies as evenly as a jittered grid.)  So there is
+no `jitter`, and at most half a million copies.
+
+**Each copy stands out of the surface where it stands**, its up the way the surface faces there: a
+barnacle on a rock's side sticks out sideways and one under an overhang hangs down, each turned about
+its own up as `turned` says.  `upright` stands every copy upright instead, as mushrooms grow up out of
+a fallen log whichever way its bark faces.  Both sides of something thin are covered as fully as a thick
+thing's: the top and bottom of a plank do not crowd each other.  A sheet is covered on the side it
+faces.
+
+**What keeps copies where they belong is the same as for a dropped field, and one thing more.**
+`above` and `below` are heights in the space the field shares with the surface, so a tide line is a
+height beside the rock, not in it.  `steepest` is an angle from level, and past a right angle the
+ground overhangs: `steepest 90` keeps copies off everything that faces down.  `facing` is hair's,
+the chance a copy stands being how squarely the surface faces the way given, so moss can favor a
+stone's top and its shaded side:
+
+```
+field {
+    of MossCushion
+    all over 'rock'
+    spacing 0.03
+    facing vector [0, 1, 0.5] by 2
+    patches bozo { scale 0.3 } from 0.4 to 0.6
+}
+```
+
+`patches`, `picked by` and `sized … by` read their pattern where each copy stands, in the field's own
+space.  As in any field, what stands at a place belongs to the place: patches cutting copies away
+leave every other one where it was, as it was.
+
+**The surface has to stand beside the field, and have an end to it.**  It is covered once it has been
+placed itself, in the same group or both at the top of the scene, and a plane, going on forever, is
+refused.  Something with nothing in it, as a snow cap out of season is, holds nothing.  A field from a
+primitive covers what is handed to it by name: `primitive Barnacles(rock) -> field { return field { …
+all over rock } }`.  A field all over something cannot itself be placed against anything, as a dropped
+one cannot.
 
 #### Laying a field along a path
 

@@ -43,19 +43,31 @@ public partial class LanguageParser
     /// </summary>
     private LexicalParser CurrentParser => _entries.IsEmpty() ? null : _entries.Peek().Parser;
 
+    /// <summary>
+    /// This is a helper property for accessing the record of where reading the current file failed furthest along,
+    /// which a message about unexpected input is built from.
+    /// <para>
+    /// **Every file has its own**, as a file's place is a line and a column of its own.  Shared, a library read to
+    /// its end left its furthest failure -- further down the library than the scene's mistake lay down the scene --
+    /// standing for the scene's: the scene was told of a line it might not have, and what the library had been
+    /// expecting there.  As with <see cref="CurrentFileName"/>, the file just finished stands in for none.
+    /// </para>
+    /// </summary>
+    private FailureTracker CurrentFailureTracker =>
+        _entries.IsEmpty() ? _lastFailureTracker : _entries.Peek().Parser.FailureTracker;
+
     private readonly ParsingContext _context;
     private readonly Stack<Entry> _entries;
-    private readonly FailureTracker _failureTracker;
     private readonly ClauseDispatcher _dispatcher;
 
     private string _lastFileName;
+    private FailureTracker _lastFailureTracker;
 
     public LanguageParser(string fileName)
     {
         _dispatcher = CreateDispatcher();
         _entries = new Stack<Entry>();
         _context = new ParsingContext();
-        _failureTracker = new FailureTracker();
         _lastFileName = fileName;
 
         PushEntry(fileName);
@@ -109,9 +121,13 @@ public partial class LanguageParser
 
         Console.WriteLine($"Error: {exception.Message}");
 
-        if (line > 0)
+        string[] lines = line > 0 ? File.ReadAllLines(fileName) : [];
+
+        // A place the file does not have is said without the line it would have shown, rather than falling over
+        // looking for it.
+        if (line > 0 && line <= lines.Length)
         {
-            string source = File.ReadAllLines(fileName)[line - 1]
+            string source = lines[line - 1]
                 .Replace("\t", "    ");
             string location = exception.Token != null
                 ? $"{Path.GetFileName(fileName)}: [{line}:{column}] -> {exception.Token}"
@@ -136,7 +152,8 @@ public partial class LanguageParser
     /// <returns>The exception to throw; this method never returns normally.</returns>
     private TokenException CreateUnexpectedInputException(string fallbackMessage)
     {
-        string message = _failureTracker.BuildMessage();
+        FailureTracker tracker = CurrentFailureTracker;
+        string message = tracker?.BuildMessage();
 
         if (message == null)
         {
@@ -148,8 +165,8 @@ public partial class LanguageParser
 
         return new TokenException(message)
         {
-            Line = _failureTracker.Line,
-            Column = _failureTracker.Column
+            Line = tracker.Line,
+            Column = tracker.Column
         };
     }
 
@@ -347,7 +364,7 @@ public partial class LanguageParser
             .Replace("\t", "    ");
 
         parser.SetSource(text.AsReader());
-        parser.FailureTracker = _failureTracker;
+        parser.FailureTracker = new FailureTracker();
 
         _entries.Push(new Entry(fileName, parser));
     }
@@ -360,6 +377,8 @@ public partial class LanguageParser
     private string PopEntry()
     {
         Entry entry = _entries.Pop();
+
+        _lastFailureTracker = entry.Parser.FailureTracker;
 
         // Must do this for proper file closure.
         entry.Parser.Dispose();

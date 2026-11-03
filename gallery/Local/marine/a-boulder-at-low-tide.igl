@@ -1,0 +1,285 @@
+// A boulder on the shore at low tide, banded as the sea leaves a rock: limpets grazing the green slime at its
+// foot, barnacles packed over it as high as the water reaches, a black band of lichen where only the spray does,
+// and above that, dry, the orange rosettes of a lichen that wants the light.
+//
+// **Every animal and lichen on it is a field all over the rock.**  A field dropped `over` the ground stands
+// its copies wherever a drop from above lands, which on a boulder is its top and nothing else.  `all over
+// 'rock'` covers the whole of it instead -- its sides and its overhangs as well as its top -- each copy
+// standing out of the rock where it stands, spread as evenly as the spacing says and no two crowding, so
+// twelve thousand barnacles a centimeter apart cover the rock's flanks as they would a real one's.
+//
+// The bands are heights beside the rock, `above` and `below`, as the tide's are; the rock's own colors
+// are bands of the same heights, a material blend up its height.  The lichen favors the top, where the
+// light is, by `facing`, and grows in patches.
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.25
+    info {
+        title 'A Boulder at Low Tide'
+        author 'J. Stephen Kress'
+        description 'A boulder on the shore at low tide, banded with limpets, barnacles and lichen, each a field all over the rock.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'rocks' { Cobble }
+import 'water' { SeaWater }
+
+camera { location [1.78, 0.64, -2.16]  look at [0.0, 0.32, 0.1]  field of view 50 }
+
+background physical sky { sun elevation 28  sun azimuth 80  turbidity 3  brightness 3 }
+sky light { samples 24 }
+
+// -- The rock ---------------------------------------------------------------------------------------------------
+
+// Granite, as the rocks library mottles it.
+RockGrain = pigment granite with seed 7 {
+    [0.06, color [0.085, 0.082, 0.078],
+     0.16, color [0.135, 0.130, 0.122],
+     0.22, color [0.185, 0.178, 0.166],
+     0.30, color [0.255, 0.240, 0.215],
+     0.41, color [0.340, 0.318, 0.285]]
+    scale 0.35
+}
+
+// Dry stone above the spray.
+DryRock = material { pigment RockGrain  specular 0.03  shininess 9  brilliance 1.4 }
+
+// Where the tide reaches: the same stone darkened by the wet, and glossy with it.
+WetRock = material {
+    pigment granite with seed 7 {
+        [0.06, color [0.050, 0.044, 0.036],
+         0.22, color [0.092, 0.082, 0.068],
+         0.41, color [0.150, 0.136, 0.115]]
+        scale 0.35
+    }
+    roughness 0.32
+}
+
+// The tar-black crust of the lichen that lives where only the spray reaches.
+BlackLichen = material { pigment color [0.020, 0.020, 0.018]  specular 0.04  shininess 12 }
+
+// Green slime at the rock's foot, where the water stands longest.
+Slime = material {
+    pigment bozo {
+        turbulence 0.5
+        [0.3, color [0.026, 0.034, 0.014], 0.6, color [0.040, 0.058, 0.020], 0.8, color [0.060, 0.052, 0.030]]
+        scale 0.05
+    }
+    roughness 0.25
+}
+
+// A boulder in meters, its middle a third of a meter up and its foot in the sand, roughened by noise at three
+// scales.  Its bands are heights in the scene, since the rock is drawn where it stands: slime at the foot,
+// wet stone over the barnacles' height, the black band, then dry stone, each edge wandering a little.
+isosurface {
+    function {
+        sqrt(x * x / 0.90 + (y - 0.31) * (y - 0.31) / 0.36 + z * z / 0.64) - 1
+            - 0.36 * (noise(x * 1.6 + 3.1, y * 1.6 + 7.3, z * 1.6 + 11.7) - 0.5)
+            - 0.13 * (noise(x * 4.1 + 1.3, y * 4.1 + 2.9, z * 4.1 + 5.1) - 0.5)
+            - 0.05 * (noise(x * 11.3 + 8.2, y * 11.3 + 4.4, z * 11.3 + 6.6) - 0.5)
+            - 0.02 * (noise(x * 27.7 + 2.6, y * 27.7 + 9.1, z * 27.7 + 3.3) - 0.5)
+    }
+    bounded by [-1.4, -0.4, -1.2], [1.4, 1.2, 1.2]
+    material blend linear Y gradient {
+        turbulence { amplitude 0.10  octaves 4 }
+        [0.10, Slime, 0.14, WetRock, 0.46, WetRock, 0.50, BlackLichen, 0.56, BlackLichen, 0.63, DryRock]
+    }
+    named 'rock'
+}
+
+// -- What lives on it -------------------------------------------------------------------------------------------
+
+// An acorn barnacle: a low volcano of chalky plates a centimeter across, its opening shut against the air.
+primitive Barnacle(variant) -> group {
+    wide = 0.0045 + random(variant, 1) * 0.0022
+    tall = wide * (0.55 + random(variant, 2) * 0.3)
+    shade = 0.70 + random(variant, 3) * 0.24
+
+    return group {
+        lathe {
+            path {
+                move to 0, -0.0015
+                line to wide, -0.0015
+                quad wide * 0.80, tall * 0.62 to wide * 0.46, tall
+                line to wide * 0.36, tall * 0.94
+                line to wide * 0.26, tall * 0.62
+                line to 0, tall * 0.62
+                close
+            }
+            material {
+                pigment color [0.48 * shade, 0.45 * shade, 0.39 * shade]
+                normal wrinkles { depth 0.4  scale 0.0012 }
+                specular 0.05  shininess 8
+            }
+        }
+        // The plates that close it, gray, down inside the opening.
+        cylinder {
+            scale [wide * 0.28, tall * 0.05, wide * 0.28]
+            translate Y tall * 0.64
+            material { pigment color [0.12, 0.115, 0.11]  specular 0 }
+        }
+    }
+}
+
+// A limpet: a low ribbed cone three or four centimeters across, its peak a little forward of its middle, gray
+// and brown in rays from the peak.
+primitive Limpet(variant) -> group {
+    wide = 0.016 + random(variant, 1) * 0.006
+    tall = wide * (0.55 + random(variant, 2) * 0.2)
+
+    return group {
+        lathe {
+            path {
+                move to 0, -0.002
+                line to wide, -0.002
+                quad wide * 0.72, tall * 0.45 to wide * 0.10, tall * 0.97
+                quad wide * 0.03, tall to 0, tall
+                close
+            }
+            material {
+                pigment radial {
+                    turbulence { amplitude 0.15 }
+                    triangle wave
+                    frequency 18
+                    [0, color [0.22, 0.19, 0.15], 1, color [0.34, 0.31, 0.26]]
+                }
+                normal radial { triangle wave  frequency 18  depth 0.3 }
+                specular 0.12  shininess 14
+            }
+            scale [1, 1, 0.82]
+            translate X wide * 0.12
+        }
+    }
+}
+
+// A patch of the orange lichen that lives above the spray: a crust as thin as paint, a dozen overlapping lobes
+// of it spreading out from where it began, so no two patches have the same edge.
+primitive Crust(variant) -> group {
+    across = 0.008 + random(variant, 1) * 0.014
+    red = 0.40 + random(variant, 2) * 0.16
+    green = 0.13 + random(variant, 3) * 0.12
+
+    return group {
+        for lobe in [0, 11] {
+            sphere {
+                scale [across * (0.25 + random(variant, lobe, 4) * 0.35), 0.0007, across * (0.2 + random(variant, lobe, 5) * 0.3)]
+                rotate Y random(variant, lobe, 6) * 180
+                translate X across * random(variant, lobe, 7) * 0.75
+                rotate Y random(variant, lobe, 8) * 360
+            }
+        }
+        material { pigment color [red, green, 0.015]  specular 0 }
+    }
+}
+
+// The pale gray-green crust of another lichen, sharing the top with the orange one.
+primitive PaleCrust(variant) -> group {
+    across = 0.006 + random(variant, 1) * 0.01
+    shade = 0.26 + random(variant, 2) * 0.06
+
+    return group {
+        for lobe in [0, 8] {
+            sphere {
+                scale [across * (0.3 + random(variant, lobe, 4) * 0.3), 0.0006, across * (0.25 + random(variant, lobe, 5) * 0.3)]
+                rotate Y random(variant, lobe, 6) * 180
+                translate X across * random(variant, lobe, 7) * 0.7
+                rotate Y random(variant, lobe, 8) * 360
+            }
+        }
+        material { pigment color [shade, shade * 1.04, shade * 0.88]  specular 0 }
+    }
+}
+
+// Limpets on the slime at the foot, where they graze.
+field {
+    of Limpet(1), Limpet(2), Limpet(3), Limpet(4)
+    all over 'rock'
+    spacing 0.10
+    turned 360  sized 0.8 to 1.2
+    above 0.03  below 0.14
+}
+
+// Barnacles over the wet band, packed thickest low down and thinning toward the top of the tide.
+field {
+    of Barnacle(1), Barnacle(2), Barnacle(3), Barnacle(4), Barnacle(5), Barnacle(6)
+    all over 'rock'
+    spacing 0.0125
+    turned 360  sized 0.7 to 1.25
+    above 0.12  below 0.58
+    patches linear Y gradient { turbulence { amplitude 0.08  octaves 4 } } from 0.54 to 0.38
+    sink 0.0004
+}
+
+// The lichens on the dry top, in patches, most where it faces the sky: the orange where the gulls perch, the
+// pale one between.
+field {
+    of Crust(1), Crust(2), Crust(3), Crust(4), Crust(5), Crust(6)
+    all over 'rock'
+    spacing 0.016
+    turned 360  sized 0.6 to 1.5
+    above 0.60
+    facing vector [0, 1, 0] by 1.5
+    patches bozo with seed 3 { scale 0.10 } from 0.36 to 0.56
+}
+
+field {
+    of PaleCrust(1), PaleCrust(2), PaleCrust(3), PaleCrust(4)
+    all over 'rock'
+    spacing 0.03
+    turned 360  sized 0.7 to 1.3
+    above 0.58
+    facing vector [0, 1, 0]
+    patches bozo with seed 3 { scale 0.10 } from 0.55 to 0.3
+}
+
+// -- The shore --------------------------------------------------------------------------------------------------
+
+// Wet sand, falling gently away toward the water and rippled where the tide ran over it: crests a hand
+// apart, sharp, with broad rounded troughs between them (a scallop upside down), the troughs darker where
+// the water lies longest.  The ripples are laid in space a crest apart so the stirring moves each by less
+// than its spacing: stirred in meters and spaced by a frequency, they wandered several crests at a time
+// and looped back on themselves like wood grain.  Both stirrings share a seed, so the dark lies in the troughs.
+Ripples = pigment linear X gradient {
+    turbulence { amplitude 0.42  octaves 3 with seed 4 }
+    triangle wave
+    [0, color [0.16, 0.135, 0.10], 0.55, color [0.21, 0.18, 0.13], 1, color [0.25, 0.215, 0.16]]
+    scale [0.07, 0.07, 0.6]
+}
+
+WetSand = material {
+    pigment blend {
+        Ripples,
+        granite with seed 2 { [0.1, color [0.19, 0.16, 0.115], 0.4, color [0.25, 0.215, 0.16]]  scale 0.4 }
+    }
+    normal linear X gradient {
+        turbulence { amplitude 0.42  octaves 3 with seed 4 }
+        scallop wave
+        depth -0.7
+        scale [0.07, 0.07, 0.6]
+    }
+    roughness 0.4
+}
+
+plane {
+    material WetSand
+    rotate X 0.6
+    rotate Y -40
+    named 'sand'
+}
+
+// The sea, past where the sand runs under it.
+plane { material SeaWater  translate Y -0.035 }
+
+// Cobbles the tide has left, dropped onto the sand.
+field {
+    of Cobble(0.09, 'summer', 1), Cobble(0.07, 'summer', 2), Cobble(0.12, 'summer', 3), Cobble(0.05, 'summer', 4)
+    within { move to -4, -3  line to 4, -3  line to 4, 8  line to -4, 8  close }
+    spacing 0.42  jitter 0.95
+    turned 360  sized 0.6 to 1.4
+    over 'sand'  tilted  sink 0.015
+    patches bozo with seed 5 { scale 1.1 } from 0.3 to 0.7
+}

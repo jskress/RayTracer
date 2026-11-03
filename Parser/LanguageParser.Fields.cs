@@ -1,6 +1,7 @@
 using Lex.Clauses;
 using Lex.Parser;
 using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Terms;
@@ -177,6 +178,25 @@ public partial class LanguageParser
                 case "over":
                     resolver.OverResolver = new TermResolver<string> { Term = clause.Term() };
                     break;
+                case "all":
+                    resolver.AllOverResolver = new TermResolver<string> { Term = clause.Term() };
+                    break;
+                case "upright":
+                    resolver.UprightResolver = new LiteralResolver<bool> { Value = true };
+                    break;
+                case "facing":
+                    resolver.FacingResolver = new TermResolver<Vector> { Term = clause.Term() };
+
+                    if (clause.Expressions.Count > 1)
+                    {
+                        resolver.FacingPowerResolver = new TermResolver<double>
+                        {
+                            Term = clause.Term(1),
+                            Validator = value => value > 0 ? null : "How strongly a field favors a facing must be more than nought."
+                        };
+                    }
+
+                    break;
                 case "tilted":
                     resolver.TiltedResolver = new LiteralResolver<bool> { Value = true };
                     break;
@@ -187,13 +207,14 @@ public partial class LanguageParser
                     resolver.BelowResolver = new TermResolver<double> { Term = clause.Term() };
                     break;
                 case "steepest":
-                    // In the scene's own unit of angle, from level.
+                    // In the scene's own unit of angle, from level: past a right angle, overhanging, which only
+                    // a field covering something all over can meet.
                     resolver.SteepestResolver = new AngleResolver
                     {
                         Term = clause.Term(),
-                        Validator = value => value is >= 0 and <= Math.PI / 2 + 1e-9
+                        Validator = value => value is >= 0 and <= Math.PI + 1e-9
                             ? null
-                            : "The steepest ground a field may stand on must be from level to upright."
+                            : "The steepest ground a field may stand on must be from level to upside down."
                     };
                     break;
                 case "sink":
