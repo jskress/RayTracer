@@ -237,7 +237,7 @@ RoadBase = material {
 }
 
 RoadSnow = material {
-    pigment [0.90, 0.92, 0.96]  specular 0.24  shininess 50  ambient 0.10
+    pigment [0.90, 0.92, 0.96]  specular 0  glints { size 0.0008  roughness 0.7 }  ambient 0.10
 }
 
 // -- After rain ------------------------------------------------------------------------------------

@@ -460,6 +460,10 @@ public partial class LanguageParser
             case "sheen":
                 resolver.SheenResolver = ParseObjectResolver<SheenResolver>("sheenEntryClause", HandleSheenEntryClause);
                 break;
+            case "glints":
+                resolver.GlintsResolver =
+                    ParseObjectResolver<GlintsResolver>("glintsEntryClause", HandleGlintsEntryClause);
+                break;
             default:
                 throw new Exception($"Internal error: unknown material property found: {field}.");
         }
@@ -491,6 +495,40 @@ public partial class LanguageParser
             {
                 Token = CurrentParser.PeekNextToken()
             };
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a glints block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleGlintsEntryClause(Clause clause)
+    {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid glints property here.");
+
+        GlintsResolver resolver = (GlintsResolver) _context.CurrentTarget;
+
+        switch (ToCmd(clause))
+        {
+            case "size":
+                resolver.SizeResolver = new TermResolver<double>
+                {
+                    Term = clause.Term(),
+                    Validator = value => value > 0 ? null : "How big a glint's facets are must be more than nought."
+                };
+                break;
+            case "roughness":
+                resolver.RoughnessResolver = new TermResolver<double>
+                {
+                    Term = clause.Term(),
+                    Validator = value => value is < 0 or > 1
+                        ? "Glints' roughness runs from nothing, grains all facing out, to one, grains facing every way."
+                        : null
+                };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown glints property found: {ToCmd(clause)}.");
+        }
     }
 
     /// <summary>

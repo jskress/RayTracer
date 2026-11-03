@@ -118,7 +118,7 @@ TrainGlass = material {
     pigment [0.07, 0.09, 0.11]  specular 0.60  shininess 190  reflective 0.04  fresnel  ambient 0.04
 }
 TrainSnowCap = material {
-    pigment [0.90, 0.92, 0.96]  specular 0.28  shininess 55  ambient 0.10
+    pigment [0.90, 0.92, 0.96]  specular 0  glints { size 0.0008  roughness 0.7 }  ambient 0.10
 }
 TrainCoal = material {
     pigment granite with seed 11 {

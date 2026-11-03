@@ -969,6 +969,12 @@ bright looked across.  The [trains](#trains), [aircraft](#aircraft), [vessels](#
 satin steel, alloy, foil — are real [metals](materials.md#metals), [rough](materials.md#roughness), so what
 they mirror is blurred.
 
+**Four of the six paints are metallic**, as most cars are — blue, green, sand and gray: flakes of metal in
+the paint, a rough metallic mirror under a [clear coat](materials.md#a-clear-coat), and the flakes
+[glint](materials.md#glints), so a wing in the sun sparkles near and has a smooth metallic sheen far off.
+Red and white are solid paints, which have no flakes.  The snow a vehicle carries in winter glints too, as
+every library's snow does: grains of ice a millimeter across.
+
 #### Vessels
 
 ```

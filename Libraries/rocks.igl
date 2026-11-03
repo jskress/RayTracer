@@ -98,7 +98,7 @@ RockStone = material {
     ambient 0.06
     brilliance 1.4
 }
-RockSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.28  shininess 55 }
+RockSnow = material { pigment [0.93, 0.94, 0.97]  specular 0  glints { size 0.0008  roughness 0.7 } }
 
 // What lies on top of a stone, which is nothing at all for three seasons of the four.
 //

@@ -1,0 +1,40 @@
+// Glints: facets counted under each pixel rather than averaged.  On the left, metallic paint as a rough
+// metallic mirror under a clear coat, its flakes averaged into a smooth sheen; in the middle the same paint
+// with its flakes glinting; on the right a snowball, white and matte, its grains of ice glinting.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.6, -8.5]
+    look at [0, 0.75, 0]
+    field of view 42
+}
+
+background [0.05, 0.06, 0.08]
+
+point light { location [6, 7, 4]  color [1, 0.97, 0.93] }
+point light { location [-6, 4, -8]  color [0.22, 0.23, 0.27] }
+
+plane { material { pigment color [0.30, 0.30, 0.32]  specular 0 } }
+
+paint = material {
+    pigment [0.10, 0.18, 0.50]
+    diffuse 0.45  metallic reflective 0.55  roughness 0.35
+    coat { }
+}
+
+// Flakes averaged.
+sphere { material paint  scale 0.75  translate [-2.1, 0.75, 0] }
+
+// The same flakes, a few hundredths of a millimeter across, counted.
+sphere {
+    material paint { glints { size 0.00004 } }
+    scale 0.75
+    translate [0, 0.75, 0]
+}
+
+// Snow, its grains a millimeter across.
+sphere {
+    material { pigment [0.93, 0.94, 0.97]  specular 0  glints { size 0.001  roughness 0.7 } }
+    scale 0.75
+    translate [2.1, 0.75, 0]
+}

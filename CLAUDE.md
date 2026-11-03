@@ -470,6 +470,20 @@ the sheen faint.  The weave beneath is scaled by `Beneath`: 1 - max(color) x E, 
 for ambient, bounces, caustics, walks and the base's mirror.  `SheenApplies` needs opaque, no film, no coat (sheen +
 coat or film is refused at parse).
 
+A material's `glints { size s [roughness r] }` (`Core/Glints.cs`) counts its facets under each pixel rather than
+averaging them: in `Light.ApplyPhong`, per lamp sample, the GGX lobe is multiplied by k/lambda, lambda = footprint area
+(world, `Intersection.Footprint`) / s^2 x D(h) (n.h) x pi c^2 -- c half the lamp's angular radius, the sun's 0.00465
+for a lamp with none (`SpreadOf` gives area lights theirs) -- and k a Poisson draw (summed below 64, normal above)
+hashed from a cell of a grid in the material's ANCHOR space (`Material.WorldToAnchor`, the footprint carried too for
+the scale) as fine as the footprint, levels log2(side / s) blended, and the half-vector's slope cell (2c wide, in
+`Microfacets.FrameAround(normal)`).  Lambda >= 10^4 or no footprint gives 1 (smooth); the average is the smooth lobe
+(`TestGlints`).  On a ROUGH material it scales the rough highlight (not brushed: `anisotropy` + glints refused); on
+any other it ADDS grains of its own (alpha = r^2, 0.5 unless said; Schlick 0.04), lamps a ray can meet giving none.
+Direct light only: reflection rays, bounces and photons stay smooth.  The libraries' eleven snow materials and
+`Weather.Snowy` carry `glints { size 0.0008  roughness 0.7 }` in place of a Phong highlight (`Weather.Stripped` drops
+glints with coats and sheens), and the vehicles' blue, green, sand and gray are metallic flake paint (rough metallic
+base, `glints { size 0.00004 }`, `coat { }`); red and white stay solid.
+
 A material's `metal 'gold'` or `metal <color> [edge <color>]` (`Core/Metal.cs`, `Core/Metals.cs`, `MetalResolver`) is
 a conductor: a complex index per band -- ten named, from refractiveindex.info (CC0): Ag Al Au Cu CuZn by way of pbrt-v4,
 Cr Ti Johnson-Christy 1974, Ni Pt Rakić 1998, Fe Querry 1985, each the set whose square-on share matches published

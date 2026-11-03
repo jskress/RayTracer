@@ -419,6 +419,13 @@ public class Material
         Sheen is not null && Transparency == 0 && !PigmentMayTransmit && Film is null && Coat is null;
 
     /// <summary>
+    /// This property holds the surface's glints, if it has them: its facets counted under each pixel rather than
+    /// averaged, so that they sparkle -- on a rough surface its own facets, on any other grains of their own; see
+    /// <see cref="Core.Glints"/>.
+    /// </summary>
+    public Glints Glints { get; set; }
+
+    /// <summary>
     /// This method returns this material with no diffuse term, and everything else as it is: what a surface
     /// whose light comes up from under it is shaded with by the lamps, the light under it being worked out
     /// apart.  The copy is made once and kept.

@@ -84,7 +84,7 @@ BuildRoofRed = material { pigment [0.42, 0.24, 0.18]  specular 0.10  shininess 2
 // the house rather than as a chimney.
 BuildChimney = material { pigment [0.34, 0.24, 0.20]  specular 0.03  shininess 8  ambient 0.10 }
 
-BuildSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.25  shininess 50 }
+BuildSnow = material { pigment [0.93, 0.94, 0.97]  specular 0  glints { size 0.0008  roughness 0.7 } }
 
 // Three walls and two roofs, so a row does not come out as one house repeated.  Which one a building
 // wears is its variant's business.
