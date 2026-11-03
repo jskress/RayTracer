@@ -33,7 +33,7 @@ namespace RayTracer.Geometry;
 /// <see cref="Instance.MayBeShared"/> for what refuses and why.
 /// </para>
 /// </summary>
-public class Field : Group
+public class Field : Group, ICoversASurface
 {
     private const int DefaultSeed = 0;
 
@@ -478,34 +478,10 @@ public class Field : Group
         Vector Up = null);
 
     /// <summary>
-    /// This method reports whether the patches keep a place.
-    /// <para>
-    /// **An edge turned about keeps exactly the places the edge the right way round leaves**, not merely
-    /// as many: it keeps a place where the draw is at or above the chance the other would have given,
-    /// rather than below its own.  So a meadow given the same pattern as a wood, with its edge reversed,
-    /// fills the wood's clearings place for place, wherever the two share a grid.
-    /// </para>
+    /// This method reports whether the patches keep a place; see <see cref="SurfaceSpread.KeptByThePatches"/>.
     /// </summary>
-    private bool KeptByThePatches(Place place, int seed)
-    {
-        double draw = DrawFor(seed, place.Row, place.Column, PatchDraw);
-
-        return PatchesFrom > PatchesTo ? 1 - draw <= ChanceAt(place) : draw < ChanceAt(place);
-    }
-
-    /// <summary>
-    /// This method returns the chance something stands at a place, by the patches.
-    /// </summary>
-    private double ChanceAt(Place place)
-    {
-        double value = Patches.ValueAt(new Point(place.X, place.Y, place.Z));
-
-        // An edge with no width is a line: everything on one side of it, nothing on the other.
-        if (PatchesFrom == PatchesTo)
-            return value >= PatchesFrom ? 1 : 0;
-
-        return Math.Clamp((value - PatchesFrom) / (PatchesTo - PatchesFrom), 0, 1);
-    }
+    private bool KeptByThePatches(Place place, int seed) =>
+        SurfaceSpread.KeptByThePatches(this, new Point(place.X, place.Y, place.Z), place.Row, place.Column, seed);
 
     /// <summary>
     /// This method returns where each place ranks among them all by a pattern's value there, from nought
@@ -644,24 +620,10 @@ public class Field : Group
     /// <returns>The places, in the order they were found.</returns>
     private IEnumerable<Place> PlacesAllOver(Surface ground, int seed)
     {
-        Matrix outward = Transform.Invert().Transpose();
-        Vector facing = Facing?.Unit;
+        List<SurfaceSpread.Spot> spread = SurfaceSpread.Over(ground, Transform, Spacing, seed, AllOver);
 
-        foreach (SurfaceSpread.Spot spot in SurfaceSpread.Over(ground, Transform, Spacing, seed, AllOver))
+        foreach (SurfaceSpread.Spot spot in SurfaceSpread.KeptBy(this, spread, seed))
         {
-            Point shared = Transform * spot.Point;
-            Vector up = (outward * spot.Normal).Unit;
-
-            if (shared.Y < Above || shared.Y > Below)
-                continue;
-
-            if (Steepest is { } steepest && Math.Acos(Math.Clamp(up.Y, -1, 1)) > steepest + 1e-12)
-                continue;
-
-            if (facing is not null &&
-                DrawFor(seed, spot.Number, 0, FacingDraw) >= Math.Pow(Math.Max(0, up.Dot(facing)), FacingPower))
-                continue;
-
             yield return new Place(
                 spot.Point.X, spot.Point.Z, spot.Number, 0, Y: spot.Point.Y, Up: spot.Normal);
         }
@@ -774,8 +736,8 @@ public class Field : Group
     private const int SizeDraw = 3;
     private const int AlongDraw = 4;
     private const int AcrossDraw = 5;
-    private const int PatchDraw = 6;
-    private const int FacingDraw = 7;
+    internal const int PatchDraw = 6;
+    internal const int FacingDraw = 7;
 
     /// <summary>
     /// This method returns the transform that stands a copy at a place: turned and sized as the field
@@ -1045,7 +1007,7 @@ public class Field : Group
     /// order, as it always has been, so a field asked for none of this stands exactly where it did.
     /// </para>
     /// </summary>
-    private static double DrawFor(int seed, int row, int column, int purpose)
+    internal static double DrawFor(int seed, int row, int column, int purpose)
     {
         ulong bits = (ulong) (uint) seed * 0x9E3779B97F4A7C15UL;
 

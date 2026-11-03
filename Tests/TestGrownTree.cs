@@ -455,4 +455,319 @@ public class TestGrownTree
             Directory.Delete(directory, true);
         }
     }
+
+    // A wall four wide, three high and three tenths thick, its front face on z = 0 and its foot on the ground.
+    private static readonly Point WallMiddle = new (0, 1.5, 0.15);
+    private static readonly Vector WallHalf = new (2, 1.5, 0.15);
+
+    private static Cube Wall() => new ()
+    {
+        Name = "wall", Transform = Transforms.Translate(WallMiddle.X, WallMiddle.Y, WallMiddle.Z) *
+                                   Transforms.Scale(WallHalf.X, WallHalf.Y, WallHalf.Z)
+    };
+
+    /// <summary>
+    /// Grows a climber over the ground given, standing beside it in a group, from just in front of the wall's foot.
+    /// </summary>
+    private static GrownTree Climbing(Surface ground, Action<GrownTree> shape = null)
+    {
+        // (Its wood, and its leaves, are in its own space: see Outside.)
+        GrownTree tree = new ()
+        {
+            AllOver = "wall", Points = 1500, Reach = 0.3, Kill = 0.06, Step = 0.04, Twig = 0.004, Seed = 5,
+            Transform = Transforms.Translate(0.3, 0.1, -0.02)
+        };
+
+        shape?.Invoke(tree);
+        new Group().Add(ground).Add(tree).PrepareForRendering();
+
+        return tree;
+    }
+
+    // A climber's wood, carried out of its own space into the one it shares with the wall.
+    private static List<TubeSegment> WoodOutside(GrownTree tree) =>
+        WoodOf(tree).Select(piece => new TubeSegment
+        {
+            Start = tree.Transform * piece.Start, StartRadius = piece.StartRadius,
+            End = tree.Transform * piece.End, EndRadius = piece.EndRadius
+        }).ToList();
+
+    // How far a place outside a box is from it.
+    private static double FromTheBox(Point at, Point middle, Vector half)
+    {
+        double x = Math.Max(Math.Abs(at.X - middle.X) - half.X, 0);
+        double y = Math.Max(Math.Abs(at.Y - middle.Y) - half.Y, 0);
+        double z = Math.Max(Math.Abs(at.Z - middle.Z) - half.Z, 0);
+
+        return Math.Sqrt(x * x + y * y + z * z);
+    }
+
+    /// <summary>
+    /// A climber's stems lie on the surface it climbs, each end held off it by the stem's own thickness, and it grows
+    /// from the place on the wall nearest where it stands -- up the face, over the top, down the far side and round
+    /// the end.
+    /// </summary>
+    [TestMethod]
+    public void TestAClimberGrowsAlongTheSurfaceItClimbs()
+    {
+        GrownTree tree = Climbing(Wall());
+        List<TubeSegment> wood = WoodOutside(tree);
+        List<Point> ends = wood.SelectMany(piece => new[] { piece.Start, piece.End }).ToList();
+
+        Assert.IsTrue(wood.Count > 500, $"The climber grew only {wood.Count} pieces of wood.");
+
+        foreach (TubeSegment piece in wood)
+        {
+            foreach (Point end in new[] { piece.Start, piece.End })
+            {
+                Assert.AreEqual(piece.StartRadius, FromTheBox(end, WallMiddle, WallHalf), 1e-6,
+                    $"A stem's end at {end} does not lie on the wall.");
+            }
+        }
+
+        Point root = new (0.3, 0.1, 0);
+
+        // The first wood is the thickest, held off the wall by its own thickness.
+        Assert.IsTrue(ends.Min(end => (end - root).Magnitude) < wood.Max(piece => piece.StartRadius) + 0.01,
+            "The climber did not start nearest where it stands.");
+        Assert.IsTrue(ends.Any(end => end.Y > 3), "The climber did not grow over the top of the wall.");
+        Assert.IsTrue(ends.Any(end => end.Z > 0.3 && end.Y < 2.5), "The climber did not grow down the far side.");
+        Assert.IsTrue(ends.Any(end => Math.Abs(end.X) > 2 && end.Y < 2.5), "The climber did not grow round the end.");
+    }
+
+    /// <summary>
+    /// A climber turns into a corner the surface makes, where a fin stands out of the wall, and goes on up the
+    /// fin's side: a step that meets the surface ahead stops there, rather than going through a fin thinner than a
+    /// step.  Its stems never stand off the surface, though deep in the corner one held off the fin by its
+    /// thickness sinks a little into the wall.
+    /// </summary>
+    [TestMethod]
+    public void TestAClimberTurnsIntoACorner()
+    {
+        Point finMiddle = new (0.9, 1.5, -0.15);
+        Vector finHalf = new (0.005, 1.5, 0.15);
+        CsgSurface ground = new ()
+        {
+            Name = "wall", Operation = CsgOperation.Union,
+            Left = new Cube
+            {
+                Transform = Transforms.Translate(WallMiddle.X, WallMiddle.Y, WallMiddle.Z) *
+                            Transforms.Scale(WallHalf.X, WallHalf.Y, WallHalf.Z)
+            },
+            Right = new Cube
+            {
+                Transform = Transforms.Translate(finMiddle.X, finMiddle.Y, finMiddle.Z) *
+                            Transforms.Scale(finHalf.X, finHalf.Y, finHalf.Z)
+            }
+        };
+        GrownTree tree = Climbing(ground);
+        List<TubeSegment> wood = WoodOutside(tree);
+
+        foreach (TubeSegment piece in wood)
+        {
+            foreach (Point end in new[] { piece.Start, piece.End })
+            {
+                double distance = Math.Min(
+                    FromTheBox(end, WallMiddle, WallHalf), FromTheBox(end, finMiddle, finHalf));
+
+                Assert.IsTrue(distance <= piece.StartRadius + 1e-6, $"A stem's end at {end} stands off the wall.");
+            }
+
+            // Across the fin's plane only where the fin is not: round its edge, over its top, or elsewhere on the
+            // wall.
+            if ((piece.Start.X - finMiddle.X) * (piece.End.X - finMiddle.X) < 0)
+            {
+                bool beside = Math.Max(piece.Start.Z, piece.End.Z) < 0 && Math.Min(piece.Start.Z, piece.End.Z) > -0.3 &&
+                              Math.Min(piece.Start.Y, piece.End.Y) > 0 && Math.Max(piece.Start.Y, piece.End.Y) < 3;
+
+                Assert.IsFalse(beside, $"A stem from {piece.Start} to {piece.End} went through the fin.");
+            }
+        }
+
+        // Up the fin's near side, square to -X, as the climber comes at it from the left.
+        Assert.IsTrue(
+            wood.Any(piece => Math.Abs(piece.End.X - (0.895 - piece.EndRadius)) < 1e-6 && piece.End.Z < -0.05),
+            "The climber did not go on up the side of the fin.");
+    }
+
+    /// <summary>
+    /// A climber's wood runs no further from its root than its spread, measured along it; unbounded, it runs further.
+    /// </summary>
+    [TestMethod]
+    public void TestAClimberSpreadsNoFurtherThanItsSpread()
+    {
+        Point root = new (0.3, 0.1, 0);
+        double Furthest(GrownTree tree) =>
+            WoodOutside(tree).SelectMany(piece => new[] { piece.Start, piece.End }).Max(end => (end - root).Magnitude);
+
+        double bounded = Furthest(Climbing(Wall(), tree => tree.Spread = 1));
+        double free = Furthest(Climbing(Wall()));
+
+        Assert.IsTrue(bounded <= 1 + 0.01, $"The climber ran {bounded} from its root, past its spread of one.");
+        Assert.IsTrue(bounded > 0.8, $"The climber ran only {bounded} from its root.");
+        Assert.IsTrue(free > 2, $"Unbounded, the climber ran only {free} from its root.");
+    }
+
+    /// <summary>
+    /// A climber's limits keep it to part of the surface, as a field's keep its copies: below a height, its points
+    /// and so its growth stay beneath it; facing a way, its points and so its growth stay on the faces that face it.
+    /// </summary>
+    [TestMethod]
+    public void TestAClimbersLimitsKeepItToPartOfTheSurface()
+    {
+        GrownTree low = Climbing(Wall(), tree => tree.Below = 1.2);
+        GrownTree front = Climbing(Wall(), tree => (tree.Facing, tree.FacingPower) = (new Vector(0, 0, -1), 8));
+
+        Assert.IsTrue(WoodOutside(low).Max(piece => piece.End.Y) <= 1.2 + 0.04 + 0.01,
+            $"The climber grew up to {WoodOutside(low).Max(piece => piece.End.Y)}, past the height it was kept below.");
+        Assert.IsTrue(WoodOutside(low).Max(piece => piece.End.Y) > 1, "The climber kept below a height grew no way up to it.");
+        Assert.IsFalse(WoodOutside(front).Any(piece => piece.End.Z > 0.3 || piece.End.Y > 3),
+            "The climber kept to the face looking -Z grew over the top or onto the back.");
+    }
+
+    /// <summary>
+    /// A climber's leaves stand out of the surface on its wood, +Y the way out and +Z down the face within an eighth
+    /// of a turn, all along its shoots but not on its oldest wood; on a level face they turn any way.
+    /// </summary>
+    [TestMethod]
+    public void TestAClimbersLeavesStandOutOfTheSurface()
+    {
+        GrownTree tree = Climbing(Wall(), climber => climber.LeafFactories =
+        [
+            () => new Sphere { Transform = Transforms.Scale(0.005) }
+        ]);
+        List<TubeSegment> wood = WoodOutside(tree);
+        Dictionary<(double, double, double), TubeSegment> ending = wood
+            .GroupBy(piece => Key(piece.End))
+            .ToDictionary(group => group.Key, group => group.First());
+        List<Instance> leaves = tree.Surfaces.OfType<Instance>().ToList();
+        int leafy = wood.Count(piece => piece.EndRadius <= 6 * 0.004 * (1 + 1e-9));
+
+        Assert.AreEqual(leafy, leaves.Count, "The climber's leaves do not stand on all its wood but the oldest.");
+        Assert.IsTrue(leaves.Count < wood.Count, "The climber's oldest wood bore leaves.");
+
+        bool level = false;
+
+        foreach (Instance leaf in leaves)
+        {
+            Matrix placed = tree.Transform * leaf.Transform;
+            Point at = placed * Point.Zero;
+            Vector up = (placed * new Vector(0, 1, 0)).Unit;
+            Vector tip = (placed * new Vector(0, 0, 1)).Unit;
+
+            Assert.IsTrue(ending.ContainsKey(Key(at)), $"A leaf stands at {at}, on no wood.");
+            Assert.AreEqual(ending[Key(at)].EndRadius + 0.005,
+                FromTheBox(at + up * 0.005, WallMiddle, WallHalf), 1e-6, $"A leaf at {at} does not stand out of the wall.");
+            Assert.AreEqual(0, tip.Dot(up), 1e-9);
+
+            if (up.Y > 0.99)
+                level = true;
+            else if (Math.Abs(up.Y) < 1e-9)
+                Assert.IsTrue(tip.Y <= -Math.Cos(Math.PI / 4) + 1e-9, $"A leaf at {at} points {tip}, not down the wall.");
+        }
+
+        Assert.IsTrue(level, "No leaf stood on the top of the wall.");
+    }
+
+    /// <summary>
+    /// What a climber cannot do is refused: standing out of its reach of what it climbs, climbing a surface that goes
+    /// on forever, climbing and growing into a crown at once, keeping a crown's tree to part of a surface, and a
+    /// spacing for one growing into a crown.
+    /// </summary>
+    [TestMethod]
+    public void TestWhatCannotClimbIsRefused()
+    {
+        Exception far = Assert.ThrowsExactly<Exception>(() =>
+            Climbing(Wall(), tree => tree.Transform = Transforms.Translate(0, 1, -1)));
+        Exception endless = Assert.ThrowsExactly<Exception>(() => Climbing(new Plane { Name = "wall" }));
+        Exception both = Assert.ThrowsExactly<Exception>(() => Climbing(Wall(), tree => tree.Crown = new Sphere()));
+        Exception limits = Assert.ThrowsExactly<Exception>(() =>
+            new GrownTree { Crown = new Sphere(), Below = 1 }.PrepareForRendering());
+        Exception spacing = Assert.ThrowsExactly<Exception>(() =>
+            new GrownTree { Crown = new Sphere(), Spacing = 0.1 }.PrepareForRendering());
+
+        StringAssert.Contains(far.Message, "must stand within its reach");
+        StringAssert.Contains(endless.Message, "goes on forever");
+        StringAssert.Contains(both.Message, "not both");
+        StringAssert.Contains(limits.Message, "keep it to part of a surface");
+        StringAssert.Contains(spacing.Message, "spacing is how far apart");
+    }
+
+    /// <summary>
+    /// The scene language: a climber written out with its limits, spread and spacing, one a primitive makes for the
+    /// surface it is handed by name, and what it cannot do refused as the scene is read.
+    /// </summary>
+    [TestMethod]
+    public void TestTheSceneLanguageGrowsAClimber()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"grown-tests-{Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            (string Error, int Wood) Run(string body)
+            {
+                string scene = Path.Combine(directory, "scene.igl");
+                string output = Path.Combine(directory, "scene.png");
+                StringWriter captured = new ();
+                TextWriter was = Console.Out;
+
+                File.WriteAllText(scene,
+                    "camera { location [0, 1.5, -6]  look at [0, 1.5, 0] }\n" +
+                    "point light { location [-4, 6, -6] }\n" +
+                    "cube { scale [2, 1.5, 0.15]  translate [0, 1.5, 0.15]  named 'wall' }\n" + body);
+                Console.SetOut(captured);
+
+                try
+                {
+                    ImageRenderer renderer = new LanguageParser(scene).Parse();
+
+                    renderer?.Render(new RenderOptions { OutputFileName = output, Width = 8, Height = 6 });
+                }
+                catch (Exception exception)
+                {
+                    return (exception.Message, 0);
+                }
+                finally
+                {
+                    Console.SetOut(was);
+                }
+
+                return (captured.ToString().Contains("Error") ? captured.ToString() : null, 0);
+            }
+
+            Assert.IsNull(Run("""
+                grown {
+                    all over 'wall'
+                    points 800  reach 0.3  kill 0.06  step 0.04  twig 0.004
+                    below 2.5  facing vector [0, 0, -1] by 2  steepest 90
+                    patches bozo { scale 0.5 } from 0.2 to 0.6
+                    spread 1.8
+                    leaf { sphere { scale 0.01 } }
+                    translate [0.3, 0.1, -0.02]
+                }
+                """).Error);
+            Assert.IsNull(Run("""
+                primitive Climber(wall, spread) -> grown {
+                    return grown { all over wall  spacing 0.1  reach 0.3  kill 0.06  step 0.04  spread spread }
+                }
+                object Climber('wall', 1.5) { translate [-0.5, 0.1, -0.02] }
+                """).Error);
+            StringAssert.Contains(
+                Run("grown { all over 'wall'  points 300  spacing 0.1  translate [0.3, 0.1, -0.02] }").Error,
+                "not both");
+            StringAssert.Contains(
+                Run("grown { all over 'stone'  translate [0.3, 0.1, -0.02] }").Error,
+                "the names here are 'wall'");
+            StringAssert.Contains(
+                Run("grown { all over 'wall'  reach 0.3  kill 0.06  step 0.04  on 'wall' }").Error,
+                "grown tree climbing something");
+            StringAssert.Contains(Run("grown { all over 'wall'  spread 0 }").Error, "more than nought");
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
 }

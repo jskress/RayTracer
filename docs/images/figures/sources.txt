@@ -47,6 +47,7 @@ adv-parametric.png|docs/examples/advanced/parametric.igl|320|240
 adv-lathe.png|docs/examples/advanced/lathe.igl|320|240
 adv-lsystem.png|docs/examples/advanced/lsystem.igl|340|260
 adv-grown.png|docs/examples/advanced/grown.igl|640|300
+adv-climbing.png|docs/examples/advanced/climbing.igl|640|300
 adv-fracture.png|docs/examples/advanced/fracture.igl|640|300
 adv-shapes.png|docs/examples/advanced/shapes.igl|640|300
 anim-along.png|docs/examples/animation/along.igl|640|300

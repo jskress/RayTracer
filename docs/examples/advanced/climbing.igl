@@ -1,0 +1,72 @@
+// A grown tree climbing a surface: the same climber twice, on a stretch of wall each.  Its points are spread
+// over the whole of the wall, and it grows toward them from the foot of it, every step walked along the wall --
+// up the face, over the top and down the far side, round the end.  On the left bare, so the stems show; on the
+// right in leaf, each leaf standing out of the wall.
+context { angles are degrees  no gamma }
+
+camera {
+    location [2.2, 3.3, -5.0]
+    look at [0.15, 0.75, 0.1]
+    field of view 50
+}
+
+background [0.66, 0.74, 0.84]
+
+point light { location [-6, 10, -10]  color [1, 0.97, 0.93] }
+point light { location [9, 4, -6]     color [0.28, 0.29, 0.33] }
+
+plane { material { pigment color [0.55, 0.57, 0.50]  specular 0 } }
+
+stone = material { pigment color [0.62, 0.59, 0.54]  specular 0.03 }
+wood = material { pigment color [0.33, 0.27, 0.21]  specular 0.08 }
+
+// A leaf stands out of the surface: up +Y from the stem, its tip down the wall along +Z.
+leaf = group {
+    sphere {
+        material { pigment color [0.16, 0.34, 0.12]  specular 0.25 }
+        scale [0.035, 0.006, 0.05]
+        rotate X 20
+        translate [0, 0.02, 0.04]
+    }
+}
+
+// Bare.
+group {
+    cube { scale [1.05, 0.8, 0.12]  translate [0, 0.8, 0.12]  material stone  named 'wall' }
+    grown {
+        all over 'wall'
+        points 1600
+        reach 0.18
+        kill 0.04
+        step 0.03
+        tropism [0, 1, 0]
+        susceptibility 0.3
+        twig 0.004
+        spread 2.2
+        with seed 3
+        material wood
+        translate [0.35, 0.02, -0.02]
+    }
+    translate X -1.25
+}
+
+// In leaf.
+group {
+    cube { scale [1.05, 0.8, 0.12]  translate [0, 0.8, 0.12]  material stone  named 'wall' }
+    grown {
+        all over 'wall'
+        points 1600
+        reach 0.18
+        kill 0.04
+        step 0.03
+        tropism [0, 1, 0]
+        susceptibility 0.3
+        twig 0.004
+        spread 2.2
+        leaf leaf
+        with seed 3
+        material wood
+        translate [0.35, 0.02, -0.02]
+    }
+    translate X 1.25
+}

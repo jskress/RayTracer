@@ -139,8 +139,23 @@ public partial class LanguageParser
                         Validator = value => value > 0 ? null : "A grown tree's joining must be more than nought."
                     };
                     break;
+                case "spacing":
+                    resolver.SpacingResolver = new TermResolver<double>
+                    {
+                        Term = clause.Term(),
+                        Validator = value => value > 0 ? null : "A grown tree's spacing must be more than nought."
+                    };
+                    break;
+                case "spread":
+                    resolver.SpreadResolver = new TermResolver<double>
+                    {
+                        Term = clause.Term(),
+                        Validator = value => value > 0 ? null : "How far a grown tree spreads must be more than nought."
+                    };
+                    break;
                 default:
-                    HandleSurfaceClause(clause, resolver, "grown tree");
+                    if (!HandleCoverClause(clause, resolver, "a grown tree"))
+                        HandleSurfaceClause(clause, resolver, "grown tree");
                     break;
             }
         });

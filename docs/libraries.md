@@ -337,6 +337,51 @@ primitive Bloom(n) -> group {
 field { of Bloom(n)  within Verge  spacing 0.4  jitter 0.9  index in n }
 ```
 
+#### Climbers
+
+```
+import 'climbers' { Ivy, Creeper }
+
+cube { scale [3, 1.5, 0.2]  translate [0, 1.5, 0.2]  named 'wall' }
+
+object Ivy('wall', 2.5) { translate [-1, 0.05, -0.03] }
+object Creeper('wall', 2, 'autumn') { translate [1.5, 0.05, -0.03] }
+```
+
+Plants that climb what they are given.  Each is a [grown tree climbing a surface](advanced-surfaces.md#climbing-a-surface):
+points spread over the whole of the surface named, and stems growing toward them along it from the
+place nearest where the plant stands — up a face, into the reveal of a window, round the corner of a
+house, over the top of a wall and down its far side.
+
+| | |
+| --- | --- |
+| `Ivy` | English ivy: evergreen, dark glossy lobed leaves on short stalks, shingled flat against the wall.  In winter a third of its leaves bronzed by the cold, in spring a third fresh and pale. |
+| `Creeper` | Virginia creeper: five leaflets on long stalks, standing further out and further apart.  Green in summer, crimson, scarlet and wine in autumn, bare in winter. |
+
+**Stand it at the foot of what it climbs**, a few centimeters off the surface: it grows from the nearest
+place on it, and is refused if there is none within its reach.  What it climbs has to stand beside it,
+named, in the same group or both at the top of the scene.
+
+**They take the name of what they climb first**, then **how far it has spread** — the longest its stems
+run from its root, in meters, 3 unless said — and then the two things every plant in these libraries
+takes, in the same order and with the same meanings: what time of year, and which one of that kind.
+Only the name is required.  A young plant covers a meter or two about its foot; an old one, the house.
+
+**The edge is ragged, as a real one's is.**  Cut off at a distance, a climber's edge would be a neat arc
+round its root; instead its points thin away with distance, raggedly, from two fifths of the spread
+on, so it stands as a dense mat that breaks up toward its edge into a few long shoots running on ahead.
+
+**A climber grows wherever its points are, and they are wherever the surface is.**  A window or a door
+drawn on the face of a wall has wall behind it, and ivy grows over the glass; cut the opening through
+the wall, with the dark of the room behind, and the climber goes into the reveal and leaves the opening
+clear.  To keep one to part of a wall, add a limit to the call — `object Ivy('cottage', 3) { below 2.98 }`
+keeps it under the eaves — as any [climbing tree's limits](advanced-surfaces.md#climbing-a-surface) do.
+
+**Everything is in meters**, as a leaf is the size a leaf is: whatever the wall, the leaves and stems
+are drawn at their own size.  An ivy spread three meters, its twenty-seven thousand leaves included,
+grows in under a second.  `gallery/Local/countryside/an-ivy-clad-cottage.igl` grows both over a cottage
+corner and its garden wall.
+
 #### Rocks
 
 ```

@@ -7,13 +7,68 @@ namespace RayTracer.Instructions.Surfaces;
 /// <summary>
 /// This class is used to resolve a tree grown by space colonization.
 /// </summary>
-public class GrownTreeResolver : SurfaceResolver<GrownTree>, IValidatable
+public class GrownTreeResolver : SurfaceResolver<GrownTree>, IValidatable, ICoverResolver
 {
     /// <summary>
     /// This property holds the resolver for the space the tree is to fill: a group written out in the
     /// block, a named surface or a call of a primitive.
     /// </summary>
     public ISurfaceResolver CrownResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the name of the surface the tree climbs, in place of a crown.
+    /// </summary>
+    public Resolver<string> AllOverResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the pattern saying where on the surface climbed points stand.
+    /// </summary>
+    public DensityShapeResolver PatchesResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the patterned value below which no point stands.
+    /// </summary>
+    public Resolver<double> PatchesFromResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the patterned value at and above which a point always stands.
+    /// </summary>
+    public Resolver<double> PatchesToResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the way the surface climbed must face for a point to stand on it.
+    /// </summary>
+    public Resolver<Vector> FacingResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how strongly points favor that facing.
+    /// </summary>
+    public Resolver<double> FacingPowerResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the lowest a point on the surface climbed may be.
+    /// </summary>
+    public Resolver<double> AboveResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the highest a point on the surface climbed may be.
+    /// </summary>
+    public Resolver<double> BelowResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the steepest the surface climbed may be where a point stands.
+    /// </summary>
+    public Resolver<double> SteepestResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how far apart a climber's points stand.
+    /// </summary>
+    public Resolver<double> SpacingResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the furthest the wood may run from where it starts.
+    /// </summary>
+    public Resolver<double> SpreadResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for how many points fill the crown.
@@ -99,6 +154,27 @@ public class GrownTreeResolver : SurfaceResolver<GrownTree>, IValidatable
         }
 
         HangingResolver.AssignTo(value, target => target.Hanging, context, variables);
+        AllOverResolver.AssignTo(value, target => target.AllOver, context, variables);
+        PatchesResolver.AssignTo(value, target => target.Patches, context, variables);
+        PatchesFromResolver.AssignTo(value, target => target.PatchesFrom, context, variables);
+        PatchesToResolver.AssignTo(value, target => target.PatchesTo, context, variables);
+        FacingResolver.AssignTo(value, target => target.Facing, context, variables);
+        FacingPowerResolver.AssignTo(value, target => target.FacingPower, context, variables);
+
+        if (AboveResolver is not null)
+            value.Above = AboveResolver.Resolve(context, variables);
+
+        if (BelowResolver is not null)
+            value.Below = BelowResolver.Resolve(context, variables);
+
+        if (SteepestResolver is not null)
+            value.Steepest = SteepestResolver.Resolve(context, variables);
+
+        if (SpreadResolver is not null)
+            value.Spread = SpreadResolver.Resolve(context, variables);
+
+        if (SpacingResolver is not null)
+            value.Spacing = SpacingResolver.Resolve(context, variables);
 
         base.SetProperties(context, variables, value);
     }
@@ -123,8 +199,11 @@ public class GrownTreeResolver : SurfaceResolver<GrownTree>, IValidatable
     /// <returns>The text of an error message or <c>null</c>.</returns>
     public string Validate()
     {
-        return CrownResolver is null
-            ? "A grown tree needs a crown: the space it is to grow into."
+        if (CrownResolver is null && AllOverResolver is null)
+            return "A grown tree needs a crown, the space it is to grow into, or a surface to climb all over.";
+
+        return PointsResolver is not null && SpacingResolver is not null
+            ? "A grown tree is given how many points it grows toward or how far apart they stand, not both."
             : null;
     }
 }

@@ -4246,4 +4246,60 @@ public class TestShippedLibraries
         Assert.AreEqual(bare + 0.16 / Math.Cos(29.74 * Math.PI / 180), back, 0.02,
             $"the plate on the foot's back stands out to {back:F3}");
     }
+
+    /// <summary>
+    /// Grows one climber in one season up a stretch of wall, and hands back the picture of it.
+    /// </summary>
+    private Canvas Climbed(string plant, string season)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'climbers' { {{plant}} }
+            context { angles are degrees  no gamma }
+            camera { location [0.3, 0.7, -2.2]  look at [0, 0.6, 0]  field of view 46 }
+            point light { location [-4, 6, -5] }
+            background [0.5, 0.6, 0.8]
+            cube { material { pigment [0.6, 0.58, 0.55] }  scale [1, 0.8, 0.1]  translate [0, 0.8, 0.1]  named 'wall' }
+            object {{plant}}('wall', 0.9, '{{season}}', 2) { translate [0, 0.03, -0.03] }
+            """);
+
+        Assert.IsNull(Render(scene, 90, 70), $"{plant} should grow in {season}");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    /// <summary>
+    /// Every climber grows in every season, and each season looks like itself: ivy is evergreen, the same in summer
+    /// and autumn, with some leaves bronzed in winter and fresh in spring; a creeper is green, then crimson, then
+    /// bare, then bronzed, and the fall is the autumn.
+    /// </summary>
+    [TestMethod]
+    public void TestEveryClimberGrowsInEverySeasonAsItself()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "climbers.igl"),
+            Path.Combine(_directory, "climbers.igl"), true);
+
+        Canvas ivy = Climbed("Ivy", "summer");
+
+        Assert.IsFalse(Differs(ivy, Climbed("Ivy", "autumn")), "ivy is evergreen, the same in autumn as in summer");
+        Assert.IsTrue(Differs(ivy, Climbed("Ivy", "winter")), "ivy should bronze in places in winter");
+        Assert.IsTrue(Differs(ivy, Climbed("Ivy", "spring")), "ivy should have fresh leaves in spring");
+
+        string[] seasons = ["summer", "autumn", "winter", "spring"];
+        Canvas[] creeper = seasons.Select(season => Climbed("Creeper", season)).ToArray();
+
+        for (int one = 0; one < seasons.Length; one++)
+        {
+            for (int other = one + 1; other < seasons.Length; other++)
+            {
+                Assert.IsTrue(Differs(creeper[one], creeper[other]),
+                    $"a creeper in {seasons[other]} looks exactly like one in {seasons[one]}");
+            }
+        }
+
+        Assert.IsFalse(Differs(creeper[1], Climbed("Creeper", "fall")),
+            "a creeper in the fall should be the same as one in the autumn");
+    }
 }

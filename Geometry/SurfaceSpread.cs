@@ -64,6 +64,63 @@ internal static class SurfaceSpread
     /// <returns>The places, in the order they were found.</returns>
     internal static List<Spot> Over(Surface ground, Matrix space, double spacing, int seed, string name)
     {
+        return Over(
+            ground, space, spacing, seed,
+            wanted => $"A field all over '{name}' would stand {wanted:N0} copies, and may stand at most {Most:N0}; " +
+                      "give it a wider spacing.",
+            $"A field may cover only a surface with an end to it all over, and '{name}' goes on forever; " +
+            "drop the field onto it with `over` instead.");
+    }
+
+    /// <summary>
+    /// This method spreads places over a surface, as evenly as the spacing says, saying what it is told to of a
+    /// surface that cannot be covered so.
+    /// </summary>
+    /// <param name="ground">The surface to cover, readied for rendering.</param>
+    /// <param name="space">The transform carrying the space the places are wanted in into the one the surface is
+    /// placed in.</param>
+    /// <param name="spacing">How far apart the places stand.</param>
+    /// <param name="seed">The seed the lines are cast from.</param>
+    /// <param name="tooMany">What to say of more places wanted than there may be.</param>
+    /// <param name="endless">What to say of a surface that goes on forever.</param>
+    /// <returns>The places, in the order they were found.</returns>
+    internal static List<Spot> Over(
+        Surface ground, Matrix space, double spacing, int seed, Func<long, string> tooMany, string endless)
+    {
+        return Spread(ground, space, area => (long) Math.Round(area / (spacing * spacing)), seed, tooMany, endless);
+    }
+
+    /// <summary>
+    /// This method spreads a number of places over a surface, as evenly as so many may lie.
+    /// </summary>
+    /// <param name="ground">The surface to cover, readied for rendering.</param>
+    /// <param name="space">The transform carrying the space the places are wanted in into the one the surface is
+    /// placed in.</param>
+    /// <param name="count">How many places to spread.</param>
+    /// <param name="seed">The seed the lines are cast from.</param>
+    /// <param name="endless">What to say of a surface that goes on forever.</param>
+    /// <returns>The places, in the order they were found.</returns>
+    internal static List<Spot> Over(Surface ground, Matrix space, int count, int seed, string endless)
+    {
+        return Spread(ground, space, _ => Math.Min(count, Most), seed, null, endless);
+    }
+
+    /// <summary>
+    /// This method spreads places over a surface, as many as are wanted for the area its lines measure.
+    /// </summary>
+    /// <param name="ground">The surface to cover, readied for rendering.</param>
+    /// <param name="space">The transform carrying the space the places are wanted in into the one the surface is
+    /// placed in.</param>
+    /// <param name="wantedFor">How many places are wanted, for the area measured so far.</param>
+    /// <param name="seed">The seed the lines are cast from.</param>
+    /// <param name="tooMany">What to say of a number wanted past the most there may be, or <c>null</c> if the
+    /// number wanted never is.</param>
+    /// <param name="endless">What to say of a surface that goes on forever.</param>
+    /// <returns>The places, in the order they were found.</returns>
+    private static List<Spot> Spread(
+        Surface ground, Matrix space, Func<double, long> wantedFor, int seed, Func<long, string> tooMany,
+        string endless)
+    {
         BoundingBox shared = Surface.BoxAround(ground, true);
 
         // Something with nothing in it -- a snow cap out of season -- is covered with nothing.
@@ -71,11 +128,7 @@ internal static class SurfaceSpread
             return [];
 
         if (shared is null || !double.IsFinite((shared.Maximum - shared.Minimum).Magnitude))
-        {
-            throw new Exception(
-                $"A field may cover only a surface with an end to it all over, and '{name}' goes on forever; " +
-                "drop the field onto it with `over` instead.");
-        }
+            throw new Exception(endless);
 
         Matrix own = space.Invert();
         Matrix inward = ground.Transform.Invert() * space;
@@ -93,14 +146,10 @@ internal static class SurfaceSpread
                 CastLine(ground, inward, outward, center, radius, random, found, hits);
 
             lines += Batch;
-            wanted = (long) Math.Round(AreaOf(found.Count, lines, radius) / (spacing * spacing));
+            wanted = wantedFor(AreaOf(found.Count, lines, radius));
 
             if (wanted > Most)
-            {
-                throw new Exception(
-                    $"A field all over '{name}' would stand {wanted:N0} copies, and may stand at most {Most:N0}; " +
-                    "give it a wider spacing.");
-            }
+                throw new Exception(tooMany(wanted));
 
             if (found.Count >= Math.Max(Candidates * wanted, Fewest) || (found.Count == 0 && lines >= Batch * 16) ||
                 lines >= MostLinesEach * Math.Max(wanted, Batch))
@@ -108,6 +157,77 @@ internal static class SurfaceSpread
         }
 
         return wanted == 0 ? [] : Thinned(found, (int) wanted, AreaOf(found.Count, lines, radius));
+    }
+
+    /// <summary>
+    /// This method keeps the places spread over a surface that stand within what the thing covering it allows: its
+    /// heights, its steepest, and the way the surface must face -- the last by chance, drawn from the place's number.
+    /// Patches are asked apart, since a field keeps any place by them, wherever it was found.
+    /// </summary>
+    /// <param name="cover">The thing covering the surface.</param>
+    /// <param name="spots">The places spread over it, in its own space.</param>
+    /// <param name="seed">The seed the draws are made from.</param>
+    /// <returns>The places kept, in the order they came.</returns>
+    internal static IEnumerable<Spot> KeptBy(ICoversASurface cover, IEnumerable<Spot> spots, int seed)
+    {
+        Matrix outward = cover.Transform.Invert().Transpose();
+        Vector facing = cover.Facing?.Unit;
+
+        foreach (Spot spot in spots)
+        {
+            Point shared = cover.Transform * spot.Point;
+            Vector up = (outward * spot.Normal).Unit;
+
+            if (shared.Y < cover.Above || shared.Y > cover.Below)
+                continue;
+
+            if (cover.Steepest is { } steepest && Math.Acos(Math.Clamp(up.Y, -1, 1)) > steepest + 1e-12)
+                continue;
+
+            if (facing is not null &&
+                Field.DrawFor(seed, spot.Number, 0, Field.FacingDraw) >=
+                Math.Pow(Math.Max(0, up.Dot(facing)), cover.FacingPower))
+                continue;
+
+            yield return spot;
+        }
+    }
+
+    /// <summary>
+    /// This method reports whether the patches of a thing covering a surface, or of any field, keep a place.
+    /// <para>
+    /// **An edge turned about keeps exactly the places the edge the right way round leaves**, not merely
+    /// as many: it keeps a place where the draw is at or above the chance the other would have given,
+    /// rather than below its own.  So a meadow given the same pattern as a wood, with its edge reversed,
+    /// fills the wood's clearings place for place, wherever the two share a grid.
+    /// </para>
+    /// </summary>
+    /// <param name="cover">The thing whose patches they are.</param>
+    /// <param name="at">The place, in the thing's own space.</param>
+    /// <param name="row">The place's row, or its number among the places found over a surface.</param>
+    /// <param name="column">The place's column, or nought for a place found over a surface.</param>
+    /// <param name="seed">The seed the draws are made from.</param>
+    /// <returns>Whether the place is kept.</returns>
+    internal static bool KeptByThePatches(ICoversASurface cover, Point at, int row, int column, int seed)
+    {
+        double draw = Field.DrawFor(seed, row, column, Field.PatchDraw);
+        double chance = ChanceAt(cover, at);
+
+        return cover.PatchesFrom > cover.PatchesTo ? 1 - draw <= chance : draw < chance;
+    }
+
+    /// <summary>
+    /// This method returns the chance a place is kept, by the patches.
+    /// </summary>
+    private static double ChanceAt(ICoversASurface cover, Point at)
+    {
+        double value = cover.Patches.ValueAt(at);
+
+        // An edge with no width is a line: everything on one side of it, nothing on the other.
+        if (cover.PatchesFrom == cover.PatchesTo)
+            return value >= cover.PatchesFrom ? 1 : 0;
+
+        return Math.Clamp((value - cover.PatchesFrom) / (cover.PatchesTo - cover.PatchesFrom), 0, 1);
     }
 
     /// <summary>

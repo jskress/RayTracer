@@ -1595,6 +1595,17 @@ public partial class LanguageParser
             { points > _expression } | { reach > _expression } | { kill > _expression } |
             { step > _expression } | { tropism > _expression } | { susceptibility > _expression } |
             { twig > _expression } | { joining > _expression } |
+            {
+                all > over ?? 'Expecting "over" to follow "all" here.' >
+                _expression ?? 'Expecting the name of the surface to climb here.'
+            } |
+            {
+                patches > patternClause >
+                openBrace ?? 'Expecting an open brace to follow the pattern here.'
+            } |
+            { facing > _expression > { by > _expression }{?} } |
+            { above > _expression } | { below > _expression } | { steepest > _expression } |
+            { spread > _expression } | { spacing > _expression } |
             surfaceEntryClause
         ]
         // What may follow a grown tree's leaf: another, after a comma, and then whether they hang.

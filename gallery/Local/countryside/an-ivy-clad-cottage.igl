@@ -1,0 +1,163 @@
+// The corner of a stone cottage in autumn: ivy climbing its front from two roots, up round the window and the
+// door, round the corner onto its end; and a creeper gone crimson over the garden wall beside it.
+//
+// **Every climber here is a grown tree climbing a surface all over.**  Points are spread over the whole of the
+// surface named, and the stems grow toward them from the place on it nearest where the plant stands -- every
+// step walked along the surface, so they turn into the window's reveal and wrap round the corner of the house.
+// The `climbers` library's `Ivy` and `Creeper` are such trees, with leaves made for them.
+//
+// The window and the door are holes through the front wall, not pictures on it, with the dark of the rooms
+// behind: a climber grows wherever its points are, and there are none where there is no wall.
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.25
+    info {
+        title 'An Ivy-Clad Cottage'
+        author 'J. Stephen Kress'
+        description 'The corner of a stone cottage in autumn, ivy climbing round its window and door and a crimson creeper over the garden wall, each a grown tree climbing a surface all over.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'climbers' { Ivy, Creeper }
+import 'windows' { Casement }
+import 'doors' { Door }
+import 'rocks' { DryStoneWall }
+import 'roads' { CrazyPaving }
+import 'undergrowth' { Grass }
+import 'trees' { Oak, Birch }
+
+camera { location [5.6, 1.7, -6.4]  look at [0.5, 1.9, 0.9]  field of view 54 }
+
+background physical sky { sun elevation 30  sun azimuth 35  turbidity 3  brightness 3 }
+sky light { samples 24 }
+
+// -- The cottage ------------------------------------------------------------------------------------------------
+
+// Rubble stone, laid in rough courses: flattened cells standing proud of the lime mortar between them.
+// Crackle is nought along the joints between its cells and rises toward their middles, so the mortar is the
+// bottom of its map, and as a bump the stones swell from their joints.
+Rubble = material {
+    pigment layer {
+        crackle with seed 3 {
+            [0.000, color [0.58, 0.56, 0.50],
+             0.022, color [0.52, 0.50, 0.45],
+             0.040, color [0.0, 0.0, 0.0, 0],
+             1.000, color [0.0, 0.0, 0.0, 0]]
+            scale [0.26, 0.13, 0.26]
+        },
+        granite with seed 9 {
+            [0.10, color [0.24, 0.22, 0.19],
+             0.25, color [0.34, 0.31, 0.26],
+             0.40, color [0.44, 0.40, 0.33]]
+            scale [0.9, 0.45, 0.9]
+        }
+    }
+    normal crackle with seed 3 { depth 1.2  scale [0.26, 0.13, 0.26] }
+    specular 0.03
+    shininess 8
+}
+
+// Slates in courses down the roof, each course's joints half a slate on from the last, as bricks lie: the
+// pattern is read in each slope's own space, across it along X and down it along Z, so its courses (its Y) are
+// turned to run down the slope and its endless depth to run through the slab.
+Slate = material {
+    pigment brick {
+        brick size [0.30, 0.22, 100]  mortar size 0.008
+        color [0.035, 0.035, 0.040], color [0.115, 0.120, 0.135]
+        translate Z 50
+        rotate X 90
+    }
+    normal brick { brick size [0.30, 0.22, 100]  mortar size 0.008  depth 0.6  translate Z 50  rotate X 90 }
+    specular 0.12
+    shininess 20
+}
+
+// A gable end, across the cottage at X, its slopes the roof's.
+primitive Gable(x) -> intersection {
+    return intersection {
+        cube { scale [0.225, 2.6, 2.75]  translate [x, 2.6, 2.75] }
+        cube { scale [1, 8, 8]  translate [x, -8, 0]  rotate X 34.6  translate [0, 4.9, 2.75] }
+        cube { scale [1, 8, 8]  translate [x, -8, 0]  rotate X -34.6  translate [0, 4.9, 2.75] }
+    }
+}
+
+// The walls the ivy climbs: the front, with the door and the window cut through it, between the two gable ends.
+// The front stops inside the ends, so no two have a face in common.
+union {
+    difference {
+        cube { scale [2.6, 1.5, 0.225]  translate [0, 1.5, 0.225] }
+        // The door, and the window.
+        cube { scale [0.47, 1.05, 0.4]  translate [-1.45, 1.0, 0.2] }
+        cube { scale [0.62, 0.6, 0.4]  translate [1.0, 1.65, 0.2] }
+    }
+    object Gable(-2.775)
+    object Gable(2.775)
+    material Rubble
+    named 'cottage'
+}
+
+// The dark of the rooms, behind the door and the window and lapping into the back of the walls.
+cube {
+    material { pigment [0.012, 0.011, 0.010]  specular 0 }
+    scale [2.6, 1.48, 2.6]
+    translate [0, 1.5, 3.0]
+}
+
+object Door(0.45, 1.02, 0.08, 'autumn', 3) { translate [-1.45, 1.02, 0.12] }
+object Casement(0.6, 0.58, 0.08, 'autumn', 2) { translate [1.0, 1.65, 0.12] }
+
+// A slate roof on the walls, overhanging them a little, ridge along X.
+group {
+    cube { scale [3.25, 0.05, 1.95]  translate [0, 0, -1.95]  rotate X -34.6 }
+    cube { scale [3.25, 0.05, 1.95]  translate [0, 0, 1.95]  rotate X 34.6 }
+    material Slate
+    translate [0, 4.93, 2.75]
+}
+
+// -- The garden ------------------------------------------------------------------------------------------------
+
+// A dry stone wall running out from the front corner of the cottage toward the lane.
+object DryStoneWall(4.6, 1.25, 'autumn', 2) {
+    rotate Y 90
+    translate [-2.75, 0, -2.4]
+    named 'garden wall'
+}
+
+// A path of flagstones from the door down the garden.
+object CrazyPaving(5.5, 1.0, 'autumn', 3) { rotate Y 90  translate [-1.45, 0, -2.9] }
+
+// Long grass along the foot of the walls, either side of the path and round the corner.
+Verge = path {
+    move to -2.6, -0.55  line to -2.0, -0.55  line to -2.0, -0.02  line to -2.6, -0.02  close
+    move to -0.9, -0.6  line to 3.6, -0.6  line to 3.6, 3.2  line to 3.02, 3.2  line to 3.02, -0.02
+    line to -0.9, -0.02  close
+}
+object Grass(Verge, 'summer', 2, 0.28)
+
+plane {
+    material {
+        pigment bozo with seed 4 {
+            [0.0, color [0.11, 0.17, 0.055], 0.5, color [0.14, 0.21, 0.065], 1.0, color [0.16, 0.20, 0.075]]
+            scale 0.6
+        }
+        normal granite { depth 0.3  scale 0.05 }
+        specular 0
+    }
+}
+
+// Trees beyond the cottage, turning.
+object Oak(9, 'autumn', 2) { translate [-11, 0, 8] }
+object Birch(10, 'autumn', 3) { translate [-0.5, 0, 19] }
+
+// -- The climbers ----------------------------------------------------------------------------------------------
+
+// Ivy from between the door and the window, and from beside the corner; kept below the eaves.
+object Ivy('cottage', 3.4, 'autumn', 1) { below 2.98  translate [-0.25, 0.03, -0.03] }
+object Ivy('cottage', 2.8, 'autumn', 2) { below 2.98  translate [2.3, 0.03, -0.03] }
+
+// The creeper, from the foot of the garden wall on the side toward the house.
+object Creeper('garden wall', 1.7, 'autumn', 1) { translate [-2.45, 0.03, -1.2] }

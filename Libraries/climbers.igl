@@ -1,0 +1,606 @@
+// Plants that climb what they are given: ivy up a wall, a creeper over a house.
+//
+//     import 'climbers' { Ivy, Creeper }
+//
+//     cube { scale [3, 1.5, 0.2]  translate [0, 1.5, 0.2]  named 'wall' }
+//
+//     object Ivy('wall', 2.5) { translate [-1, 0.05, -0.03] }
+//     object Creeper('wall', 2, 'autumn') { translate [1.5, 0.05, -0.03] }
+//
+// Each is a grown tree climbing the surface named all over (see `grown` in the documentation): points are
+// spread over the whole of the surface, and the stems grow toward them from the place on it nearest where the
+// plant stands, every step walked along the surface -- up a face, into a corner, over the top of a wall and down
+// its far side.  So **the plant must stand at the foot of what it climbs**, within a few centimeters of it, and
+// what it climbs must stand beside it in the same group, named.
+//
+// They take the name of what they climb, then the two things every plant in these libraries takes, in the same
+// order and with the same meanings -- **what time of year** and **which one of that kind** -- after **how far it
+// has spread**: the longest its stems run from its root, in meters.  A young plant covers a meter or two about
+// its foot; an old one, the house.  Only the name is ever required.
+//
+// | `Ivy` | English ivy: evergreen, dark glossy lobed leaves held flat against the wall.  In winter a third bronzed. |
+// | `Creeper` | Virginia creeper: five leaflets on long stalks, green in summer, crimson in autumn, bare in winter. |
+//
+// **The seasons are the same words** as the trees': 'summer', 'autumn' (or 'fall'), 'winter', or anything else
+// for spring.  Ivy hardly changes; a creeper is what a wall in autumn is remembered for.
+//
+// **Everything is in meters**, as a leaf is the size a leaf is: the leaves and the stems are drawn at their own
+// size whatever they climb, so a climber on a model's wall a unit high is a climber on a wall a meter high.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Climber` is the machinery.  The materials travel with what they belong to, for the
+// reason the trees library gives, and are prefixed so they will not collide with anything of yours.
+
+ClimberIvyStem = material { pigment [0.26, 0.22, 0.17]  specular 0.06  shininess 10 }
+ClimberCreeperStem = material { pigment [0.30, 0.20, 0.14]  specular 0.06  shininess 10 }
+
+// -- Ivy -------------------------------------------------------------------------------------------
+
+// An ivy leaf's blade, as Hedera's young leaves are: one of three forms -- five shallow lobes, five cut deeper, or
+// three -- standing on the origin and growing up +Y to its tip at one, flat in the XY plane, the stalk meeting it
+// in the notch at its base.
+primitive ClimberIvyBlade(form) -> group {
+    switch (form) {
+        case 2 {
+            return group { generic shape {
+                path {
+                move to 0.0000, 0.0000
+                line to -0.0277, -0.0322
+                line to -0.0574, -0.0594
+                line to -0.0893, -0.0818
+                line to -0.1232, -0.0992
+                line to -0.1593, -0.1118
+                line to -0.1974, -0.1194
+                line to -0.2377, -0.1222
+                line to -0.2800, -0.1200
+                line to -0.3335, -0.1293
+                line to -0.3839, -0.1309
+                line to -0.4311, -0.1249
+                line to -0.4752, -0.1112
+                line to -0.5161, -0.0899
+                line to -0.5539, -0.0609
+                line to -0.5885, -0.0243
+                line to -0.6200, 0.0200
+                line to -0.5905, 0.0574
+                line to -0.5594, 0.0930
+                line to -0.5267, 0.1269
+                line to -0.4925, 0.1590
+                line to -0.4567, 0.1894
+                line to -0.4194, 0.2180
+                line to -0.3805, 0.2449
+                line to -0.3400, 0.2700
+                line to -0.3894, 0.3167
+                line to -0.4361, 0.3655
+                line to -0.4802, 0.4162
+                line to -0.5215, 0.4690
+                line to -0.5602, 0.5237
+                line to -0.5961, 0.5805
+                line to -0.6294, 0.6392
+                line to -0.6600, 0.7000
+                line to -0.5914, 0.6837
+                line to -0.5242, 0.6641
+                line to -0.4584, 0.6414
+                line to -0.3940, 0.6155
+                line to -0.3309, 0.5864
+                line to -0.2692, 0.5541
+                line to -0.2089, 0.5187
+                line to -0.1500, 0.4800
+                line to -0.1449, 0.5489
+                line to -0.1359, 0.6168
+                line to -0.1230, 0.6834
+                line to -0.1062, 0.7490
+                line to -0.0855, 0.8134
+                line to -0.0609, 0.8768
+                line to -0.0324, 0.9389
+                line to 0.0000, 1.0000
+                line to 0.0324, 0.9389
+                line to 0.0609, 0.8768
+                line to 0.0855, 0.8134
+                line to 0.1062, 0.7490
+                line to 0.1230, 0.6834
+                line to 0.1359, 0.6168
+                line to 0.1449, 0.5489
+                line to 0.1500, 0.4800
+                line to 0.2089, 0.5187
+                line to 0.2692, 0.5541
+                line to 0.3309, 0.5864
+                line to 0.3940, 0.6155
+                line to 0.4584, 0.6414
+                line to 0.5242, 0.6641
+                line to 0.5914, 0.6837
+                line to 0.6600, 0.7000
+                line to 0.6294, 0.6392
+                line to 0.5961, 0.5805
+                line to 0.5602, 0.5237
+                line to 0.5215, 0.4690
+                line to 0.4802, 0.4162
+                line to 0.4361, 0.3655
+                line to 0.3894, 0.3167
+                line to 0.3400, 0.2700
+                line to 0.3805, 0.2449
+                line to 0.4194, 0.2180
+                line to 0.4567, 0.1894
+                line to 0.4925, 0.1590
+                line to 0.5267, 0.1269
+                line to 0.5594, 0.0930
+                line to 0.5905, 0.0574
+                line to 0.6200, 0.0200
+                line to 0.5885, -0.0243
+                line to 0.5539, -0.0609
+                line to 0.5161, -0.0899
+                line to 0.4752, -0.1112
+                line to 0.4311, -0.1249
+                line to 0.3839, -0.1309
+                line to 0.3335, -0.1293
+                line to 0.2800, -0.1200
+                line to 0.2377, -0.1222
+                line to 0.1974, -0.1194
+                line to 0.1593, -0.1118
+                line to 0.1232, -0.0992
+                line to 0.0893, -0.0818
+                line to 0.0574, -0.0594
+                line to 0.0277, -0.0322
+                close
+                }
+            } }
+        }
+        case 3 {
+            return group { generic shape {
+                path {
+                move to 0.0000, 0.0000
+                line to -0.0389, -0.0345
+                line to -0.0795, -0.0628
+                line to -0.1219, -0.0848
+                line to -0.1660, -0.1004
+                line to -0.2119, -0.1098
+                line to -0.2595, -0.1128
+                line to -0.3089, -0.1096
+                line to -0.3600, -0.1000
+                line to -0.4013, -0.0673
+                line to -0.4358, -0.0318
+                line to -0.4635, 0.0065
+                line to -0.4844, 0.0476
+                line to -0.4985, 0.0915
+                line to -0.5058, 0.1382
+                line to -0.5063, 0.1877
+                line to -0.5000, 0.2400
+                line to -0.5308, 0.2797
+                line to -0.5570, 0.3210
+                line to -0.5788, 0.3637
+                line to -0.5960, 0.4080
+                line to -0.6088, 0.4537
+                line to -0.6170, 0.5010
+                line to -0.6208, 0.5497
+                line to -0.6200, 0.6000
+                line to -0.5715, 0.6050
+                line to -0.5232, 0.6071
+                line to -0.4753, 0.6064
+                line to -0.4276, 0.6028
+                line to -0.3802, 0.5964
+                line to -0.3332, 0.5871
+                line to -0.2865, 0.5750
+                line to -0.2400, 0.5600
+                line to -0.2254, 0.6234
+                line to -0.2064, 0.6844
+                line to -0.1830, 0.7430
+                line to -0.1552, 0.7992
+                line to -0.1230, 0.8530
+                line to -0.0864, 0.9044
+                line to -0.0454, 0.9534
+                line to 0.0000, 1.0000
+                line to 0.0454, 0.9534
+                line to 0.0864, 0.9044
+                line to 0.1230, 0.8530
+                line to 0.1552, 0.7992
+                line to 0.1830, 0.7430
+                line to 0.2064, 0.6844
+                line to 0.2254, 0.6234
+                line to 0.2400, 0.5600
+                line to 0.2865, 0.5750
+                line to 0.3332, 0.5871
+                line to 0.3802, 0.5964
+                line to 0.4276, 0.6028
+                line to 0.4753, 0.6064
+                line to 0.5232, 0.6071
+                line to 0.5715, 0.6050
+                line to 0.6200, 0.6000
+                line to 0.6208, 0.5497
+                line to 0.6170, 0.5010
+                line to 0.6088, 0.4537
+                line to 0.5960, 0.4080
+                line to 0.5788, 0.3637
+                line to 0.5570, 0.3210
+                line to 0.5308, 0.2797
+                line to 0.5000, 0.2400
+                line to 0.5063, 0.1877
+                line to 0.5058, 0.1382
+                line to 0.4985, 0.0915
+                line to 0.4844, 0.0476
+                line to 0.4635, 0.0065
+                line to 0.4358, -0.0318
+                line to 0.4013, -0.0673
+                line to 0.3600, -0.1000
+                line to 0.3089, -0.1096
+                line to 0.2595, -0.1128
+                line to 0.2119, -0.1098
+                line to 0.1660, -0.1004
+                line to 0.1219, -0.0848
+                line to 0.0795, -0.0628
+                line to 0.0389, -0.0345
+                close
+                }
+            } }
+        }
+        default {
+            return group { generic shape {
+                path {
+                move to 0.0000, 0.0000
+                line to -0.0295, -0.0346
+                line to -0.0614, -0.0640
+                line to -0.0954, -0.0881
+                line to -0.1318, -0.1070
+                line to -0.1704, -0.1206
+                line to -0.2113, -0.1290
+                line to -0.2545, -0.1321
+                line to -0.3000, -0.1300
+                line to -0.3550, -0.1315
+                line to -0.4056, -0.1257
+                line to -0.4521, -0.1128
+                line to -0.4942, -0.0926
+                line to -0.5321, -0.0653
+                line to -0.5656, -0.0307
+                line to -0.5950, 0.0110
+                line to -0.6200, 0.0600
+                line to -0.6013, 0.0953
+                line to -0.5808, 0.1290
+                line to -0.5585, 0.1612
+                line to -0.5344, 0.1920
+                line to -0.5085, 0.2213
+                line to -0.4808, 0.2490
+                line to -0.4513, 0.2752
+                line to -0.4200, 0.3000
+                line to -0.4519, 0.3403
+                line to -0.4812, 0.3819
+                line to -0.5077, 0.4249
+                line to -0.5316, 0.4692
+                line to -0.5527, 0.5149
+                line to -0.5712, 0.5619
+                line to -0.5869, 0.6103
+                line to -0.6000, 0.6600
+                line to -0.5471, 0.6568
+                line to -0.4950, 0.6505
+                line to -0.4438, 0.6412
+                line to -0.3934, 0.6290
+                line to -0.3438, 0.6138
+                line to -0.2950, 0.5955
+                line to -0.2471, 0.5742
+                line to -0.2000, 0.5500
+                line to -0.1908, 0.6133
+                line to -0.1770, 0.6745
+                line to -0.1588, 0.7338
+                line to -0.1360, 0.7910
+                line to -0.1087, 0.8463
+                line to -0.0770, 0.8995
+                line to -0.0408, 0.9507
+                line to 0.0000, 1.0000
+                line to 0.0408, 0.9507
+                line to 0.0770, 0.8995
+                line to 0.1087, 0.8463
+                line to 0.1360, 0.7910
+                line to 0.1588, 0.7338
+                line to 0.1770, 0.6745
+                line to 0.1908, 0.6133
+                line to 0.2000, 0.5500
+                line to 0.2471, 0.5742
+                line to 0.2950, 0.5955
+                line to 0.3438, 0.6138
+                line to 0.3934, 0.6290
+                line to 0.4438, 0.6412
+                line to 0.4950, 0.6505
+                line to 0.5471, 0.6568
+                line to 0.6000, 0.6600
+                line to 0.5869, 0.6103
+                line to 0.5712, 0.5619
+                line to 0.5527, 0.5149
+                line to 0.5316, 0.4692
+                line to 0.5077, 0.4249
+                line to 0.4812, 0.3819
+                line to 0.4519, 0.3403
+                line to 0.4200, 0.3000
+                line to 0.4513, 0.2752
+                line to 0.4808, 0.2490
+                line to 0.5085, 0.2213
+                line to 0.5344, 0.1920
+                line to 0.5585, 0.1612
+                line to 0.5808, 0.1290
+                line to 0.6013, 0.0953
+                line to 0.6200, 0.0600
+                line to 0.5950, 0.0110
+                line to 0.5656, -0.0307
+                line to 0.5321, -0.0653
+                line to 0.4942, -0.0926
+                line to 0.4521, -0.1128
+                line to 0.4056, -0.1257
+                line to 0.3550, -0.1315
+                line to 0.3000, -0.1300
+                line to 0.2545, -0.1321
+                line to 0.2113, -0.1290
+                line to 0.1704, -0.1206
+                line to 0.1318, -0.1070
+                line to 0.0954, -0.0881
+                line to 0.0614, -0.0640
+                line to 0.0295, -0.0346
+                close
+                }
+            } }
+        }
+    }
+}
+
+// The green of an ivy leaf: dark and glossy, a little different leaf to leaf; in winter a third of the ways of
+// making a leaf bronzed by the cold, in spring a third fresh and pale.  A third by the leaf's number rather than by
+// chance: a climber has only six of them, and by chance one in six winters had none bronzed at all.
+function ClimberIvyGreen(season, id, variant) -> color {
+    shade = 0.80 + random(id, 1, variant) * 0.45
+    bronzed = season == 'winter' && mod(id, 3) == 0
+    fresh = season != 'summer' && season != 'autumn' && season != 'fall' && season != 'winter' && mod(id, 3) == 1
+
+    return (bronzed ? color [0.075, 0.045, 0.030] : fresh ? color [0.070, 0.115, 0.030] : color [0.030, 0.062, 0.022]) *
+           shade
+}
+
+// One ivy leaf, standing out of the surface as a climber's leaves stand: its stalk up +Y from the stem and out to
+// one side -- odd leaves to one side, even to the other, as they alternate along a shoot -- and the blade at the
+// stalk's end laid back toward the wall, tip down it along +Z and a little out, so its face looks out and a little
+// up: the shingled way ivy leaves overlap on a wall.
+primitive ClimberIvyLeaf(season, id, variant) -> group {
+    size = 0.055 * (0.80 + random(id, 4, variant) * 0.45)
+    stalk = 0.03 + random(id, 5, variant) * 0.03
+    side = mod(id, 2) == 0 ? -1 : 1
+    lean = side * (35 + random(id, 9, variant) * 25)
+
+    return group {
+        cylinder {
+            min Y 0  max Y 1
+            material { pigment [0.10, 0.12, 0.05]  specular 0.05 }
+            scale [0.0012, stalk, 0.0012]
+            rotate Z lean
+        }
+        object ClimberIvyBlade(1 + floor(random(id, 6, variant) * 3)) {
+            material { pigment ClimberIvyGreen(season, id, variant)  specular 0.45  shininess 45 }
+            scale size
+            rotate X 90 + 12 + random(id, 7, variant) * 22
+            rotate Y -side * (15 + random(id, 8, variant) * 30)
+            translate [-stalk * sin(lean°), stalk * cos(lean°), 0]
+        }
+    }
+}
+
+// English ivy, climbing the surface of that name from where it stands: its stems spread from its root as far as
+// `spread` along them, branching and filling the surface, its leaves all along them.
+//
+// **Its edge is ragged, as a real one's is.**  Cut off at a distance, a climber's edge is a neat arc; here its
+// points thin away with distance from its root, raggedly, from two fifths of the spread on, so it stands as a
+// dense mat that breaks up toward its edge into a few long shoots running on ahead.
+primitive Ivy(wall, spread = 3, season = 'summer', variant = 1) -> grown {
+    return grown {
+        all over wall
+        spacing 0.045
+        reach 0.15
+        kill 0.03
+        step 0.03
+        tropism [0, 1, 0]
+        susceptibility 0.35
+        twig 0.0016
+        spread spread
+        patches spherical { turbulence { amplitude 0.35  octaves 2  with seed variant }  scale spread } from 0 to 0.6
+        leaf ClimberIvyLeaf(season, 1, variant), ClimberIvyLeaf(season, 2, variant),
+             ClimberIvyLeaf(season, 3, variant), ClimberIvyLeaf(season, 4, variant),
+             ClimberIvyLeaf(season, 5, variant), ClimberIvyLeaf(season, 6, variant)
+        with seed variant
+        material ClimberIvyStem
+    }
+}
+
+// -- Virginia creeper ------------------------------------------------------------------------------
+
+// One leaflet of a creeper's leaf: base on the origin, tip up +Y at one, widest past its middle, toothed toward
+// its tip, flat in the XY plane.
+primitive ClimberLeaflet() -> group {
+    return group { generic shape {
+        path {
+                move to 0.0000, 0.0000
+                line to 0.0634, 0.0167
+                line to 0.1006, 0.0333
+                line to 0.1313, 0.0500
+                line to 0.1580, 0.0667
+                line to 0.1818, 0.0833
+                line to 0.2033, 0.1000
+                line to 0.2228, 0.1167
+                line to 0.2406, 0.1333
+                line to 0.2567, 0.1500
+                line to 0.2715, 0.1667
+                line to 0.2848, 0.1833
+                line to 0.2969, 0.2000
+                line to 0.3078, 0.2167
+                line to 0.3175, 0.2333
+                line to 0.3261, 0.2500
+                line to 0.3337, 0.2667
+                line to 0.3402, 0.2833
+                line to 0.3458, 0.3000
+                line to 0.3558, 0.3167
+                line to 0.3651, 0.3333
+                line to 0.3735, 0.3500
+                line to 0.3812, 0.3667
+                line to 0.3627, 0.3833
+                line to 0.3686, 0.4000
+                line to 0.3737, 0.4167
+                line to 0.3780, 0.4333
+                line to 0.3565, 0.4500
+                line to 0.3592, 0.4667
+                line to 0.3612, 0.4833
+                line to 0.3624, 0.5000
+                line to 0.3627, 0.5167
+                line to 0.3388, 0.5333
+                line to 0.3379, 0.5500
+                line to 0.3362, 0.5667
+                line to 0.3337, 0.5833
+                line to 0.3088, 0.6000
+                line to 0.3053, 0.6167
+                line to 0.3010, 0.6333
+                line to 0.2959, 0.6500
+                line to 0.2901, 0.6667
+                line to 0.2651, 0.6833
+                line to 0.2584, 0.7000
+                line to 0.2510, 0.7167
+                line to 0.2428, 0.7333
+                line to 0.2186, 0.7500
+                line to 0.2098, 0.7667
+                line to 0.2002, 0.7833
+                line to 0.1899, 0.8000
+                line to 0.1789, 0.8167
+                line to 0.1563, 0.8333
+                line to 0.1448, 0.8500
+                line to 0.1325, 0.8667
+                line to 0.1194, 0.8833
+                line to 0.0987, 0.9000
+                line to 0.0852, 0.9167
+                line to 0.0707, 0.9333
+                line to 0.0554, 0.9500
+                line to 0.0390, 0.9667
+                line to 0.0196, 0.9833
+                line to 0.0000, 1.0000
+                line to -0.0196, 0.9833
+                line to -0.0390, 0.9667
+                line to -0.0554, 0.9500
+                line to -0.0707, 0.9333
+                line to -0.0852, 0.9167
+                line to -0.0987, 0.9000
+                line to -0.1194, 0.8833
+                line to -0.1325, 0.8667
+                line to -0.1448, 0.8500
+                line to -0.1563, 0.8333
+                line to -0.1789, 0.8167
+                line to -0.1899, 0.8000
+                line to -0.2002, 0.7833
+                line to -0.2098, 0.7667
+                line to -0.2186, 0.7500
+                line to -0.2428, 0.7333
+                line to -0.2510, 0.7167
+                line to -0.2584, 0.7000
+                line to -0.2651, 0.6833
+                line to -0.2901, 0.6667
+                line to -0.2959, 0.6500
+                line to -0.3010, 0.6333
+                line to -0.3053, 0.6167
+                line to -0.3088, 0.6000
+                line to -0.3337, 0.5833
+                line to -0.3362, 0.5667
+                line to -0.3379, 0.5500
+                line to -0.3388, 0.5333
+                line to -0.3627, 0.5167
+                line to -0.3624, 0.5000
+                line to -0.3612, 0.4833
+                line to -0.3592, 0.4667
+                line to -0.3565, 0.4500
+                line to -0.3780, 0.4333
+                line to -0.3737, 0.4167
+                line to -0.3686, 0.4000
+                line to -0.3627, 0.3833
+                line to -0.3812, 0.3667
+                line to -0.3735, 0.3500
+                line to -0.3651, 0.3333
+                line to -0.3558, 0.3167
+                line to -0.3458, 0.3000
+                line to -0.3402, 0.2833
+                line to -0.3337, 0.2667
+                line to -0.3261, 0.2500
+                line to -0.3175, 0.2333
+                line to -0.3078, 0.2167
+                line to -0.2969, 0.2000
+                line to -0.2848, 0.1833
+                line to -0.2715, 0.1667
+                line to -0.2567, 0.1500
+                line to -0.2406, 0.1333
+                line to -0.2228, 0.1167
+                line to -0.2033, 0.1000
+                line to -0.1818, 0.0833
+                line to -0.1580, 0.0667
+                line to -0.1313, 0.0500
+                line to -0.1006, 0.0333
+                line to -0.0634, 0.0167
+                close
+        }
+    } }
+}
+
+// The color of a creeper's leaf by the season: green in summer; in autumn crimson, scarlet, wine or, now and
+// then, still orange on its way; in spring bronzed.
+function ClimberCreeperColor(season, id, variant) -> color {
+    shade = 0.80 + random(id, 11, variant) * 0.40
+    turn = random(id, 12, variant)
+
+    switch (season) {
+        case 'summer' { return color [0.055, 0.115, 0.035] * shade }
+        case 'autumn', 'fall' {
+            return (turn < 0.40 ? color [0.33, 0.025, 0.025] : turn < 0.70 ? color [0.46, 0.065, 0.020] :
+                    turn < 0.88 ? color [0.19, 0.020, 0.055] : color [0.42, 0.17, 0.025]) * shade
+        }
+        default { return color [0.11, 0.105, 0.035] * shade }
+    }
+}
+
+// One creeper leaf: a long stalk up +Y from the stem, and at its end five leaflets spread like a hand, laid back
+// toward the wall, tips down it along +Z.  Bare in winter, as the plant is.
+primitive ClimberCreeperLeaf(season, id, variant) -> group {
+    size = 0.065 * (0.80 + random(id, 13, variant) * 0.40) *
+           (season == 'summer' || season == 'autumn' || season == 'fall' ? 1 : 0.7)
+    stalk = 0.05 + random(id, 14, variant) * 0.04
+    tint = ClimberCreeperColor(season, id, variant)
+
+    if (season == 'winter') { return group { } }
+    else {
+        return group {
+            cylinder {
+                min Y 0  max Y 1
+                material { pigment tint * 0.8  specular 0.05 }
+                scale [0.0013, stalk, 0.0013]
+            }
+            group {
+                for leaflet in [0, 4] {
+                    object ClimberLeaflet() {
+                        scale size * (leaflet == 2 ? 1 : leaflet == 1 || leaflet == 3 ? 0.88 : 0.66)
+                        rotate Z (leaflet - 2) * 38
+                    }
+                }
+                material { pigment tint  specular 0.18  shininess 24 }
+                rotate X 90 + 10 + random(id, 15, variant) * 25
+                rotate Y (random(id, 16, variant) - 0.5) * 40
+                translate Y stalk
+            }
+        }
+    }
+}
+
+// Virginia creeper, climbing the surface of that name from where it stands, as ivy does but more loosely, its
+// leaves larger and further apart on longer stalks.
+primitive Creeper(wall, spread = 3, season = 'summer', variant = 1) -> grown {
+    return grown {
+        all over wall
+        spacing 0.06
+        reach 0.2
+        kill 0.04
+        step 0.045
+        tropism [0, 1, 0]
+        susceptibility 0.30
+        twig 0.0018
+        spread spread
+        patches spherical { turbulence { amplitude 0.35  octaves 2  with seed variant + 7 }  scale spread } from 0 to 0.6
+        leaf ClimberCreeperLeaf(season, 1, variant), ClimberCreeperLeaf(season, 2, variant),
+             ClimberCreeperLeaf(season, 3, variant), ClimberCreeperLeaf(season, 4, variant),
+             ClimberCreeperLeaf(season, 5, variant), ClimberCreeperLeaf(season, 6, variant)
+        with seed variant
+        material ClimberCreeperStem
+    }
+}
