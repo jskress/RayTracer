@@ -1,7 +1,7 @@
 railroad-ebnf-beta
 title "A loft"
 
-loft = "loft" "{" { section | spline | "spline" name | "straight" | "open" | property } "}" ;
+loft = "loft" "{" { section | spline | "spline" catenary | "spline" name | "straight" | "open" | property } "}" ;
 
 section = "section" "{" { "path" outline | "at" number | transform } "}" ;
 

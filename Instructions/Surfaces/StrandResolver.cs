@@ -19,6 +19,16 @@ public class StrandResolver : SurfaceResolver<Strand>, IValidatable
     } = [];
 
     /// <summary>
+    /// This property holds the resolver for the spline the strand runs along, in place of points, or <c>null</c>.
+    /// </summary>
+    public Resolver<Spline> SplineResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how wide a strand along a spline is.
+    /// </summary>
+    public Resolver<double> SplineWidthResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a strand.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -35,6 +45,12 @@ public class StrandResolver : SurfaceResolver<Strand>, IValidatable
                 Width = width.Resolve(context, variables),
                 Position = position.Resolve(context, variables)
             });
+        }
+
+        if (SplineResolver is not null)
+        {
+            value.Spline = SplineResolver.Resolve(context, variables);
+            value.Width = SplineWidthResolver.Resolve(context, variables);
         }
 
         base.SetProperties(context, variables, value);
@@ -61,6 +77,13 @@ public class StrandResolver : SurfaceResolver<Strand>, IValidatable
     /// <returns>The text of an error message or <c>null</c>.</returns>
     public string Validate()
     {
+        if (SplineResolver is not null)
+        {
+            return PointResolvers.Count > 0
+                ? "A strand runs through its points or along a spline, not both."
+                : null;
+        }
+
         return PointResolvers.Count < 2
             ? "A strand needs at least two points to run between."
             : null;

@@ -58,6 +58,7 @@ adv-loft.png|docs/examples/advanced/loft.igl|640|300
 adv-text-along-a-path.png|docs/examples/advanced/text-along-a-path.igl|640|240
 adv-text.png|docs/examples/advanced/text.igl|320|240
 adv-tube.png|docs/examples/advanced/tube.igl|320|240
+adv-rigging.png|docs/examples/advanced/rigging.igl|640|300
 blobs.png|docs/examples/surfaces/blobs.igl|600|200
 cam-fisheye.png|gallery/Local/cameras/fisheye.igl|400|300
 camera-fov-100.png|docs/examples/cameras/fov-100.igl|300|225

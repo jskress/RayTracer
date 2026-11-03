@@ -150,6 +150,12 @@ public partial class LanguageParser
             case "loft":
                 resolver.SurfaceResolvers.Add(ParseLoftClause(clause));
                 break;
+            case "rope":
+                resolver.SurfaceResolvers.Add(ParseRopeClause(clause));
+                break;
+            case "chain":
+                resolver.SurfaceResolvers.Add(ParseChainClause(clause));
+                break;
             case "grown":
                 resolver.SurfaceResolvers.Add(ParseGrownClause(clause));
                 break;

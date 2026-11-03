@@ -59,21 +59,10 @@ public partial class LanguageParser
                         ParseObjectResolver<LoftSectionResolver>("loftSectionEntryClause", HandleLoftSectionEntryClause));
                     break;
                 case "spline" or "discontinuous":
-                {
-                    // A spline written out, or the name of one, looked up where the loft is made, as a sweep's is.
-                    Token last = clause.Tokens[^1];
-
-                    if (BounderToken.OpenBrace.Matches(last))
-                    {
-                        resolver.SplineResolver = clause.Text() == "discontinuous"
-                            ? ParseDiscontinuousSpline()
-                            : ParseSplineClause();
-                    }
-                    else
-                        resolver.SplineResolver = new TermResolver<Spline> { Term = new VariableTerm(last) };
-
+                    // A spline written out, a catenary hung in place, or the name of one, looked up where the loft is
+                    // made, so it may be a primitive's parameter.
+                    resolver.SplineResolver = SplineNamedBy(clause);
                     break;
-                }
                 case "straight":
                     resolver.StraightResolver = new LiteralResolver<bool> { Value = true };
                     break;

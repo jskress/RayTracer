@@ -71,6 +71,15 @@ public partial class LanguageParser
                         EndResolver = ParseTubeControlPoint(clause, 4)
                     });
                     break;
+                // A tube along a spline, as thick all along as the radius after it says.  Told apart by its words: a
+                // tag on a sequence written in place among the alternatives is not kept.
+                case not "point" and not "quad" and not "curve"
+                    when clause.Text() == "spline" || (clause.Text() == "discontinuous" && clause.Tokens.Count > 1):
+                    resolver.SplineResolver = SplineNamedBy(clause);
+                    resolver.SplineRadiusResolver = ParseClause("tubeSplineRadiusClause") is { } radius
+                        ? new TermResolver<double> { Term = radius.Term() }
+                        : throw CreateUnexpectedInputException("Expecting \"radius\" and how thick the tube is to follow its spline here.");
+                    break;
                 default:
                     if (clause.Text() == "discontinuous")
                         resolver.DiscontinuousResolver = new LiteralResolver<bool> { Value = true };

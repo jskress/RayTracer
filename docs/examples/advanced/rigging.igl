@@ -1,0 +1,45 @@
+// What hangs between two places hangs in a catenary.  Four posts and three spans: on the left a cable, a tube along a
+// catenary hung by how far its middle sags; in the middle a laid rope, three strands twisted about a catenary;
+// on the right a chain, hung by its length, its links each turned a quarter from the last.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 2.1, -8.4]
+    look at [0, 1.2, 0]
+    field of view 62
+}
+
+background [0.66, 0.74, 0.84]
+
+point light { location [-6, 10, -10]  color [1, 0.97, 0.93] }
+point light { location [9, 4, -6]     color [0.28, 0.29, 0.33] }
+
+plane { material { pigment color [0.55, 0.57, 0.50]  specular 0 } }
+
+wood = material { pigment color [0.33, 0.27, 0.21]  specular 0.08 }
+
+for x in [-4.2, 4.2] by 2.8 {
+    cylinder { min Y 0  max Y 1.9  scale [0.08, 1, 0.08]  translate X x  material wood }
+}
+
+// A cable, by its sag: its middle 0.3 below the straight line between the posts' tops.
+tube {
+    spline catenary { from [-4.2, 1.8, 0]  to [-1.4, 1.8, 0]  sag 0.3 }
+    radius 0.025
+    material { pigment color [0.08, 0.08, 0.09]  specular 0.4  shininess 60 }
+}
+
+// A laid rope, three strands about the same curve, hung deeper.
+rope {
+    spline catenary { from [-1.4, 1.8, 0]  to [1.4, 1.8, 0]  sag 0.55 }
+    radius 0.045
+    strands 3
+    material { pigment color [0.62, 0.50, 0.32]  specular 0.05  shininess 8 }
+}
+
+// A chain, by its length: 3.4 long over the 2.8 between the posts.
+chain {
+    spline catenary { from [1.4, 1.8, 0]  to [4.2, 1.8, 0]  length 3.4 }
+    link 0.16
+    material { metal [0.62, 0.62, 0.61]  roughness 0.35 }
+}

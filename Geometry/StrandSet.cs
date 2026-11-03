@@ -123,6 +123,35 @@ public sealed class StrandSet
     }
 
     /// <summary>
+    /// This method adds a strand of one width all along running through the given cubic Bézier pieces, end to end as
+    /// they are given, as a spline is drawn: a curve already laid, so taken as it stands.
+    /// </summary>
+    /// <param name="pieces">Each piece's start, two control points and end, root first.  At least one.</param>
+    /// <param name="width">The strand's width.</param>
+    public void Add(IReadOnlyList<(Point Start, Point First, Point Second, Point End)> pieces, double width)
+    {
+        int count = pieces.Count;
+
+        if (count < 1)
+            throw new ArgumentException("A strand needs at least one piece to run along.");
+
+        for (int index = 0; index < count; index++)
+        {
+            Append(pieces[index].Start);
+            Append(pieces[index].First);
+            Append(pieces[index].Second);
+            Append(pieces[index].End);
+            _building.Add((float) width);
+            _building.Add((float) width);
+            _building.Add((float) index / count);
+            _building.Add((float) (index + 1) / count);
+            _buildingStrands.Add(StrandCount);
+        }
+
+        StrandCount++;
+    }
+
+    /// <summary>
     /// This method adds a control point's three numbers to the segment being built.
     /// </summary>
     private void Append(Point point)

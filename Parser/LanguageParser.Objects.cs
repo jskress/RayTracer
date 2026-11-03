@@ -141,6 +141,10 @@ public partial class LanguageParser
                 return ParseSweepClause(clause);
             case LoftResolver:
                 return ParseLoftClause(clause);
+            case RopeResolver:
+                return ParseRopeClause(clause);
+            case ChainResolver:
+                return ParseChainClause(clause);
             case GrownTreeResolver:
                 return ParseGrownClause(clause);
             case FractureResolver:

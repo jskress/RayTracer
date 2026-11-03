@@ -48,6 +48,8 @@ public partial class LanguageParser
             .On(nameof(HandleStartFieldClause), HandleStartFieldClause)
             .On(nameof(HandleStartSweepClause), HandleStartSweepClause)
             .On(nameof(HandleStartLoftClause), HandleStartLoftClause)
+            .On(nameof(HandleStartRopeClause), HandleStartRopeClause)
+            .On(nameof(HandleStartChainClause), HandleStartChainClause)
             .On(nameof(HandleStartGrownClause), HandleStartGrownClause)
             .On(nameof(HandleStartFractureClause), HandleStartFractureClause)
             .On(nameof(HandleStartShapesClause), HandleStartShapesClause)

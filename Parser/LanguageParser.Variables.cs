@@ -46,6 +46,8 @@ public partial class LanguageParser
             // A spline is named so that things may be put along it, and a sweep carried along it, by its name.
             "spline" => ParseSplineClause(),
             "discontinuous" when second == "spline" => ParseDiscontinuousSpline(),
+            // A cable hung between two places is a spline too, named so the things that go along one may hang.
+            "catenary" => ParseCatenaryClause(),
             "material" => GetMaterialResolver(clause),
             "interior" => GetInteriorResolver(clause),
             "medium" => GetMediumResolver(clause),
@@ -82,6 +84,8 @@ public partial class LanguageParser
             "field" => ParseFieldClause(clause),
             "sweep" => ParseSweepClause(clause),
             "loft" => ParseLoftClause(clause),
+            "rope" => ParseRopeClause(clause),
+            "chain" => ParseChainClause(clause),
             "grown" => ParseGrownClause(clause),
             "fracture" => ParseFractureClause(clause),
             "shapes" => ParseShapesClause(clause),
