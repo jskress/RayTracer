@@ -112,7 +112,17 @@ orange in autumn); a leaf that is an empty plain group keeps its share by standi
 leaves upright in the tree's space instead (willow strands, fruit).  Every tree in the trees library but `Palm` (it
 never branches) is grown so, and the undergrowth's `Boxwood`, in crowns of lobes placed by the variant (one ball
 grows a lollipop) whose LOWEST part is a middle lobe (a side lobe reaching the trunk first dog-legged it), each
-species' height factor measured over five variants.  A `Fracture` (`fracture { solid ... }`, a `Group`) breaks a
+species' height factor measured over five variants.  Given `all over 'name'` in place of a crown, a grown tree CLIMBS
+that sibling (`GrownTree.GrowOver`, from `PlacementSettler` beside dropped fields; empty when prepared): points by
+`SurfaceSpread` (`points` spread again, more, so the part its limits keep holds that many; or `spacing`), kept by the
+field's own limits (`ICoversASurface`, `SurfaceSpread.KeptBy`/`KeptByThePatches`; parsed alike by `HandleCoverClause`
+through `ICoverResolver`), grown from the nearest place within `reach` of its origin, every step walked by
+`GrownTree.Walker` -- a ray ahead (a corner, so a fin thinner than a step is climbed), a ray down onto the face, and
+from just past an edge back onto the face beyond (insets 0.5/0.2/0.05 steps) -- smoothed places set back down on it,
+stems held off it by their radius (sinking a little into an inside corner), leaves on every place of wood no thicker
+than six twigs, standing OUT of the surface (+Y out, +Z down it within 45 degrees).  `spread` caps the run along the
+wood, for any grown tree.  The `climbers` library's `Ivy` and `Creeper` (meters) thin their points from two fifths of
+the spread on (`patches spherical` with turbulence) for a ragged edge.  A `Fracture` (`fracture { solid ... }`, a `Group`) breaks a
 solid into Voronoi cells when prepared: seeds by rejection (or, `toward` a point, rings and nine spokes held from ring to
 ring in the plane of a thin solid's two longest sides, else density falling off), each cell clipped from a start
 `Polytope` (`Geometry/Polytope.cs`: faces as plane + CCW polygon, Sutherland-Hodgman clipping, `Shrunk`, `Centroid`) by

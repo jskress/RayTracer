@@ -464,7 +464,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Countryside</b> &mdash; 13 images &middot; trees, ground, weather and fire</summary>
+<summary><b>Countryside</b> &mdash; 14 images &middot; trees, ground, weather and fire</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -529,6 +529,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/countryside/a-wooded-hillside.igl">A Wooded Hillside</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/countryside/an-ivy-clad-cottage.png">
+      <img alt="An Ivy-Clad Cottage" height="120" src="Local/countryside/an-ivy-clad-cottage.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/countryside/an-ivy-clad-cottage.igl">An Ivy-Clad Cottage</a>
     </td>
   </tr>
   <tr style="border: none;">

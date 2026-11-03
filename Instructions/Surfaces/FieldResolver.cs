@@ -9,7 +9,7 @@ namespace RayTracer.Instructions.Surfaces;
 /// <summary>
 /// This class is used to resolve a field value.
 /// </summary>
-public class FieldResolver : SurfaceResolver<Field>, IValidatable
+public class FieldResolver : SurfaceResolver<Field>, IValidatable, ICoverResolver
 {
     /// <summary>
     /// This property holds the resolver for the outline the field fills.

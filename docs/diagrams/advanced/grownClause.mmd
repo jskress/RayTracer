@@ -3,7 +3,10 @@ title "A grown tree"
 
 grown = "grown" [ name ] "{" { "crown" shape | "leaf" shape { "," shape } [ "hanging" ]
       | ( "points" | "reach" | "kill" | "step" | "twig" | "joining"
-        | "susceptibility" ) number | "tropism" vector | property } "}" ;
+        | "susceptibility" | "spacing" | "spread" ) number | "tropism" vector | climbing | property } "}" ;
+
+climbing = "all" "over" string | "patches" pattern [ "from" number "to" number ]
+         | "facing" vector [ "by" number ] | ( "above" | "below" ) number | "steepest" angle ;
 
 shape = "{" { surface } "}"
       | name [ "(" [ expression { "," expression } ] ")" [ "{" { property } "}" ] ] ;

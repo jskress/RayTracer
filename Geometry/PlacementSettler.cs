@@ -39,8 +39,12 @@ internal static class PlacementSettler
             .OfType<Field>()
             .Where(field => field.Over is not null || field.AllOver is not null)
             .ToList();
+        List<GrownTree> climbing = siblings
+            .OfType<GrownTree>()
+            .Where(tree => tree.AllOver is not null)
+            .ToList();
 
-        if (placed.Count == 0 && dropped.Count == 0)
+        if (placed.Count == 0 && dropped.Count == 0 && climbing.Count == 0)
             return;
 
         Dictionary<string, Surface> byName = NamesAmong(siblings);
@@ -49,10 +53,38 @@ internal static class PlacementSettler
             Settle(surface, byName);
 
         // Fields dropped onto the ground beside them, or covering it all over, go last, so that the ground
-        // has been placed wherever it was told to stand before anything falls onto it.
+        // has been placed wherever it was told to stand before anything falls onto it; and so do climbers.
         foreach (Field field in dropped)
             field.DropOnto(GroundFor(field, byName));
+
+        foreach (GrownTree tree in climbing)
+            tree.GrowOver(GroundFor(tree, byName));
     }
+
+    /// <summary>
+    /// This method finds the surface a grown tree climbs, complaining usefully when there is no such thing among
+    /// the tree's siblings.
+    /// </summary>
+    /// <param name="tree">The tree climbing.</param>
+    /// <param name="byName">The named siblings, by name.</param>
+    /// <returns>The surface it climbs.</returns>
+    private static Surface GroundFor(GrownTree tree, Dictionary<string, Surface> byName)
+    {
+        if (byName.TryGetValue(tree.AllOver, out Surface ground) && ground != tree)
+            return ground;
+
+        throw new Exception(
+            $"A grown tree climbs '{tree.AllOver}' all over, but {KnownNames(byName)}.  A grown tree may only climb " +
+            "something standing beside it in the same group.");
+    }
+
+    /// <summary>
+    /// This method says what names there are among a set of siblings, for a complaint that one was not found.
+    /// </summary>
+    private static string KnownNames(Dictionary<string, Surface> byName) =>
+        byName.Count == 0
+            ? "nothing beside it carries a name at all"
+            : $"the names here are {string.Join(", ", byName.Keys.Order().Select(name => $"'{name}'"))}";
 
     /// <summary>
     /// This method finds the surface a field is dropped onto or covers all over, complaining usefully when there
@@ -68,9 +100,7 @@ internal static class PlacementSettler
         if (byName.TryGetValue(wanted, out Surface ground) && ground != field)
             return ground;
 
-        string known = byName.Count == 0
-            ? "nothing beside it carries a name at all"
-            : $"the names here are {string.Join(", ", byName.Keys.Order().Select(name => $"'{name}'"))}";
+        string known = KnownNames(byName);
 
         throw field.Over is not null
             ? new Exception(
@@ -180,13 +210,14 @@ internal static class PlacementSettler
     {
         // A swarm fills itself once bodies are moved and a dropped field where it lands, both after placements are
         // settled, so either is empty here and would be passed over as nothing to place; and so does a field
-        // covering something all over.
-        if (surface is Swarm or Field { Over: not null } or Field { AllOver: not null })
+        // covering something all over, or a tree climbing it.
+        if (surface is Swarm or Field { Over: not null } or Field { AllOver: not null } or GrownTree { AllOver: not null })
         {
             string what = surface switch
             {
                 Swarm => "swarm",
                 Field { AllOver: not null } => "field covering something all over",
+                GrownTree => "grown tree climbing something",
                 _ => "field dropped over something"
             };
 

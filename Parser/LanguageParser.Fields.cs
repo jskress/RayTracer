@@ -161,61 +161,17 @@ public partial class LanguageParser
                     }
 
                     break;
-                case "patches":
-                    resolver.PatchesResolver = ParseDensityShapeClause(clause);
-
-                    // An edge, if the scene gives one: unsaid, the pattern's value is the chance itself.
-                    if (ParseClause("fieldEdgeClause") is { } edge)
-                    {
-                        resolver.PatchesFromResolver = new TermResolver<double> { Term = edge.Term() };
-                        resolver.PatchesToResolver = new TermResolver<double> { Term = edge.Term(1) };
-                    }
-
-                    break;
                 case "picked":
                     resolver.PickedByResolver = ParseDensityShapeClause(clause, 2);
                     break;
                 case "over":
                     resolver.OverResolver = new TermResolver<string> { Term = clause.Term() };
                     break;
-                case "all":
-                    resolver.AllOverResolver = new TermResolver<string> { Term = clause.Term() };
-                    break;
                 case "upright":
                     resolver.UprightResolver = new LiteralResolver<bool> { Value = true };
                     break;
-                case "facing":
-                    resolver.FacingResolver = new TermResolver<Vector> { Term = clause.Term() };
-
-                    if (clause.Expressions.Count > 1)
-                    {
-                        resolver.FacingPowerResolver = new TermResolver<double>
-                        {
-                            Term = clause.Term(1),
-                            Validator = value => value > 0 ? null : "How strongly a field favors a facing must be more than nought."
-                        };
-                    }
-
-                    break;
                 case "tilted":
                     resolver.TiltedResolver = new LiteralResolver<bool> { Value = true };
-                    break;
-                case "above":
-                    resolver.AboveResolver = new TermResolver<double> { Term = clause.Term() };
-                    break;
-                case "below":
-                    resolver.BelowResolver = new TermResolver<double> { Term = clause.Term() };
-                    break;
-                case "steepest":
-                    // In the scene's own unit of angle, from level: past a right angle, overhanging, which only
-                    // a field covering something all over can meet.
-                    resolver.SteepestResolver = new AngleResolver
-                    {
-                        Term = clause.Term(),
-                        Validator = value => value is >= 0 and <= Math.PI + 1e-9
-                            ? null
-                            : "The steepest ground a field may stand on must be from level to upside down."
-                    };
                     break;
                 case "sink":
                     resolver.SinkResolver = new TermResolver<double> { Term = clause.Term() };
@@ -237,9 +193,72 @@ public partial class LanguageParser
 
                     break;
                 default:
-                    HandleSurfaceClause(clause, resolver, "field");
+                    if (!HandleCoverClause(clause, resolver, "a field"))
+                        HandleSurfaceClause(clause, resolver, "field");
                     break;
             }
         });
+    }
+
+    /// <summary>
+    /// This method handles what a thing filling itself over the whole of another surface says of where on it it may
+    /// stand -- the surface, its patches, its facing, its heights and its steepest -- which a field and a grown tree
+    /// read alike.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    /// <param name="resolver">The resolver of the thing.</param>
+    /// <param name="what">What the thing is called, with its article, for what is said of a bad value.</param>
+    /// <returns>Whether the clause was one of these.</returns>
+    private bool HandleCoverClause(Clause clause, ICoverResolver resolver, string what)
+    {
+        switch (clause.Text())
+        {
+            case "patches":
+                resolver.PatchesResolver = ParseDensityShapeClause(clause);
+
+                // An edge, if the scene gives one: unsaid, the pattern's value is the chance itself.
+                if (ParseClause("fieldEdgeClause") is { } edge)
+                {
+                    resolver.PatchesFromResolver = new TermResolver<double> { Term = edge.Term() };
+                    resolver.PatchesToResolver = new TermResolver<double> { Term = edge.Term(1) };
+                }
+
+                return true;
+            case "all":
+                resolver.AllOverResolver = new TermResolver<string> { Term = clause.Term() };
+                return true;
+            case "facing":
+                resolver.FacingResolver = new TermResolver<Vector> { Term = clause.Term() };
+
+                if (clause.Expressions.Count > 1)
+                {
+                    resolver.FacingPowerResolver = new TermResolver<double>
+                    {
+                        Term = clause.Term(1),
+                        Validator = value => value > 0 ? null : $"How strongly {what} favors a facing must be more than nought."
+                    };
+                }
+
+                return true;
+            case "above":
+                resolver.AboveResolver = new TermResolver<double> { Term = clause.Term() };
+                return true;
+            case "below":
+                resolver.BelowResolver = new TermResolver<double> { Term = clause.Term() };
+                return true;
+            case "steepest":
+                // In the scene's own unit of angle, from level: past a right angle, overhanging, which only
+                // something covering a surface all over can meet.
+                resolver.SteepestResolver = new AngleResolver
+                {
+                    Term = clause.Term(),
+                    Validator = value => value is >= 0 and <= Math.PI + 1e-9
+                        ? null
+                        : $"The steepest ground {what} may stand on must be from level to upside down."
+                };
+                return true;
+            default:
+                return false;
+        }
     }
 }

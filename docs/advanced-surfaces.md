@@ -2324,6 +2324,81 @@ is to see.
 
 The complete scene is [`docs/examples/advanced/grown.igl`](examples/advanced/grown.igl).
 
+#### Climbing a surface
+
+Ivy up a wall, a creeper over a house: given **`all over`** and the name of a surface in place of a
+crown, a grown tree climbs that surface.  Its points are spread over the whole of it — every face, as a
+field [all over](#covering-a-surface-all-over) spreads its copies — and its stems grow toward them
+along it.
+
+![A climber on a stretch of wall, bare and in leaf](images/figures/adv-climbing.png)
+
+```
+cube { scale [1.05, 0.8, 0.12]  translate [0, 0.8, 0.12]  named 'wall' }
+
+grown {
+    all over 'wall'
+    points 1600
+    reach 0.18  kill 0.04  step 0.03
+    tropism [0, 1, 0]  susceptibility 0.3
+    twig 0.004
+    spread 2.2
+    leaf leaf
+    translate [0.35, 0.02, -0.02]     // its foot, at the wall
+}
+```
+
+The same climber twice, bare and in leaf: up the face from its foot, over the top and down the far
+side, and round the end.  The scene is
+[`docs/examples/advanced/climbing.igl`](examples/advanced/climbing.igl).
+
+**It grows from where it stands**: from the place on the surface nearest its origin, looking every way
+as far as its `reach` — so stand it at the foot of what it climbs, a few centimeters off it.  One with
+nothing of the surface that near is refused.  Its first stem grows along the surface toward the nearest point,
+until the points draw it.
+
+**Every step is walked along the surface.**  A step goes on across the face it is on, however the face
+curves; into a corner it meets, where it stops and climbs the face it met — so a fin thinner than a
+step is climbed, not passed through; and round an edge the surface turns away over, onto the top of a
+wall or round the corner of a house.  A step that finds the surface none of those ways is not taken,
+so growth that would leave the surface stops there.  The stems lie on the surface, each held off it by
+its own thickness; deep in an inside corner, a stem held off one face sinks a little into the other.
+
+**`points`**, or **`spacing`**.  `points` is how many points are spread over what it climbs, and
+**`spacing`** how far apart they stand instead — one for every square of that side, which is what a
+climber made for any surface says, not knowing how big the surface will be.  Not both.
+
+**`above`**, **`below`**, **`steepest`**, **`facing`** and **`patches`** keep it to part of the
+surface, exactly as they keep [a field all over](#covering-a-surface-all-over) to part of one: ivy kept
+`below` the eaves, a climber `facing` the sun, patches where it has died back.  When they leave part
+of the surface, the points are spread again, more of them, so the part climbed holds about as many as
+`points` asks.
+
+**`spread`** is the furthest its wood may run from its root, measured along it; what lies further is
+left unreached.  It is how far a climber has spread — a young plant covers a meter or two about its
+foot, an old one the house — and without it a climber covers everything it can reach, as a tree fills
+its crown.  (It bounds a tree grown into a crown as well, which then stops short of filling it.)
+
+**Its leaves stand out of the surface**, as a field's copies do.  A climber's leaf is authored
+**standing on the origin, +Y out of the surface, its tip along +Z**: laid on the stem, its tip runs
+down the surface, give or take an eighth of a turn, as a climber's leaves hang on their stalks, and on
+a level face any way at all.  They stand all along the wood but the oldest — wherever it is no
+thicker than six twigs — since a climber's leaves are on its shoots, everywhere, and not on the stems
+that carry them.  `hanging` still stands them upright.
+
+**The surface has to stand beside it**, in the same group or both at the top of the scene, and have an
+end to it: a plane is refused.  It is climbed once it has been placed, so a climber cannot itself be
+placed `on` anything.  A primitive's climber climbs what it is handed by name:
+
+```
+primitive Climber(wall) -> grown { return grown { all over wall  spacing 0.05 } }
+```
+
+What it costs: an ivy spread three meters over a wall — nine thousand pieces of stem and twenty-seven
+thousand leaves — grows in under a second.  The [climbers library](libraries.md#climbers) holds `Ivy`
+and `Creeper`, and `gallery/Local/countryside/an-ivy-clad-cottage.igl` grows both over a cottage
+corner and its garden wall.
+
 ### Fracture
 
 A solid broken into pieces.  Seeds are scattered through it, and each piece is the part of the solid
