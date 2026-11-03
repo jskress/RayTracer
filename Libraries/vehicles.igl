@@ -64,12 +64,30 @@
 
 // The gloss is the point; see above.  A paint with these numbers dropped to a building's `specular
 // 0.05` stops reading as a vehicle even with the shape untouched.
+//
+// **Four of the six are metallic**, as most cars are: flakes of metal in the paint, a rough metallic mirror,
+// under a clear coat that mirrors smoothly over them.  The flakes are a few hundredths of a millimeter across
+// and **glint** -- counted under each pixel rather than averaged (see `glints` in the documentation) -- so a
+// wing in the sun sparkles near and shows its smooth sheen far off.  Red and white are solid paints, which
+// have no flakes.
 VehicleRed = material { pigment [0.52, 0.11, 0.09]  specular 0.85  shininess 200  reflective 0.05  fresnel }
-VehicleBlue = material { pigment [0.13, 0.20, 0.42]  specular 0.85  shininess 200  reflective 0.05  fresnel }
+VehicleBlue = material {
+    pigment [0.13, 0.20, 0.42]  diffuse 0.45  metallic reflective 0.55  roughness 0.35  glints { size 0.00004 }  coat { }
+}
 VehicleWhite = material { pigment [0.80, 0.80, 0.79]  specular 0.85  shininess 200  reflective 0.05  fresnel }
-VehicleGreen = material { pigment [0.13, 0.28, 0.19]  specular 0.85  shininess 200  reflective 0.05  fresnel }
-VehicleSand = material { pigment [0.62, 0.55, 0.36]  specular 0.80  shininess 180  reflective 0.05  fresnel }
-VehicleGray = material { pigment [0.28, 0.29, 0.31]  specular 0.85  shininess 200  reflective 0.05  fresnel }
+VehicleGreen = material {
+    pigment [0.13, 0.28, 0.19]  diffuse 0.45  metallic reflective 0.55  roughness 0.35  glints { size 0.00004 }  coat { }
+}
+VehicleSand = material {
+    pigment [0.62, 0.55, 0.36]  diffuse 0.45  metallic reflective 0.5  roughness 0.35  glints { size 0.00004 }  coat { }
+}
+VehicleGray = material {
+    pigment [0.28, 0.29, 0.31]  diffuse 0.45  metallic reflective 0.6  roughness 0.35  glints { size 0.00004 }  coat { }
+}
+
+// A truck's chassis, painted gray, and the sheeted load on its bed: neither metallic paint.
+VehicleChassis = material { pigment [0.28, 0.29, 0.31]  specular 0.85  shininess 200  reflective 0.05  fresnel }
+VehicleLoad = material { pigment [0.62, 0.55, 0.36]  specular 0.80  shininess 180  reflective 0.05  fresnel }
 
 VehicleGlass = material { pigment [0.06, 0.08, 0.10]  specular 0.90  shininess 300  reflective 0.04  fresnel }
 VehicleTire = material { pigment [0.06, 0.06, 0.07]  specular 0.06  shininess 8 }
@@ -78,7 +96,7 @@ VehicleChrome = material { metal 'chromium' }
 VehicleLamp = material { pigment [0.86, 0.83, 0.71]  specular 0.90  shininess 250 }
 VehicleTail = material { pigment [0.58, 0.06, 0.05]  specular 0.90  shininess 250 }
 VehicleBed = material { pigment [0.34, 0.30, 0.26]  specular 0.12  shininess 20 }
-VehicleSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.25  shininess 50 }
+VehicleSnow = material { pigment [0.93, 0.94, 0.97]  specular 0  glints { size 0.0008  roughness 0.7 } }
 
 // Six paints, so that a street does not come out as one car repeated.  Which one a vehicle wears is
 // its variant's business.
@@ -384,7 +402,7 @@ primitive Truck(length, season = 'summer', variant = 1) -> group {
 
     return group {
         // The chassis, which is what the cab and the bed both stand on.
-        cube { material VehicleGray  scale [length * 0.48, length * 0.014, wide * 0.40]
+        cube { material VehicleChassis  scale [length * 0.48, length * 0.014, wide * 0.40]
                translate Y deck - length * 0.014 }
 
         // The cab.
@@ -425,7 +443,7 @@ primitive Truck(length, season = 'summer', variant = 1) -> group {
 
         // The load, which is what stops a flat bed from reading as an empty shelf.
         superellipsoid {
-            material VehicleSand
+            material VehicleLoad
             east 0.25
             north 0.25
             scale [length * 0.215, length * 0.075, wide * 0.40]

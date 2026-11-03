@@ -52,6 +52,7 @@ The rest of the material describes how light behaves when it arrives.
 | `subsurface` | none | Light that goes in, wanders under the surface and comes out elsewhere — wax, marble, skin, a leaf; see [Light under the surface](#light-under-the-surface). |
 | `coat` | none | A clear coat over the surface — lacquer, varnish, a glaze — that mirrors by its own index; see [A clear coat](#a-clear-coat). |
 | `sheen` | none | The soft shine of cloth toward a graze — velvet, satin, felt; see [Cloth](#cloth). |
+| `glints` | none | Facets counted under each pixel rather than averaged, so they sparkle — metal flakes in paint, the grains of snow; see [Glints](#glints). |
 | `melanin` | none | For hair only: colors it as natural hair is colored; see [How hair is lit](advanced-surfaces.md#how-hair-is-lit). |
 | `brilliance` | 1 | How sharply the diffuse term falls off toward the edges. |
 | `grain` | 0 | Roughens the diffuse falloff. |
@@ -584,6 +585,68 @@ cloth or gathered by caustics, which reach only the weave.  A sheen goes on some
 material with one may have no film or coat.
 
 `gallery/Local/materials/velvet-and-satin.igl` shows a velvet cushion, a fold of satin and a felt ball.
+
+#### Glints
+
+The flakes of metal in a car's paint, the ice grains of snow, the quartz in sand: each is a little
+mirror, and in the sun each catches it or does not.  A rough surface's highlight is worked out as if its
+facets were infinitely many and infinitely small, which shows their average, a smooth sheen.
+**`glints`** says how big the facets really are, and they are counted rather than averaged: a pixel's
+patch of snow holds a few hundred grains, and of those the sun's own sliver of directions is caught by
+none — or by one, which then blazes.
+
+![Metallic paint averaged, the same paint glinting, and a snowball](images/figures/material-glints.png)
+
+```
+material {
+    pigment [0.10, 0.18, 0.50]
+    diffuse 0.45  metallic reflective 0.55  roughness 0.35
+    glints { size 0.00004 }       // flakes a few hundredths of a millimeter across
+    coat { }
+}
+
+material {
+    pigment [0.93, 0.94, 0.97]
+    specular 0
+    glints { size 0.001  roughness 0.7 }    // grains of ice a millimeter across
+}
+```
+
+On the left, metallic paint as a rough metallic mirror under a clear coat, its flakes averaged; in the
+middle the same paint, its flakes glinting under the coat's own smooth highlight; on the right, snow.
+The scene is [`docs/examples/materials/glints.igl`](examples/materials/glints.igl).
+
+| Setting | What it is |
+| --- | --- |
+| `size` | How big a facet is across, in the world's units: meters, in every library. |
+| `roughness` | For glints on a surface that is not rough: how far its grains lean, 0.5 unless said. |
+
+**On a rough surface, its own facets glint**: the highlight its `roughness` gives is shared out among
+the facets under each pixel, so a few pixels blaze and the rest go dark.  **On any other**, glints are
+grains of their own on its skin, mirroring what a non-metal does — four hundredths square-on, more at
+a graze — and leaning as their own `roughness` says: a highlight of their own beside whatever else the
+surface shows, which is how snow and sand sparkle while staying matte and taking no reflection rays.
+A rough material's grains are its own facets, so glints' own `roughness` is refused on one.
+
+**Far off, the sparkle settles into the sheen it averages to.**  How many facets catch a lamp under a
+pixel is drawn from a Poisson law whose mean is what the smooth highlight assumes (Zirr and
+Kaplanyan's counting, 2016, over a grid matched to the pixel as Deliot and Belcour's is, 2023), so the
+picture gives back exactly as much light as the smooth highlight would, on average; and where a pixel's
+patch holds so many facets that the count is its mean, the smooth highlight is what shows.  A wing a
+few meters off glitters; the same car down the street has a metallic sheen.
+
+**A glint stays where it is.**  The count belongs to the place, drawn by hashing a cell of a grid laid in
+the material's own space and as fine as the pixel's patch, and a cell of the directions the lamp's
+light comes back along: every ray in a pixel finds the same facets, and moving the lamp or the eye
+turns the light onto other facets, as turning a car in the sun does.
+
+**Only lamps glint.**  The sun, lamps, the patches of an area light: a lamp with no size is taken to be
+as wide as the sun, half a degree.  What the surface mirrors of the sky and the rest of the world keeps
+the smooth highlight's blur.  A brushed surface's facets run along its grooves, so `glints` and
+`anisotropy` are refused together.
+
+The [vehicles library](libraries.md#vehicles)' metallic paints and all the libraries' snow glint, and
+`gallery/Local/countryside/a-car-on-a-winter-morning.igl` shows both in a low winter sun.
 
 #### Thin films
 

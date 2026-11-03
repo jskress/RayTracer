@@ -547,6 +547,10 @@ public abstract class Light : NamedThing
                         ? share * facets.Highlight(eye, vector, reflectance, spread)
                         : share * Microfacets.Highlight(normal, eye, vector, alpha, reflectance);
 
+                // Facets few enough to count give the lamp to the few that catch it; see Glints.
+                if (factor != 0 && facets is null && material.Glints is { } glints)
+                    factor *= GlintShareOf(glints, material, surface, point, footprint, portals, normal, eye, alpha, sample);
+
                 // What the facets give back of the lamp after mirroring it among themselves, which the highlight
                 // of a single mirroring leaves out; see Microfacets.Compensation.  Rough glass's facets let through
                 // what they do not mirror, and are made up for by the glass's own albedo, the two together.
@@ -603,6 +607,21 @@ public abstract class Light : NamedThing
                     specularColor *= bare.Mirrors<TS>(lightDotNormal, 1);
                 else if (material.Metallic != 0 && material.Metal is null)
                     specularColor *= material.GetMetallicTint(pigmentColor, lightDotNormal);
+            }
+
+            // A surface that is not rough may have grains of its own that glint -- ice in snow, quartz in sand -- a
+            // highlight of their own beside whatever else it shows.  Lamps a ray can meet give them none.
+            if (!material.IsRough && material.Glints is { } grains && highlights &&
+                (highlightShare ?? (CanBeSeen ? 0 : 1)) is var grainShare && grainShare > 0)
+            {
+                double alpha = Microfacets.WidenedBy(grains.GrainAlpha, SpreadOf(sample));
+                double factor = grainShare * Microfacets.Highlight(normal, eye, vector, alpha, GrainReflectanceAt);
+
+                if (factor != 0)
+                    factor *= GlintShareOf(grains, material, surface, point, footprint, portals, normal, eye, alpha, sample);
+
+                if (factor != 0)
+                    specularColor += EmittedToward<TS>(sample) * factor;
             }
         }
 
@@ -672,6 +691,30 @@ public abstract class Light : NamedThing
 
         return ambientColor + diffuseColor * reaching + specularColor * reaching + coatColor * reaching +
                sheenColor * reaching;
+    }
+
+    /// <summary>
+    /// This method returns what grains on a surface that is not rough mirror, at the cosine the eye meets one at:
+    /// a non-metal's square-on share, climbing toward a graze by Schlick's reckoning.
+    /// </summary>
+    private static double GrainReflectanceAt(double cos) =>
+        Glints.GrainReflectance + (1 - Glints.GrainReflectance) * Math.Pow(1 - Math.Clamp(cos, 0, 1), 5);
+
+    /// <summary>
+    /// This method returns how much of the smooth highlight a sample of this light gets from glints at a place:
+    /// see <see cref="Glints.ShareAt"/>.  All of it for a ray with no footprint, which has no pixel to count over.
+    /// </summary>
+    private double GlintShareOf(
+        Glints glints, Material material, Surface surface, Point point, Footprint footprint, Portals portals,
+        Vector normal, Vector eye, double alpha, LightSample sample)
+    {
+        if (footprint is null || footprint.IsEmpty)
+            return 1;
+
+        Point local = material.WorldToAnchor(surface, point, portals);
+        Footprint there = material.WorldToAnchor(surface, footprint, portals);
+
+        return glints.ShareAt(local, footprint, there, normal, (eye + sample.Direction).Unit, alpha, SpreadOf(sample));
     }
 
     /// <summary>

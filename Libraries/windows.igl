@@ -79,7 +79,7 @@ WindowSill = material { pigment [0.640, 0.625, 0.590]  specular 0.10  shininess 
 
 WindowShutter = material { pigment [0.255, 0.300, 0.255]  specular 0.16  shininess 32  ambient 0.06 }
 
-WindowSnowCap = material { pigment [0.90, 0.92, 0.96]  specular 0.26  shininess 52  ambient 0.10 }
+WindowSnowCap = material { pigment [0.90, 0.92, 0.96]  specular 0  glints { size 0.0008  roughness 0.7 }  ambient 0.10 }
 
 primitive WindowFrameOf(variant) -> material {
     switch (mod(floor(variant), 3)) {

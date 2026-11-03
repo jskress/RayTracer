@@ -2,7 +2,7 @@ railroad-ebnf-beta
 title "A material"
 
 material = "material" "{" { pigment | normal | finish | brushing | metal | metallic | interior | decal | film
-                           | subsurface | coat | sheen } "}"
+                           | subsurface | coat | sheen | glints } "}"
          | "material" "inherited" [ "{" { decal } "}" ]
          | "material" "blend" pattern "{" [ weathering ] ( map | materials ) { transform } "}" ;
 
@@ -34,6 +34,8 @@ coat = "coat" "{" { "roughness" number | ( "ior" | "index" "of" "refraction" ) n
                   | "tint" ( number | color ) } "}" ;
 
 sheen = "sheen" "{" { "color" ( number | color ) | "roughness" number } "}" ;
+
+glints = "glints" "{" { "size" number | "roughness" number } "}" ;
 
 pattern = ( name [ "with" "seed" number ] | picture ) "{" [ turbulence ] [ shaping ] { transform } "}" ;
 

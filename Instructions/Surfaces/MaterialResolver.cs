@@ -144,6 +144,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     public SheenResolver SheenResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the material's glints, if it has them.
+    /// </summary>
+    public GlintsResolver GlintsResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how much the material's surface is brushed.
     /// </summary>
     public Resolver<double> AnisotropyResolver { get; set; }
@@ -205,7 +210,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
                         MetallicResolver is not null || MetalResolver is not null || TransparencyResolver is not null ||
                         MelaninResolver is not null || FilmResolver is not null || SubsurfaceResolver is not null ||
                         CoatResolver is not null || AnisotropyResolver is not null || SheenResolver is not null ||
-                        InteriorResolver is not null || SurfaceNormalResolver is not null;
+                        GlintsResolver is not null || InteriorResolver is not null || SurfaceNormalResolver is not null;
 
         if (SetToNull && saysMore)
         {
@@ -222,6 +227,14 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
 
         if (SheenResolver is not null && (FilmResolver is not null || CoatResolver is not null))
             return "A sheen is cloth's own skin, so a material with one may have no film or coat as well.";
+
+        if (GlintsResolver is not null && AnisotropyResolver is not null)
+            return "A brushed surface's facets run along its grooves; glints are facets leaning every way, so a " +
+                   "material may be brushed or glint, not both.";
+
+        if (GlintsResolver?.RoughnessResolver is not null && RoughnessResolver is not null)
+            return "A rough material's glints are its own facets, leaning as its roughness says; glints' own " +
+                   "roughness is for grains on a surface that is not rough.";
 
         return FilmResolver is not null && RoughnessResolver is not null
             ? "A film's colors come of its being smooth, so a material with a film may not also be rough."
@@ -316,6 +329,9 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
 
         if (SheenResolver != null)
             value.Sheen = SheenResolver.Resolve(context, variables);
+
+        if (GlintsResolver != null)
+            value.Glints = GlintsResolver.Resolve(context, variables);
 
         // Decals go on top of any the material already has rather than in place of them, the same as
         // writing a second one in the same block would, which is what a block laid over a material

@@ -464,9 +464,17 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Countryside</b> &mdash; 14 images &middot; trees, ground, weather and fire</summary>
+<summary><b>Countryside</b> &mdash; 15 images &middot; trees, ground, weather and fire</summary>
 
 <table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/countryside/a-car-on-a-winter-morning.png">
+      <img alt="A Car on a Winter Morning" height="120" src="Local/countryside/a-car-on-a-winter-morning.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/countryside/a-car-on-a-winter-morning.igl">A Car on a Winter Morning</a>
+    </td>
+  </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/countryside/a-corner-of-a-field.png">
       <img alt="A Corner of a Field" height="120" src="Local/countryside/a-corner-of-a-field.png" width="160"/>

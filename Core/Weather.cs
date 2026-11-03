@@ -263,15 +263,16 @@ public sealed class Weather
         return dusty;
     }
 
-    // Snow: white and matte but for a little sheen, whatever lies beneath.
+    // Snow: white and matte, whatever lies beneath, its ice grains glinting -- the libraries' snow, a grain a
+    // millimeter across, rather than the sheen it had before glints (see Glints).
     private Material Snowy(Material material)
     {
         Material snowy = Stripped(material);
 
         snowy.Pigment = new SolidPigment(SnowColor);
         snowy.Diffuse = 0.9;
-        snowy.Specular = 0.12;
-        snowy.Shininess = 20;
+        snowy.Specular = 0;
+        snowy.Glints = SnowGrains;
         snowy.Reflective = 0;
         snowy.Roughness = 0;
         snowy.Metallic = 0;
@@ -279,6 +280,9 @@ public sealed class Weather
 
         return snowy;
     }
+
+    // The grains of snow: the same everywhere snow lies, as the libraries' own snow has them.
+    private static readonly Glints SnowGrains = new () { Size = 0.0008, Roughness = 0.7 };
 
     // Wear with nothing said to bare: the part's own, paler and smoother, as handling polishes paint.
     private static Material Worn(Material material)
@@ -291,13 +295,14 @@ public sealed class Weather
         return worn;
     }
 
-    // A copy with its skins gone: a coat or a sheen is under the dirt, not over it.
+    // A copy with its skins gone: a coat, a sheen or glinting flakes are under the dirt, not over it.
     private static Material Stripped(Material material)
     {
         Material stripped = material.CopiedForBlending();
 
         stripped.Coat = null;
         stripped.Sheen = null;
+        stripped.Glints = null;
         stripped.Anisotropy = 0;
 
         return stripped;

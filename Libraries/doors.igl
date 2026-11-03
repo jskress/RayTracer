@@ -65,7 +65,7 @@ DoorStep = material { pigment [0.560, 0.548, 0.522]  specular 0.09  shininess 20
 // and it stops being an ornament the moment there is any more of it.
 DoorBrass = material { metal 'brass' }
 
-DoorSnowCap = material { pigment [0.90, 0.92, 0.96]  specular 0.26  shininess 52  ambient 0.10 }
+DoorSnowCap = material { pigment [0.90, 0.92, 0.96]  specular 0  glints { size 0.0008  roughness 0.7 }  ambient 0.10 }
 
 primitive DoorLeafOf(variant) -> material {
     switch (mod(floor(variant), 4)) {

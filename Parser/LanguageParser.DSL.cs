@@ -95,7 +95,7 @@ public partial class LanguageParser
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'portal', 'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reach', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
-            'gives', 'glass', 'grown', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rounded', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
+            'gives', 'glass', 'glints', 'grown', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rounded', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'solid', 'source',
             'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'splash', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'step', 'stretched', 'strength', 'stripes', 'subsurface', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'tint', 'title', 'to', 'toward', 'top', 'toroidal', 'torus',
@@ -693,7 +693,7 @@ public partial class LanguageParser
             metallic > [
                 pigment | normal | fresnel | materialValueClause | materialAnisotropyClause | materialMelaninClause |
                 materialMetalClause | startInteriorClause | startDecalClause | startFilmClause |
-                startSubsurfaceClause | startCoatClause | startSheenClause | _expression{?}
+                startSubsurfaceClause | startCoatClause | startSheenClause | startGlintsClause | _expression{?}
             ] > { to > _expression }{?}
         }
         // A real metal: by name, measured, or by the color it mirrors square-on and, if said, an edge color for how
@@ -831,11 +831,21 @@ public partial class LanguageParser
         [
             { color > _expression } | { roughness > _expression }
         ] ?? 'Expecting a sheen property here.'
+        // Glints: a surface's facets counted under each pixel rather than averaged, so they sparkle -- how big they
+        // are, and on a surface that is not rough, how far its grains lean.
+        startGlintsClause:
+        {
+            glints > openBrace ?? 'Expecting an open brace to follow "glints" here.'
+        }
+        glintsEntryClause:
+        [
+            { size > _expression } | { roughness > _expression }
+        ] ?? 'Expecting a glints property here.'
         materialEntryClause:
         [
             pigment | normal | fresnel | materialValueClause | materialAnisotropyClause | materialMetallicClause |
             materialMetalClause | materialMelaninClause | startInteriorClause | startDecalClause | startFilmClause |
-            startSubsurfaceClause | startCoatClause | startSheenClause
+            startSubsurfaceClause | startCoatClause | startSheenClause | startGlintsClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.
