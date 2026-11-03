@@ -1,0 +1,6 @@
+railroad-ebnf-beta
+title "A chain"
+
+chain = "chain" "{" { way | "link" number | "wire" number | "width" number | property } "}" ;
+
+way = spline | "spline" catenary | "spline" name ;

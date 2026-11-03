@@ -1160,6 +1160,53 @@ gradient will do; one of [the skies](#daylight) does it better.
 past where this can go.  Turning the shape round to ask what stands at a place needs there to be one
 answer, and past a steepness of one there is more than one.  The cusp at 1.0 is the nearest it comes.
 
+#### Rigging
+
+```
+import 'rigging' { MooringBollard, MooringLine, AnchorChain, RopeBarrier, TelegraphLine }
+
+object MooringBollard(0.6) { translate [2, 0, 0] }
+object MooringLine([-2, 1.2, -1], [2, 0, 0], 0.6, 0.3)
+object AnchorChain([-2, 1.6, 1], [1, 0, 3], 0.4)
+object RopeBarrier([-4, 0, 4], [4, 0, 4], 4)
+object TelegraphLine([-30, 0, 15], [30, 0, 15], 4)
+```
+
+Rope, wire and chain, and the things they are made fast to.
+
+| | |
+| --- | --- |
+| `Mooring` | A laid rope hung between two places: manila, nylon, polypropylene or steel wire rope. |
+| `MooringLine` | A mooring line from a place on a boat to a `MooringBollard`: an eye dropped over the bollard, the line hung from its splice. |
+| `AnchorChain` | Galvanized short-link chain hung between two places, its links sized for an anchor. |
+| `MooringBollard` | A cast-iron bollard on a quay, waisted under a broad head that keeps a rope from riding off. |
+| `Cleat` | A horn cleat: a bar with two horns on two legs, for a rope to be made fast round.  Its length runs along X. |
+| `RopeBarrier` | Cast-iron stanchions along a line, a rope hung in a swag between each two through the rings on top. |
+| `TelegraphLine` | Wooden poles along a line, each with a crossarm and porcelain insulators, the wires hung from pole to pole. |
+
+**What hangs is a [catenary](advanced-surfaces.md#catenary)**, said by how far its middle sags below the
+straight line between its ends.  So each of these takes where it hangs from and to, then the sag:
+`Mooring` and `AnchorChain` between any two places, `MooringLine` from a place on a boat to where a
+bollard stands, and the barrier and the telegraph line from post to post along the ground between two
+places, the posts set evenly along it.  A rope that runs some other way — round a bollard, along a deck
+— is a [`rope`](advanced-surfaces.md#rope) along a spline of your own, in one of the library's
+materials: `RiggingManila`, `RiggingNylon`, `RiggingPolypropylene` and `RiggingGalvanized`.
+
+**A mooring line is made fast by an eye.**  `MooringLine` takes the place on the boat, where the bollard
+stands and how tall it is (as its `MooringBollard` was given), then the sag, the kind of rope and how
+thick it is.  It lays an eye spliced in the line's end over the bollard's head and round its waist, its
+two legs closing at the splice toward the boat, and hangs the line from the splice to the boat.
+
+**A kind of rope is said by name**: `'manila'` unless said, `'nylon'`, `'polypropylene'`, or `'wire'`,
+which is laid from six strands where fiber rope is laid from three.  A telegraph line's wires are
+[strands](advanced-surfaces.md#strand) of metal, so from any distance they are faint whole lines
+rather than rows of dots.
+
+**Everything is in meters**, as a rope is the size a rope is: a mooring line 24 mm across unless said,
+an anchor chain's links 9 cm long, a bollard 0.6 m tall, telegraph poles 7.5 m.
+`gallery/Local/marine/a-trawler-at-the-quay.igl` moors a trawler alongside a granite quay with all of
+them.
+
 #### Cloth
 
 ```

@@ -1,4 +1,6 @@
 railroad-ebnf-beta
 title "A strand"
 
-strand = "strand" "{" { "width" number "at" point | property } "}" ;
+strand = "strand" "{" { "width" number "at" point | way "width" number | property } "}" ;
+
+way = spline | "spline" catenary | "spline" name ;

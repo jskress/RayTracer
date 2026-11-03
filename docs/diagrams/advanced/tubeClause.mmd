@@ -1,6 +1,8 @@
 railroad-ebnf-beta
 title "A tube"
 
-tube = "tube" "{" [ "discontinuous" ] { point } { property } "}" ;
+tube = "tube" "{" ( [ "discontinuous" ] { point } | way "radius" number ) { property } "}" ;
 
 point = [ "quad" | "curve" ] "radius" number "at" point3 { "radius" number "at" point3 } ;
+
+way = spline | "spline" catenary | "spline" name ;

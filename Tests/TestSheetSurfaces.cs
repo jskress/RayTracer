@@ -161,6 +161,8 @@ public class TestSheetSurfaces
             "Swarm",
             // A joint is a group, and a mark is answered by no ray at all.
             "Joint", "Mark",
+            // A rope holds the tube pieces of its strands, and a chain the links it stands along its spline.
+            "Rope", "Chain",
             // A strand is hit as a ribbon but shaded as a rod: its normal always faces whoever is
             // looking, and a ray leaving it sets off from the round surface the shading pretends is
             // there (see HairIntersection.LeavingPoints), so it is never met from behind.

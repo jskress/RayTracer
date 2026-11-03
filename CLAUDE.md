@@ -296,6 +296,19 @@ Found exactly: a box tree over the patches, each patch's de Casteljau pieces bui
 Closed outlines are a solid capped flat (plane + `GeneralPath.Contains`), open ones (or `open`) a sheet; which way
 is out is voted at the first section.  `gallery/Local/marine/a-boat-at-the-jetty.igl` lofts a clinker hull from
 seven stations of three shapes, and oars from a ring into a blade.
+Rigging: a `catenary { from to sag | length }` (`Geometry/Catenary.cs`) is a SPLINE value -- cubic Hermite pieces of
+y = a cosh((x - x0)/a) + c in the upright plane through its ends, even in arc length, one per 8 degrees of turning
+and at least 8 -- named, or written where any spline goes (`spline catenary { }`, read by `SplineNamedBy`), which
+is how a primitive hangs one: its body holds only what it gives back.  `rope` (`Geometry/Rope.cs`, a Group) lays
+`strands` touching helices, r sin(pi/n)/(1 + sin(pi/n)) each, about a spline in rotation-minimizing frames, 16
+straight `TubeSegment`s a `lay` (7 radii unless said); `chain` (`Geometry/Chain.cs`) stands one shared `Tube`
+stadium link (`link` long, `wire` link/5.5, `width` 3.5 wires) every link less two wires, along the chord,
+alternating the frame's normal and binormal.  A `tube` takes `spline S radius r` and a `strand` `spline S width w`
+in place of points (`StrandSet.Add(pieces, width)`, the spline's own curves; a 4 mm telegraph wire as a tube came
+out a row of dashes at 20 m, as a metal strand a faint whole line).  Lex keeps no tag on a sequence written in
+place among alternatives, so the tube's and strand's spline entries are told apart by their text.  The `rigging`
+library's `MooringLine` draws its eye round a bollard's waist (0.74 h up, 0.155 h round) in its own frame, the boat
+along +X, and turns it into place.
 A closed `HeightField` has walls down to a floor and an underside there (`BaseUnder`): nought, or for a function's
 ground below nought, a hundredth of its height under its lowest point.  Until 2026-11-01 it was always nought, a lid
 over any ground below it: a lake bed showed through ripples at the water line, and Tatooine's wheel tracks, cut 3 cm

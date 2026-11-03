@@ -1,0 +1,6 @@
+railroad-ebnf-beta
+title "A rope"
+
+rope = "rope" "{" { way | "radius" number | "strands" number | "lay" number | property } "}" ;
+
+way = spline | "spline" catenary | "spline" name ;

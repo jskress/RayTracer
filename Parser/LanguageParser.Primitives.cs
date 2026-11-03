@@ -260,6 +260,8 @@ public partial class LanguageParser
             "field" => ParseFieldClause(clause),
             "sweep" => ParseSweepClause(clause),
             "loft" => ParseLoftClause(clause),
+            "rope" => ParseRopeClause(clause),
+            "chain" => ParseChainClause(clause),
             "grown" => ParseGrownClause(clause),
             "fracture" => ParseFractureClause(clause),
             "shapes" => ParseShapesClause(clause),
@@ -395,6 +397,10 @@ public partial class LanguageParser
                 "sweepEntryClause", HandleSweepEntryClause, validate: false),
             "loft" => ParseObjectResolver<LoftResolver>(
                 "loftEntryClause", HandleLoftEntryClause, validate: false),
+            "rope" => ParseObjectResolver<RopeResolver>(
+                "ropeEntryClause", HandleRopeEntryClause, validate: false),
+            "chain" => ParseObjectResolver<ChainResolver>(
+                "chainEntryClause", HandleChainEntryClause, validate: false),
             "grown" => ParseObjectResolver<GrownTreeResolver>(
                 "grownEntryClause", HandleGrownEntryClause, validate: false),
             "fracture" => ParseObjectResolver<FractureResolver>(
@@ -471,6 +477,8 @@ public partial class LanguageParser
             "field" => "startFieldClause",
             "sweep" => "startSweepClause",
             "loft" => "startLoftClause",
+            "rope" => "startRopeClause",
+            "chain" => "startChainClause",
             "grown" => "startGrownClause",
             "fracture" => "startFractureClause",
             "shapes" => "startShapesClause",

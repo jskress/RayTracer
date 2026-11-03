@@ -761,6 +761,19 @@ wound round it; give such a strand's material `anisotropy` and no direction, and
 it, drawing its highlight out along its length as the winding does.  See
 [Brushed metal](materials.md#brushed-metal).
 
+**Along a spline.**  In place of points, a strand may follow a [spline](#sweep) — written out, named, or
+a [catenary](#catenary) — as wide all along as the `width` after it says.  A telegraph wire hung from
+pole to pole is one: a few millimeters across, it is a fine wire from any distance, a faint line whole
+from one pole to the next rather than a row of dots.
+
+```
+strand {
+    spline catenary { from [0, 7.3, 0]  to [20, 7.3, 0]  sag 0.5 }
+    width 0.004
+    material { metal [0.42, 0.42, 0.41]  roughness 0.6 }
+}
+```
+
 **Strands are rarely written one at a time.**  For fur, a pile or a head of hair, have a surface
 grow them: see [Hair](#hair), next.
 
@@ -1187,11 +1200,130 @@ gives the taper.
 A tube checks for tangent continuity exactly as a sweep does, a control point on its own end
 included, and `discontinuous` says the kinks are meant.
 
+**Along a spline.**  In place of points, a tube may follow a [spline](#sweep) — written out, named, or a
+[catenary](#catenary) — as thick all along as the `radius` after it says.  Its kinks are the spline's,
+so a `discontinuous` spline says them for the tube as well:
+
+```
+tube {
+    spline catenary { from [-4.2, 1.8, 0]  to [-1.4, 1.8, 0]  sag 0.3 }
+    radius 0.025
+}
+```
+
 Where a sweep carries an arbitrary profile, a tube is always round — which makes it the right
 tool for cables, pipes, handles and stems, and it is what the
 [L-system](#l-systems) renderer uses to draw branches.  The complete scene is
 [`docs/examples/advanced/tube.igl`](examples/advanced/tube.igl), and
 `gallery/Local/paths/power-cord.igl` is a longer one.
+
+### Catenary
+
+The curve a rope, a chain or a wire takes when it hangs between two places under its own weight.  It is
+a [spline](#sweep), so whatever goes along a spline may hang in one: a [tube](#tube), a
+[strand](#strand), a [rope](#rope) or a [chain](#chain), a [sweep](#sweep) or a [loft](#loft), or
+anything placed [`along`](animation.md#along-a-spline) it.
+
+![A cable, a rope and a chain, each hung between two posts](images/figures/adv-rigging.png)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/catenaryClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/catenaryClause.svg">
+  <img alt="A catenary" src="images/advanced/catenaryClause.svg">
+</picture>
+
+```
+Cable = catenary { from [-4.2, 1.8, 0]  to [-1.4, 1.8, 0]  sag 0.3 }
+
+tube { spline Cable  radius 0.025 }
+chain { spline catenary { from [1.4, 1.8, 0]  to [4.2, 1.8, 0]  length 3.4 }  link 0.16 }
+```
+
+**How deep it hangs is said by its sag or by its length**, and exactly one of them must be said.  `sag`
+is how far its middle hangs below the straight line between its ends; `length` is how long the cable is,
+which must be longer than the distance between them.  Either fixes its one shape — a long cable over a
+short span hangs deep and narrow, a short one nearly straight — and it hangs in the upright plane
+through its two ends, which may stand at different heights, the lowest place nearer the lower end or
+past it.  One end straight above the other is refused: a cable between them hangs straight down, and is
+a line.
+
+It may be named, as above, or written where a spline goes, `spline catenary { ... }` — which is how a
+[primitive](scene-files.md#things-of-your-own) hangs one, since a primitive's body holds nothing but
+what it gives back.
+
+**It is the exact curve**, drawn as cubic pieces of it even in length along it, one for every eight
+degrees it turns and never fewer than eight, each set by the curve's own place and slope at its ends:
+they lie within a few millionths of its length of the true catenary.  The complete scene is
+[`docs/examples/advanced/rigging.igl`](examples/advanced/rigging.igl).
+
+### Rope
+
+A laid rope along a spline: its strands twisted about it, as three-strand rope is laid — manila, hemp,
+a mooring line — and wire rope from six strands of wire.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/ropeClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/ropeClause.svg">
+  <img alt="A rope" src="images/advanced/ropeClause.svg">
+</picture>
+
+```
+rope {
+    spline catenary { from [-1.4, 1.8, 0]  to [1.4, 1.8, 0]  sag 0.55 }
+    radius 0.045
+    strands 3
+}
+```
+
+| Property | What it says |
+| --- | --- |
+| `spline` | The way the rope runs: a spline written out, a [catenary](#catenary), or the name of either.  Always needed. |
+| `radius` | How thick the rope is: the radius of the round its strands fill.  0.01 unless said. |
+| `strands` | How many strands it is laid from: three unless said, and at least two (one is a [tube](#tube)). |
+| `lay` | How far along the rope a strand goes in one turn about it: seven times the radius unless said, as rope is commonly laid.  Negative, the strands turn the other way. |
+
+**The strands touch**, each as thick as fits so many alike round a middle — three strands are each a
+little under half the rope — and each turns once about the spline in a lay, in the spline's own frames,
+which turn no more than the spline makes them, so a rope along a bend does not twist round it.
+
+**Each strand is straight tube pieces**, sixteen a lay, end to end with round ends, so no joint shows;
+a strand laid so is off the true helix by about a fiftieth of its own thickness.  The pieces stand in
+the rope as they would in a [group](surfaces.md#groups), boxed and sorted, so a mooring line of
+thousands of pieces is looked into only where a ray goes.
+
+### Chain
+
+Oval links along a spline, each hooked through the next and turned a quarter from it, as an anchor
+chain or a swing's chain runs.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/chainClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/chainClause.svg">
+  <img alt="A chain" src="images/advanced/chainClause.svg">
+</picture>
+
+```
+chain {
+    spline catenary { from [1.4, 1.8, 0]  to [4.2, 1.8, 0]  length 3.4 }
+    link 0.16
+}
+```
+
+| Property | What it says |
+| --- | --- |
+| `spline` | The way the chain runs: a spline written out, a [catenary](#catenary), or the name of either.  Always needed. |
+| `link` | How long a link is, end to end outside.  0.05 unless said. |
+| `wire` | How thick a link's bar is: two elevenths of the link unless said, as a short-link chain's is. |
+| `width` | How wide a link is outside: three and a half bars unless said. |
+
+**A link is sized by its length and its thickness.**  It is a round bar bent into an oval, two straights
+joined by two half rounds, so it must be wider than two of its bars, to leave room inside it, and no
+shorter than it is wide.  Every link is the one shape, shared.
+
+**Links hooked through each other stand an inner length apart**, the link less two bars, so as many
+stand along the spline as fit whole, spaced to fill it.  Each lies along the chord between the two
+places it reaches on the spline, turned a quarter about it from the last in the spline's own frames, so
+a chain hanging straight down alternates as one along the ground does.
 
 ### Isosurface
 

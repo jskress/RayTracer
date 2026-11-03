@@ -58,22 +58,10 @@ public partial class LanguageParser
                     resolver.ProfileResolver = GetPathResolver(clause);
                     break;
                 case "spline" or "discontinuous":
-                {
-                    // A spline written out, or the name of one: a name is looked up where the sweep is made, so it
-                    // may be a primitive's parameter as well as one the scene set.
-                    Token last = clause.Tokens[^1];
-
-                    if (BounderToken.OpenBrace.Matches(last))
-                    {
-                        resolver.SplineResolver = clause.Text() == "discontinuous"
-                            ? ParseDiscontinuousSpline()
-                            : ParseSplineClause();
-                    }
-                    else
-                        resolver.SplineResolver = new TermResolver<Spline> { Term = new VariableTerm(last) };
-
+                    // A spline written out, a catenary hung in place, or the name of one, looked up where the sweep is
+                    // made, so it may be a primitive's parameter.
+                    resolver.SplineResolver = SplineNamedBy(clause);
                     break;
-                }
                 case "steps":
                     resolver.StepsResolver = new TermResolver<int> { Term = clause.Term() };
                     break;

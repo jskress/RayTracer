@@ -1,0 +1,290 @@
+// Rope, wire and chain, and things to make them fast to.
+//
+//     import 'rigging' { MooringBollard, MooringLine, AnchorChain, RopeBarrier, TelegraphLine }
+//
+//     object MooringBollard(0.6)  { translate [2, 0, 0] }
+//     object MooringLine([-2, 1.2, -1], [2, 0, 0], 0.6, 0.3)
+//     object AnchorChain([-2, 1.6, 1], [1, 0, 3], 0.4)
+//     object RopeBarrier([-4, 0, 4], [4, 0, 4], 4)
+//     object TelegraphLine([-30, 0, 15], [30, 0, 15], 4)
+//
+// | `Mooring` | A laid rope hung between two places: manila, nylon, polypropylene or steel wire rope. |
+// | `MooringLine` | A mooring line from a boat to a `MooringBollard`: an eye over the bollard, the line hung from its splice. |
+// | `AnchorChain` | Galvanized short-link chain hung between two places, its links sized for an anchor. |
+// | `MooringBollard` | A cast-iron bollard on a quay, waisted under a broad head that keeps a rope from riding off. |
+// | `Cleat` | A horn cleat: a bar with two horns on two legs, for a rope to be made fast round. |
+// | `RopeBarrier` | Cast-iron stanchions along a line, a rope hung in a swag between each two. |
+// | `TelegraphLine` | Wooden poles along a line, crossarms and insulators, the wires hung between them. |
+//
+// **What hangs is a catenary**, the curve a rope, a chain or a wire of even weight takes between two places (see
+// `catenary` in the documentation), said by how far its middle sags below the straight line between its ends.  So
+// each of these takes where it hangs from and to, then the sag: `Mooring` and `AnchorChain` between any two places,
+// `MooringLine` from a place on a boat to where a bollard stands, the barrier and the telegraph line from post to
+// post along the ground between two places.  A rope that runs straight -- round a bollard, along a deck -- is a
+// `rope` along a spline of your own, in one of the materials here.
+//
+// **A kind of rope is said by name**: 'manila' unless said, 'nylon', 'polypropylene' or 'wire', which is laid from
+// six strands where fiber rope is laid from three.
+//
+// **Everything is in meters**, as a rope is the size a rope is: a mooring line about 24 mm across unless said, an
+// anchor chain's links 9 cm long, a bollard 0.6 m tall, telegraph poles 7.5 m.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Rigging` is the machinery, but for the materials, which are for you as well: a rope
+// or a chain of your own, along a spline you draw, takes one of them.  They are prefixed so they will not collide
+// with anything of yours.
+
+// -- Rope, wire and chain ----------------------------------------------------------------------------------------
+
+// Manila: tan, its strands a fuzz of fiber.
+RiggingManila = material {
+    pigment granite with seed 2 { [0.2, color [0.50, 0.40, 0.25], 0.5, color [0.62, 0.51, 0.33]]  scale 0.004 }
+    normal granite { depth 0.35  scale 0.0015 }
+    specular 0.04  shininess 8
+}
+
+// Nylon: white, and smoother.
+RiggingNylon = material {
+    pigment [0.84, 0.83, 0.79]
+    normal granite { depth 0.15  scale 0.0012 }
+    specular 0.18  shininess 30
+}
+
+// Polypropylene: blue, with a plastic sheen.
+RiggingPolypropylene = material {
+    pigment [0.09, 0.22, 0.52]
+    normal granite { depth 0.12  scale 0.0012 }
+    specular 0.25  shininess 40
+}
+
+// Galvanized steel, for wire rope and chain: a dull gray metal, rough with the zinc.
+RiggingGalvanized = material { metal [0.60, 0.61, 0.60]  roughness 0.5 }
+
+// Galvanized iron telegraph wire, weathered dull.
+RiggingTelegraphWire = material { metal [0.42, 0.42, 0.41]  roughness 0.6 }
+
+// Cast iron, painted black.
+RiggingIron = material { pigment [0.030, 0.031, 0.034]  specular 0.25  shininess 30 }
+
+// A creosoted pole and its crossarm.
+RiggingPole = material {
+    pigment wood { [0, color [0.22, 0.16, 0.11], 1, color [0.17, 0.12, 0.08]]  scale [0.05, 1, 0.05] }
+    specular 0.06  shininess 10
+}
+
+// A glazed porcelain insulator.
+RiggingPorcelain = material { pigment [0.86, 0.84, 0.80]  specular 0.6  shininess 80 }
+
+// A rope's material by its kind.
+primitive RiggingRope(kind) -> material {
+    switch (kind) {
+        case 'nylon' { return material RiggingNylon }
+        case 'polypropylene' { return material RiggingPolypropylene }
+        case 'wire' { return material RiggingGalvanized }
+        default { return material RiggingManila }
+    }
+}
+
+// A laid rope hung between two places, sagging so far in its middle: manila unless said, 24 mm across unless said.
+// Wire rope is laid from six strands, fiber rope from three.
+primitive Mooring(from, to, sag = 0.3, kind = 'manila', thick = 0.024) -> rope {
+    return rope {
+        spline catenary { from from  to to  sag sag }
+        radius thick / 2
+        strands kind == 'wire' ? 6 : 3
+        material RiggingRope(kind)
+    }
+}
+
+// Galvanized short-link chain hung between two places, sagging so far in its middle: links nine centimeters long
+// unless said, their bar two elevenths of that, as a short-link chain's is.
+primitive AnchorChain(from, to, sag = 0.5, link = 0.09) -> chain {
+    return chain {
+        spline catenary { from from  to to  sag sag }
+        link link
+        material RiggingGalvanized
+    }
+}
+
+// A mooring line from a place on a boat to a `MooringBollard` standing at a place on the quay, as tall as said: an
+// eye spliced in the line's end and dropped over the bollard, lying round its waist under the head, and the line
+// hung from the splice to the boat, sagging so far in its middle.
+primitive MooringLine(from, bollard, height = 0.6, sag = 0.3, kind = 'manila', thick = 0.024) -> group {
+    boat = point from
+    waist = point bollard + vector [0, height * 0.74, 0]
+    toward = boat - waist
+    ahead = normalize(vector [dot(toward, vector [1, 0, 0]), 0, dot(toward, vector [0, 0, 1])])
+    heading = toDegrees(atan2(-dot(ahead, vector [0, 0, 1]), dot(ahead, vector [1, 0, 0])))
+    round = height * 0.155 + thick / 2
+    reach = round * 5
+    k = round * 0.5523
+
+    return group {
+        // The eye, drawn round the bollard's waist at the origin with the boat along +X: out from the splice, round
+        // the far side and back, each leg leaving the waist square to the line.
+        rope {
+            spline {
+                move to reach, 0, 0
+                curve reach * 2 / 3, 0, round / 2, round * 0.9, 0, round to 0, 0, round
+                curve -k, 0, round, -round, 0, k to -round, 0, 0
+                curve -round, 0, -k, -k, 0, -round to 0, 0, -round
+                curve round * 0.9, 0, -round, reach * 2 / 3, 0, -round / 2 to reach, 0, 0
+            }
+            radius thick / 2
+            strands kind == 'wire' ? 6 : 3
+            material RiggingRope(kind)
+            rotate Y heading
+            translate waist
+        }
+        object Mooring(waist + ahead * reach, boat, sag, kind, thick)
+    }
+}
+
+// -- Things to make them fast to ---------------------------------------------------------------------------------
+
+// A cast-iron mooring bollard, as tall as said, on a quay: a flanged foot, a body narrowing a little as it rises,
+// and a broad head over a waist, which is what keeps a rope's eye from riding up off it.
+primitive MooringBollard(height = 0.6) -> group {
+    return group {
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.62, 0
+                line to 0.62, 0.07
+                quad 0.46, 0.09 to 0.42, 0.16
+                line to 0.36, 0.72
+                quad 0.33, 0.80 to 0.48, 0.86
+                line to 0.52, 0.93
+                quad 0.46, 1.04 to 0, 1.06
+            }
+            scale [height * 0.42, height / 1.06, height * 0.42]
+        }
+        material RiggingIron
+    }
+}
+
+// A horn cleat, as long as said: two legs on a base, and across them a bar swelling to its middle and tapering to a
+// horn either side, for a rope to be made fast round.  Its length runs along X.
+primitive Cleat(length = 0.35) -> group {
+    tall = length * 0.32
+
+    return group {
+        superellipsoid { east 0.3  north 0.3  scale [length * 0.30, tall * 0.08, length * 0.11]  translate Y tall * 0.08 }
+        cylinder { min Y 0  max Y 1  scale [length * 0.055, tall * 0.78, length * 0.055]  translate X -length * 0.16 }
+        cylinder { min Y 0  max Y 1  scale [length * 0.055, tall * 0.78, length * 0.055]  translate X length * 0.16 }
+        tube {
+            radius length * 0.035 at [-length / 2, tall * 0.78, 0]
+            quad radius length * 0.075 at [0, tall * 1.02, 0]  radius length * 0.035 at [length / 2, tall * 0.78, 0]
+        }
+        material RiggingIron
+    }
+}
+
+// A glazed porcelain pin insulator, its foot at the origin: a skirt to shed the rain, a petticoat under it, and a
+// groove round its neck the wire is tied into, 0.085 up.
+RiggingInsulator = lathe {
+    path {
+        move to 0, 0
+        line to 0.040, 0
+        quad 0.041, 0.030 to 0.030, 0.044
+        line to 0.035, 0.054
+        line to 0.026, 0.070
+        line to 0.029, 0.078
+        line to 0.022, 0.085
+        line to 0.026, 0.093
+        quad 0.026, 0.110 to 0, 0.112
+    }
+    material RiggingPorcelain
+}
+
+// One telegraph pole, its foot at the origin and its crossarm across Z, bolted to the pole's +X face: a creosoted
+// pole as tall as said, an arm near its top, and an insulator for each wire along the arm.
+primitive RiggingTelegraphPole(height, wires) -> group {
+    return group {
+        cylinder { min Y 0  max Y 1  scale [0.12, height, 0.12]  material RiggingPole }
+        cube { scale [0.05, 0.05, 0.25 + wires * 0.18]  translate [0.17, height - 0.35, 0]  material RiggingPole }
+        for wire in [0, wires) {
+            object RiggingInsulator { translate [0.17, height - 0.30, (wire - (wires - 1) / 2) * 0.36] }
+        }
+    }
+}
+
+// Telegraph poles from one place on the ground to another, as many as said, evenly, each with its crossarm across
+// the line, and the wires hung from pole to pole, sagging so far between each two.
+primitive TelegraphLine(from, to, poles = 5, height = 7.5, wires = 4, sag = 0.35) -> group {
+    start = point from
+    run = point to - start
+    across = normalize(cross(run, vector [0, 1, 0]))
+    heading = toDegrees(atan2(-dot(run, vector [0, 0, 1]), dot(run, vector [1, 0, 0])))
+    rise = vector [0, height - 0.215, 0] + normalize(run) * 0.17
+
+    return group {
+        for pole in [0, poles) {
+            object RiggingTelegraphPole(height, wires) {
+                rotate Y heading
+                translate from
+                translate run * pole / (poles - 1)
+            }
+        }
+        for pole in [0, poles - 1) {
+            for wire in [0, wires) {
+                strand {
+                    spline catenary {
+                        from start + run * pole / (poles - 1) + across * (wire - (wires - 1) / 2) * 0.36 + rise
+                        to start + run * (pole + 1) / (poles - 1) + across * (wire - (wires - 1) / 2) * 0.36 + rise
+                        sag sag
+                    }
+                    width 0.004
+                    material RiggingTelegraphWire
+                }
+            }
+        }
+    }
+}
+
+// A cast-iron stanchion for a rope barrier, its foot at the origin, as tall as said: a round foot, a post, and on
+// top a ring standing across X for the rope to pass through.
+primitive RiggingStanchion(height) -> group {
+    return group {
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.09, 0
+                quad 0.09, 0.05 to 0.04, 0.07
+                line to 0.03, 0.10
+                line to 0.025, 0.85
+                line to 0.035, 0.87
+                line to 0.02, 0.90
+                line to 0, 0.90
+            }
+            scale [1, (height - 0.07) / 0.90, 1]
+        }
+        torus { radii 0.035, 0.008  rotate Z 90  translate Y height - 0.027 }
+        material RiggingIron
+    }
+}
+
+// A rope barrier from one place on the ground to another: as many cast-iron stanchions as said, evenly, as tall as
+// said, and a rope hung in a swag between each two through the rings on top, sagging so far.  Manila 32 mm thick
+// unless said.
+primitive RopeBarrier(from, to, posts = 5, height = 0.9, sag = 0.15, kind = 'manila', thick = 0.032) -> group {
+    start = point from
+    run = point to - start
+    heading = toDegrees(atan2(-dot(run, vector [0, 0, 1]), dot(run, vector [1, 0, 0])))
+    rise = vector [0, height - 0.038, 0]
+
+    return group {
+        for post in [0, posts) {
+            object RiggingStanchion(height) {
+                rotate Y heading
+                translate from
+                translate run * post / (posts - 1)
+            }
+        }
+        for post in [0, posts - 1) {
+            object Mooring(start + run * post / (posts - 1) + rise, start + run * (post + 1) / (posts - 1) + rise,
+                           sag, kind, thick)
+        }
+    }
+}

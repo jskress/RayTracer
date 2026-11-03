@@ -105,7 +105,8 @@ public partial class LanguageParser
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
             'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span', 'falls', 'burst',
             'channel', 'red', 'green', 'blue', 'alpha', 'map', 'directx', 'vignetting', 'distortion', 'chromatic',
-            'aberration', 'loft', 'section', 'straight', 'triplanar', 'shuffled',
+            'aberration', 'loft', 'section', 'straight', 'triplanar', 'shuffled', 'catenary', 'sag', 'rope', 'chain',
+            'lay', 'strands', 'link', 'wire',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -1423,8 +1424,18 @@ public partial class LanguageParser
             tubePointClause => 'point' |
             tubeQuadClause => 'quad' |
             tubeCubicClause => 'curve' |
+            {
+                discontinuous{?} > spline >
+                [ openBrace | { catenary > openBrace ?? 'Expecting an open brace to follow "catenary" here.' } |
+                  _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
+            } |
             discontinuous | surfaceEntryClause
         ]
+        // How thick a tube along a spline is, which follows the spline.
+        tubeSplineRadiusClause:
+        {
+            radius ?? 'Expecting "radius" and how thick the tube is to follow its spline here.' > _expression
+        }
 
         // Field clauses.
         startPathClause:
@@ -1533,8 +1544,18 @@ public partial class LanguageParser
         strandEntryClause:
         [
             ribbonPointClause => 'width' |
+            {
+                discontinuous{?} > spline >
+                [ openBrace | { catenary > openBrace ?? 'Expecting an open brace to follow "catenary" here.' } |
+                  _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
+            } |
             surfaceEntryClause
         ]
+        // How wide a strand along a spline is, which follows the spline.
+        strandSplineWidthClause:
+        {
+            width ?? 'Expecting "width" and how wide the strand is to follow its spline here.' > _expression
+        }
 
         // Sweep clauses.
         startSweepClause:
@@ -1552,12 +1573,57 @@ public partial class LanguageParser
             } |
             {
                 discontinuous{?} > spline >
-                [ openBrace | _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
+                [ openBrace | { catenary > openBrace ?? 'Expecting an open brace to follow "catenary" here.' } |
+                  _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
             } |
             { steps > _expression } |
             // No insisting on "center": `no shadow` and `no caustics` belong to every surface, and are read below.
             { no > center } |
             open | surfaceEntryClause
+        ]
+
+        // A cable hung between two places, by its sag or by its length: a spline, named.
+        catenaryEntryClause:
+        [
+            { from > _expression } | { to > _expression } | { sag > _expression } | { length > _expression }
+        ] ?? 'Expecting a catenary property here.'
+
+        // Rope clauses: strands laid about a spline.
+        startRopeClause:
+        {
+            rope > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "rope" here.'
+        }
+        ropeEntryClause:
+        [
+            {
+                discontinuous{?} > spline >
+                [ openBrace | { catenary > openBrace ?? 'Expecting an open brace to follow "catenary" here.' } |
+                  _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
+            } |
+            { radius > _expression } | { strands > _expression } | { lay > _expression } |
+            surfaceEntryClause
+        ]
+
+        // Chain clauses: links along a spline.
+        startChainClause:
+        {
+            chain > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "chain" here.'
+        }
+        chainEntryClause:
+        [
+            {
+                discontinuous{?} > spline >
+                [ openBrace | { catenary > openBrace ?? 'Expecting an open brace to follow "catenary" here.' } |
+                  _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
+            } |
+            { link > _expression } | { wire > _expression } | { width > _expression } |
+            surfaceEntryClause
         ]
 
         // Loft clauses: a skin stretched through cross-sections, each an outline with its own placing.
@@ -1573,7 +1639,8 @@ public partial class LanguageParser
             { section > openBrace ?? 'Expecting an open brace to follow "section" here.' } |
             {
                 discontinuous{?} > spline >
-                [ openBrace | _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
+                [ openBrace | { catenary > openBrace ?? 'Expecting an open brace to follow "catenary" here.' } |
+                  _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
             } |
             straight | open | surfaceEntryClause
         ]
@@ -2032,6 +2099,8 @@ public partial class LanguageParser
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
             startLoftClause => 'loft' |
+            startRopeClause => 'rope' |
+            startChainClause => 'chain' |
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
@@ -2124,6 +2193,8 @@ public partial class LanguageParser
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
             startLoftClause => 'loft' |
+            startRopeClause => 'rope' |
+            startChainClause => 'chain' |
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
@@ -2191,6 +2262,8 @@ public partial class LanguageParser
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
             startLoftClause => 'loft' |
+            startRopeClause => 'rope' |
+            startChainClause => 'chain' |
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
@@ -2286,6 +2359,7 @@ public partial class LanguageParser
             [
                 pigment | startPathClause | startKeysClause |
                 { discontinuous{?} > spline > openBrace ?? 'Expecting an open brace to follow "spline" here.' } |
+                { catenary > openBrace ?? 'Expecting an open brace to follow "catenary" here.' } |
                 startMaterialClause | { transform > startThingClause } |
                 { interior > startThingClause } | { medium > startThingClause } |
                 startLightClause |
@@ -2293,7 +2367,7 @@ public partial class LanguageParser
                 startConicClause | startTorusClause | startExtrusionClause |
                 startTaperedExtrusionClause | startLatheClause |
                 startBlobClause | startSwellsClause | startTubeClause | startRibbonClause | startStrandClause | startFieldClause |
-                startSweepClause | startLoftClause | startGrownClause | startFractureClause | startShapesClause | startSwarmClause | startJointClause | startTextClause |
+                startSweepClause | startLoftClause | startRopeClause | startChainClause | startGrownClause | startFractureClause | startShapesClause | startSwarmClause | startJointClause | startTextClause |
                 startTaperedTextClause | startLsystemClause | startHeightFieldClause |
                 startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
@@ -2332,7 +2406,7 @@ public partial class LanguageParser
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
                 isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
-                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | loft | grown | fracture | shapes | swarm | joint | extrusion | text | lsystem |
+                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | loft | rope | chain | grown | fracture | shapes | swarm | joint | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
                 { bilinear > patch } |
@@ -2455,6 +2529,8 @@ public partial class LanguageParser
             startFieldClause => 'HandleStartFieldClause' |
             startSweepClause          => 'HandleStartSweepClause' |
             startLoftClause           => 'HandleStartLoftClause' |
+            startRopeClause           => 'HandleStartRopeClause' |
+            startChainClause          => 'HandleStartChainClause' |
             startGrownClause          => 'HandleStartGrownClause' |
             startFractureClause       => 'HandleStartFractureClause' |
             startShapesClause         => 'HandleStartShapesClause' |

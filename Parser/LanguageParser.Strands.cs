@@ -57,6 +57,18 @@ public partial class LanguageParser
                         new TermResolver<double> { Term = clause.Term() },
                         new TermResolver<Point> { Term = clause.Term(1) }));
                     break;
+                // A strand along a spline, as wide all along as the width after it says.
+                case "spline" or "discontinuous":
+                    resolver.SplineResolver = SplineNamedBy(clause);
+                    resolver.SplineWidthResolver = ParseClause("strandSplineWidthClause") is { } width
+                        ? new TermResolver<double>
+                        {
+                            Term = width.Term(),
+                            Validator = value => value > 0 ? null : "A strand's width must be more than nought."
+                        }
+                        : throw CreateUnexpectedInputException(
+                            "Expecting \"width\" and how wide the strand is to follow its spline here.");
+                    break;
                 default:
                     HandleSurfaceClause(clause, resolver, "strand");
                     break;

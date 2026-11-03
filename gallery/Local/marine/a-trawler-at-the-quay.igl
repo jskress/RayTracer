@@ -1,0 +1,145 @@
+// A trawler made fast alongside a granite quay on a still morning: a bow line, a stern line and two springs, each
+// an eye dropped over a cast-iron bollard and a laid rope hung from its splice to the boat; her starboard anchor's
+// chain running down into the water off the far bow; a rope barrier along the back of the quay; and the telegraph
+// poles along the road behind, their wires hung pole to pole, with the houses across it.
+//
+// **Everything that hangs is a catenary**, the curve a rope, a chain or a wire takes under its own weight, said by
+// how far its middle sags: a mooring line's short, nearly straight run to the bulwark, the barrier's swags, the
+// chain's long fall and the telegraph wires' twenty-meter spans are all the one curve, only differently deep.
+//
+// The boat lies port side to the quay, facing +X as the vessels library builds her, her waterline at y = 0 and
+// the quay's coping 1.6 m over it; the water is the water library's, calm.
+
+import 'vessels' { Trawler }
+import 'water' { Water, SeaWater }
+import 'daylight' { ClearMorningFrom, ClearMorningLight }
+import 'buildings' { Terrace }
+import 'roads' { RoadWornAsphalt }
+import 'rigging' { MooringBollard, MooringLine, AnchorChain, RopeBarrier, TelegraphLine, RiggingManila }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    info {
+        title 'A Trawler at the Quay'
+        author 'J. Stephen Kress'
+        description 'A trawler moored by laid ropes to bollards, her anchor chain in the water, wires hung behind.'
+        copyright true
+        software __software__
+    }
+}
+
+// On the quay ahead of her, at the edge past the bow line's bollard, looking back along her and the quay.
+camera {
+    location [15, 3.25, 0.3]
+    look at [2, 1.9, 0.2]
+    field of view 58
+}
+
+background ClearMorningFrom(140)
+light ClearMorningLight
+
+// -- The water and the quay --------------------------------------------------------------------------------------
+
+object Water(40000, 40000, 'calm') { material SeaWater }
+
+// Granite: gray, speckled, as dark as real stone is.
+Granite = pigment granite with seed 11 {
+    [0.06, color [0.150, 0.146, 0.140],
+     0.16, color [0.205, 0.199, 0.188],
+     0.24, color [0.262, 0.254, 0.240],
+     0.33, color [0.318, 0.309, 0.292],
+     0.45, color [0.380, 0.370, 0.350]]
+    scale 0.08
+}
+Mortar = color [0.11, 0.105, 0.10]
+
+// Dressed blocks down the face of the wall, a meter and a quarter long and half a meter high, the top course the
+// coping's front; a hundred meters deep, so no face of the wall lands in a joint.
+QuayFace = material {
+    pigment brick { brick size [1.25, 0.5, 100]  mortar size 0.015  Mortar, Granite  translate [0, 0.1, 50] }
+    specular 0.04  shininess 10
+}
+
+// The coping along the edge, its stones the face's top course seen from above; and the slabs behind, laid in
+// courses along the quay, the first joint at the coping's back edge.
+Coping = material {
+    pigment brick { brick size [1.25, 100, 100]  mortar size 0.015  Mortar, Granite  translate [0, 50, 50] }
+    specular 0.05  shininess 12
+}
+Slabs = material {
+    pigment brick { brick size [0.9, 100, 0.6]  mortar size 0.012  Mortar, Granite  translate [0, 50, 0.1] }
+    specular 0.05  shininess 12
+}
+
+// The quay, its face along X at z = 0 looking out over the water and its top 1.6 m up, weathered as a harbor wall
+// is: the green-black of weed and wet up the face from the water, and grime in its joints.  Its faces are
+// parallelograms, set by their corners in meters, so the stone is read at its own size: a pattern is read in a
+// surface's own space, and on a cube stretched sixty meters long the granite ran into streaks.
+group {
+    parallelogram { at [-160, -4, 0]  sides [220, 0, 0], [0, 5.6, 0]  material QuayFace }
+    parallelogram { at [-160, 1.6, 0]  sides [220, 0, 0], [0, 0, 0.7]  material Coping }
+    parallelogram { at [-160, 1.6, 0.7]  sides [220, 0, 0], [0, 0, 8.3]  material Slabs }
+    weather { splash 1.3 color [0.05, 0.07, 0.04]  grime 0.5  radius 0.05 }
+}
+
+// -- The trawler and her lines -----------------------------------------------------------------------------------
+
+// Sixteen meters, alongside, her side 0.35 m off the face where she is widest, an old tire hung over her side for a
+// fender at three places.
+object Trawler(16, 1) { translate [0, 0, -2.75] }
+
+Rubber = material { pigment [0.025, 0.025, 0.027]  specular 0.15  shininess 12 }
+
+// A tire hung against her side on a short rope from the bulwark, at a place along her where her side stands so far
+// off the quay.
+primitive Fender(x, side) -> group {
+    return group {
+        torus { radii 0.3, 0.1  rotate X 90  translate [x, 0.75, side + 0.1]  material Rubber }
+        rope {
+            spline { move to x, 2.42, side - 0.05  line to x, 1.13, side + 0.1 }
+            radius 0.008
+            material RiggingManila
+        }
+    }
+}
+
+object Fender(-5.0, -0.551)
+object Fender(-1.0, -0.408)
+object Fender(2.0, -0.945)
+
+// Bollards along the coping, an eye over each.
+object MooringBollard(0.6) { translate [12, 1.6, 0.4] }
+object MooringBollard(0.6) { translate [4, 1.6, 0.4] }
+object MooringBollard(0.6) { translate [-4.5, 1.6, 0.4] }
+object MooringBollard(0.6) { translate [-12.5, 1.6, 0.4] }
+
+// The bow line forward and the stern line aft, white nylon and manila; the springs crossed between them, blue
+// polypropylene, the forward one running aft and the after one forward.  Each is made fast on the boat over her
+// bulwark's cap, 2.4 m up.
+object MooringLine([5.0, 2.42, -2.28], [12, 1.6, 0.4], 0.6, 0.35, 'nylon', 0.032)
+object MooringLine([1.2, 2.42, -0.79], [-4.5, 1.6, 0.4], 0.6, 0.25, 'polypropylene', 0.028)
+object MooringLine([-1.6, 2.42, -0.42], [4, 1.6, 0.4], 0.6, 0.25, 'polypropylene', 0.028)
+object MooringLine([-7.4, 2.42, -1.18], [-12.5, 1.6, 0.4], 0.6, 0.35, 'manila', 0.032)
+
+// The starboard anchor's chain, out of the hawse on the far bow and down into the water ahead.
+object AnchorChain([4.6, 1.8, -3.55], [10.5, -3.0, -6.5], 0.6, 0.08)
+
+// -- The quay behind ---------------------------------------------------------------------------------------------
+
+// The road along the back of the quay, and the pavement in front of the houses across it.
+parallelogram { at [-160, 1.6, 9]  sides [220, 0, 0], [0, 0, 12]  material RoadWornAsphalt }
+parallelogram { at [-160, 1.6, 21]  sides [220, 0, 0], [0, 0, 20]  material Slabs }
+
+// Shops with flats over them along the far side of the road, their fronts toward the water, where the quay runs
+// on past the boat.
+object Terrace(6, 'summer', 3) { translate [-52, 1.6, 26.5] }
+object Terrace(5, 'summer', 5) { translate [-85, 1.6, 26.5] }
+
+// A rope barrier along the back of the quay, between the working edge and the road.
+object RopeBarrier([-26, 1.6, 7.5], [16, 1.6, 7.5], 15, 0.9, 0.2)
+
+// Telegraph poles along the quay side of the road.
+object TelegraphLine([-110, 1.6, 8.4], [50, 1.6, 8.4], 9, 7.5, 4, 0.5)
