@@ -34,7 +34,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | Keyword | Meaning | Documented in |
 | --- | --- | --- |
 | `aberration` | Camera: `chromatic aberration`, how far the lens parts red from blue toward the corners. | [Chromatic aberration](cameras.md#chromatic-aberration) |
-| `above` | Field: the lowest ground a dropped copy may stand on. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
+| `above` | Field: the lowest ground a copy may stand on, dropped or all over. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `absorption` | Medium: how much light it takes out per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
 | `accuracy` | Isosurface, parametric surface, distance surface, Julia set or swells: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface), [Swells](surfaces.md#swells) |
 | `across` | Shape grammar: a gabled `roof` whose ridge runs along the scope's Z rather than its X. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -43,6 +43,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `aim` | Joint: `aim at <place or name>`, turned about its axis to face it, within its limits. | [Aiming](animation.md#aiming) |
 | `align` | Lines one edge of a surface up with the matching edge of another. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
+| `all` | Field: `all over '<name>'`, covering the whole of that surface with its copies. | [Advanced Surfaces](advanced-surfaces.md#covering-a-surface-all-over) |
 | `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline.  Material: which way a brushed surface's grooves run.  Transform: `along <spline> at|by <amount>` puts a thing on a spline, turned to run with it. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path), [Brushed metal](materials.md#brushed-metal), [Along a Spline](animation.md#along-a-spline) |
 | `alpha` | Image pattern: `channel alpha`, how much of each place the picture covers. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `ambient` | Finish: color shown with no light on it; in a context block, `scale ambient by`. | [Materials](materials.md#ambient-diffuse-and-specular), [Context](context.md#ambient) |
@@ -73,7 +74,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `banked` | `along`: leaning into a bend as a rider would feel to be up, by the speed and the curvature. | [Along a Spline](animation.md#along-a-spline) |
 | `baseline` | Text layout: sit the block on the first line's baseline. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `behind` | Places a surface behind another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
-| `below` | Field: the highest ground a dropped copy may stand on. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
+| `below` | Field: the highest ground a copy may stand on, dropped or all over. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `bilinear` | Surface: the warped quadrilateral four corners span, optionally shaded from corner normals. | [Surfaces](surfaces.md#bilinear-patch) |
 | `black` | Font weight: the heaviest.  (The color is `Black`, capitalized.) | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `blades` | Camera: how many blades its opening is made of, shaping what is out of focus and the rays of its glare. | [Cameras](cameras.md#blades) |
@@ -173,7 +174,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `extrude` | Shape grammar: gives a scope a height, a lot raised into a mass. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `faces` | Shape grammar: hands on each face of a box as a scope standing on it, its Z pointing in. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
-| `facing` | Hair: the way a surface must face for hair to grow on it; `by` sets how strictly.  Pattern: which way a surface faces in the world, `toward` a direction.  Joint: which of its ways is turned to face what it aims at. | [Advanced Surfaces](advanced-surfaces.md#hair), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Aiming](animation.md#aiming) |
+| `facing` | Hair: the way a surface must face for hair to grow on it; `by` sets how strictly.  A field all over a surface: the same, for its copies.  Pattern: which way a surface faces in the world, `toward` a direction.  Joint: which of its ways is turned to face what it aims at. | [Advanced Surfaces](advanced-surfaces.md#hair), [Covering a surface all over](advanced-surfaces.md#covering-a-surface-all-over), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Aiming](animation.md#aiming) |
 | `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `fade` | Light: `fade distance` names where the light is worth its color; `fade power` how fast it thins past there.  Decal: `fade from` … `to` … sets the angles it fades between, and `no fade` turns that off. | [Lights](lights.md#fading-with-distance), [Materials](materials.md#fading) |
 | `fainter` | Turbulence/noise: dims each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
@@ -313,7 +314,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `or` | True when either condition is; the same operator as `\|\|`. | [Scene Files](scene-files.md#expressions) |
 | `orthographic` | Camera projection: parallel, with no perspective shrink. | [Cameras](cameras.md#projections) |
 | `out` | Keys: `ease out`, slowing as it arrives. | [Keys](animation.md#keys) |
-| `over` | A `for` loop with no name for its count.  Also a field's `over '<name>'`, dropping its copies onto that surface, and how long a swarm's `burst … over` takes. | [Surfaces](surfaces.md#repeating-things), [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Swarms](animation.md#swarms) |
+| `over` | A `for` loop with no name for its count.  Also a field's `over '<name>'`, dropping its copies onto that surface, and its `all over '<name>'`, covering the whole of it; and how long a swarm's `burst … over` takes. | [Surfaces](surfaces.md#repeating-things), [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Covering a surface all over](advanced-surfaces.md#covering-a-surface-all-over), [Swarms](animation.md#swarms) |
 | `overhang` | Shape grammar: how far a `roof` reaches past the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `panoramic` | Camera projection: a cylindrical, wide horizontal view. | [Cameras](cameras.md#projections) |
 | `paraboloid` | Surface: a bowl that gathers to a focus. | [Surfaces](surfaces.md#paraboloid) |
@@ -399,7 +400,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `sides` | Parallelogram: its two edge vectors. | [Surfaces](surfaces.md#parallelogram) |
 | `since` | Swarm: when it began throwing, before nought for one already in full flow; a `burst` says `at` instead. | [Swarms](animation.md#swarms) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
-| `sink` | Field: how far a dropped copy is sunk into the ground. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
+| `sink` | Field: how far a copy is sunk into the ground, dropped or all over. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's.  Image map: `shuffled size s`, how far apart its tiles stand. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar), [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat) |
 | `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`, and `by <pattern>` to set them by one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
@@ -425,7 +426,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `square` | Pattern: a four-color square tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `squares` | Quadric: the coefficients of `x²`, `y²` and `z²`. | [Surfaces](surfaces.md#quadric) |
 | `startBranch` | L-system turtle: push a branch point. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `steepest` | Field: the steepest ground a dropped copy may stand on. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
+| `steepest` | Field: the steepest ground a copy may stand on, dropped or all over; past 90, overhanging. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `steepness` | Swells: how tall a wave train is against its wavelength. | [Surfaces](surfaces.md#swells) |
 | `step` | Grown tree: how far a twig grows each round. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `steps` | Sweep/area light: how finely it is sampled. | [Sweep](advanced-surfaces.md#sweep), [Lights](lights.md#area-lights) |
@@ -490,7 +491,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `under` | Places a surface beneath another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `union` | CSG: everything in any child. | [Surfaces](surfaces.md#combining-surfaces) |
 | `up` | Camera: which way is up. | [Cameras](cameras.md#placing-a-camera) |
-| `upright` | `along`: up the world's, as near as the spline allows; the default. | [Along a Spline](animation.md#along-a-spline) |
+| `upright` | `along`: up the world's, as near as the spline allows; the default.  A field all over a surface: each copy stands upright rather than out of the surface. | [Along a Spline](animation.md#along-a-spline), [Covering a surface all over](advanced-surfaces.md#covering-a-surface-all-over) |
 | `uSteps` | Area light: samples across U.  Patch: how finely it may be diced across U. | [Lights](lights.md#area-lights), [Surfaces](surfaces.md#patch) |
 | `v` | Parametric surface: the span the second parameter runs over. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `vary` | Hair: how much one strand's length may differ from another's. | [Advanced Surfaces](advanced-surfaces.md#hair) |

@@ -37,7 +37,7 @@ internal static class PlacementSettler
             .ToList();
         List<Field> dropped = siblings
             .OfType<Field>()
-            .Where(field => field.Over is not null)
+            .Where(field => field.Over is not null || field.AllOver is not null)
             .ToList();
 
         if (placed.Count == 0 && dropped.Count == 0)
@@ -48,31 +48,37 @@ internal static class PlacementSettler
         foreach (Surface surface in InDependencyOrder(placed, byName))
             Settle(surface, byName);
 
-        // Fields dropped onto the ground beside them go last, so that the ground has been placed
-        // wherever it was told to stand before anything falls onto it.
+        // Fields dropped onto the ground beside them, or covering it all over, go last, so that the ground
+        // has been placed wherever it was told to stand before anything falls onto it.
         foreach (Field field in dropped)
             field.DropOnto(GroundFor(field, byName));
     }
 
     /// <summary>
-    /// This method finds the surface a field is dropped onto, complaining usefully when there is no such
-    /// thing among the field's siblings.
+    /// This method finds the surface a field is dropped onto or covers all over, complaining usefully when there
+    /// is no such thing among the field's siblings.
     /// </summary>
     /// <param name="field">The field being dropped.</param>
     /// <param name="byName">The named siblings, by name.</param>
-    /// <returns>The surface to drop it onto.</returns>
+    /// <returns>The surface to drop it onto or cover.</returns>
     private static Surface GroundFor(Field field, Dictionary<string, Surface> byName)
     {
-        if (byName.TryGetValue(field.Over, out Surface ground) && ground != field)
+        string wanted = field.Over ?? field.AllOver;
+
+        if (byName.TryGetValue(wanted, out Surface ground) && ground != field)
             return ground;
 
         string known = byName.Count == 0
             ? "nothing beside it carries a name at all"
             : $"the names here are {string.Join(", ", byName.Keys.Order().Select(name => $"'{name}'"))}";
 
-        throw new Exception(
-            $"A field is dropped over '{field.Over}', but {known}.  A field may only be dropped onto " +
-            "something standing beside it in the same group.");
+        throw field.Over is not null
+            ? new Exception(
+                $"A field is dropped over '{wanted}', but {known}.  A field may only be dropped onto " +
+                "something standing beside it in the same group.")
+            : new Exception(
+                $"A field covers '{wanted}' all over, but {known}.  A field may only cover something " +
+                "standing beside it in the same group.");
     }
 
     /// <summary>
@@ -173,11 +179,19 @@ internal static class PlacementSettler
     private static void Settle(Surface surface, Dictionary<string, Surface> byName)
     {
         // A swarm fills itself once bodies are moved and a dropped field where it lands, both after placements are
-        // settled, so either is empty here and would be passed over as nothing to place.
-        if (surface is Swarm or Field { Over: not null })
+        // settled, so either is empty here and would be passed over as nothing to place; and so does a field
+        // covering something all over.
+        if (surface is Swarm or Field { Over: not null } or Field { AllOver: not null })
         {
+            string what = surface switch
+            {
+                Swarm => "swarm",
+                Field { AllOver: not null } => "field covering something all over",
+                _ => "field dropped over something"
+            };
+
             throw new Exception(
-                $"A {(surface is Swarm ? "swarm" : "field dropped over something")} is placed " +
+                $"A {what} is placed " +
                 $"{surface.Placements[0]}, but it fills itself only after placements are settled, so there is " +
                 "nothing yet to place; say where it stands with its own transforms instead.");
         }

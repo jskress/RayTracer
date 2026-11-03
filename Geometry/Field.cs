@@ -6,7 +6,8 @@ namespace RayTracer.Geometry;
 
 /// <summary>
 /// This class represents a field: an area of the X/Z plane, given by a 2D outline, filled with
-/// copies of one surface -- or a line in it, given by a path, laid with them.
+/// copies of one surface -- or a line in it, given by a path, laid with them, or the whole of another
+/// surface covered with them.
 /// <para>
 /// It is a compound surface, like <see cref="TextSolid"/> and <see cref="LSystem"/> -- it builds its
 /// own children when it is prepared, from a description rather than from a list.  What that buys is
@@ -198,10 +199,40 @@ public class Field : Group
     public bool Tilted { get; set; }
 
     /// <summary>
-    /// This property holds the steepest ground a dropped copy may stand on, as an angle from level, in
-    /// radians.
+    /// This property holds the name of the surface the copies cover all over, standing beside the field in the
+    /// same group: they stand wherever it is, on every face of it, spread evenly as far apart as the spacing
+    /// says.  Unsaid, the field fills an outline or follows a path.
+    /// <para>
+    /// **Each copy stands out of the surface**, its up the way the surface faces where it stands -- barnacles on a
+    /// rock's side, crystals lining a hollow -- unless the field says <see cref="Upright"/>.
+    /// </para>
     /// </summary>
-    public double Steepest { get; set; } = Math.PI / 2;
+    public string AllOver { get; set; }
+
+    /// <summary>
+    /// This property notes that a copy covering a surface all over stands upright in the field's own space, as
+    /// mushrooms on a log do, rather than out of the surface.
+    /// </summary>
+    public bool Upright { get; set; }
+
+    /// <summary>
+    /// This property holds the way the surface a field covers all over must face for a copy to stand on it: the
+    /// chance one stands is how squarely the surface faces that way, nothing where it faces away, as hair's is.
+    /// Unsaid, copies stand whichever way the surface faces.
+    /// </summary>
+    public Vector Facing { get; set; }
+
+    /// <summary>
+    /// This property holds how strongly copies favor a surface facing squarely the way they must: the chance from
+    /// <see cref="Facing"/> is raised to this power.
+    /// </summary>
+    public double FacingPower { get; set; } = 1;
+
+    /// <summary>
+    /// This property holds the steepest ground a copy may stand on, as an angle from level, in radians:
+    /// past a right angle, ground overhanging.  Unsaid, there is no limit.
+    /// </summary>
+    public double? Steepest { get; set; }
 
     /// <summary>
     /// This property holds the lowest ground a dropped copy may stand on, in the space the field shares
@@ -224,13 +255,42 @@ public class Field : Group
 
     /// <summary>
     /// This method is called once prior to rendering to fill the outline -- or, for a field to be
-    /// dropped onto the ground, to leave it empty until it is dropped, since only then is it known
-    /// which places stand anything.
+    /// dropped onto the ground or to cover a surface all over, to leave it empty until then, since only
+    /// then is it known which places stand anything.
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
-        if (Outline is null && Along is null)
-            throw new Exception("A field needs an outline to fill or a path to follow.");
+        if (AllOver is not null)
+        {
+            if (Outline is not null || Along is not null)
+            {
+                throw new Exception(
+                    "A field covering a surface all over finds its own places; it has no outline to fill or path to follow.");
+            }
+
+            if (Over is not null)
+                throw new Exception("A field covers a surface all over or is dropped onto one, not both.");
+
+            if (Jitter != 0)
+                throw new Exception("A field covering a surface all over spreads its copies evenly; it has no grid to jitter.");
+
+            if (Tilted)
+                throw new Exception("A field covering a surface all over stands its copies out of it already; say `upright` to stand them up.");
+        }
+        else
+        {
+            if (Outline is null && Along is null)
+                throw new Exception("A field needs an outline to fill or a path to follow, or a surface to cover all over.");
+
+            if (Upright)
+                throw new Exception("Only a field covering a surface all over may be stood upright; any other already is.");
+
+            if (Facing is not null)
+            {
+                throw new Exception(
+                    "A field's facing is the way the surface it covers all over must face; a dropped field has `steepest` for that.");
+            }
+        }
 
         if (Outline is not null && Along is not null)
             throw new Exception("A field fills an outline or follows a path, not both.");
@@ -261,7 +321,7 @@ public class Field : Group
 
         Surfaces.Clear();
 
-        if (Over is null)
+        if (Over is null && AllOver is null)
             Fill(null);
 
         base.PrepareSurfaceForRendering();
@@ -312,10 +372,10 @@ public class Field : Group
     /// <summary>
     /// This method stands a copy at every place of the grid that falls inside the outline, or at every
     /// stop along the path: on the field's own ground, or, given a surface to drop onto, wherever each
-    /// lands on it.
+    /// lands on it -- or at every place spread over the whole of the surface the field covers all over.
     /// </summary>
-    /// <param name="ground">The surface to drop the copies onto, or <c>null</c> to stand them on the
-    /// field's own ground.</param>
+    /// <param name="ground">The surface to drop the copies onto or cover all over, or <c>null</c> to stand
+    /// them on the field's own ground.</param>
     private void Fill(Surface ground)
     {
         // (Made once, here or when the field was asked whether it may be shared: see Candidates.)
@@ -357,11 +417,13 @@ public class Field : Group
 
         int[] turns = Cycle ? TurnsOf(choices) : null;
         double totalWeight = choices.Sum(choice => choice.Weight);
-        Dropping dropping = ground is null ? null : new Dropping(this, ground);
+        Dropping dropping = ground is null || AllOver is not null ? null : new Dropping(this, ground);
 
         // A place the patches keep empty is left before anything else is asked of it, and the places a
         // pattern picks or sizes by are ranked among those that are left.
-        List<Place> places = (Along is null ? GridPlaces(seed) : PathPlaces(seed))
+        List<Place> places = (AllOver is not null ? PlacesAllOver(ground, seed)
+                : Along is null ? GridPlaces(seed)
+                : PathPlaces(seed))
             .Where(place => Patches is null || KeptByThePatches(place, seed))
             .ToList();
         double[] pickRanks = PickedBy is null || choices.Count == 1 ? null : RanksOf(places, PickedBy);
@@ -373,7 +435,7 @@ public class Field : Group
 
             // Dropped before anything is made, so that a place standing nothing costs only the drop:
             // most of a wood filling a hill's whole square falls in the lake or above the tree line.
-            Matrix landing = null;
+            Matrix landing = place.Up is not null ? StandingOn(place) : null;
 
             if (dropping is not null && (landing = dropping.LandingAt(place.X, place.Z)) is null)
                 continue;
@@ -407,10 +469,13 @@ public class Field : Group
     /// This record holds one place a copy may stand: where, which row and column of the field it is,
     /// for the draws that decide what stands there, which way the path runs there, in radians about the
     /// up axis, for a field that follows one, and where it ranks among the field's places by the pattern
-    /// that sets sizes, for a field that has one.
+    /// that sets sizes, for a field that has one.  A place on a surface the field covers all over has a
+    /// height too, and the way out of the surface there, in the field's own space; its row is its number
+    /// among the places found and its column nought.
     /// </summary>
     private readonly record struct Place(
-        double X, double Z, int Row, int Column, double? Facing = null, double? SizeRank = null);
+        double X, double Z, int Row, int Column, double? Facing = null, double? SizeRank = null, double Y = 0,
+        Vector Up = null);
 
     /// <summary>
     /// This method reports whether the patches keep a place.
@@ -433,7 +498,7 @@ public class Field : Group
     /// </summary>
     private double ChanceAt(Place place)
     {
-        double value = Patches.ValueAt(new Point(place.X, 0, place.Z));
+        double value = Patches.ValueAt(new Point(place.X, place.Y, place.Z));
 
         // An edge with no width is a line: everything on one side of it, nothing on the other.
         if (PatchesFrom == PatchesTo)
@@ -455,7 +520,7 @@ public class Field : Group
     /// </summary>
     private static double[] RanksOf(List<Place> places, DensityShape pattern)
     {
-        double[] values = places.Select(place => pattern.ValueAt(new Point(place.X, 0, place.Z))).ToArray();
+        double[] values = places.Select(place => pattern.ValueAt(new Point(place.X, place.Y, place.Z))).ToArray();
         int[] order = Enumerable.Range(0, places.Count).OrderBy(index => values[index]).ToArray();
         double[] ranks = new double[places.Count];
 
@@ -566,6 +631,60 @@ public class Field : Group
     }
 
     /// <summary>
+    /// This method returns the places spread over the whole of the surface the field covers all over (see
+    /// <see cref="SurfaceSpread"/>) that the ground's limits and its facing keep, in the field's own space.
+    /// <para>
+    /// **Heights, slopes and facings are the shared space's**, as a dropped field's are: a tide line is a height
+    /// beside the rock, not in it.  A place is kept by the facing as often as the chance says, by a draw of its
+    /// own, so the places it keeps stand where they would without it.
+    /// </para>
+    /// </summary>
+    /// <param name="ground">The surface to cover.</param>
+    /// <param name="seed">The seed the places are found by.</param>
+    /// <returns>The places, in the order they were found.</returns>
+    private IEnumerable<Place> PlacesAllOver(Surface ground, int seed)
+    {
+        Matrix outward = Transform.Invert().Transpose();
+        Vector facing = Facing?.Unit;
+
+        foreach (SurfaceSpread.Spot spot in SurfaceSpread.Over(ground, Transform, Spacing, seed, AllOver))
+        {
+            Point shared = Transform * spot.Point;
+            Vector up = (outward * spot.Normal).Unit;
+
+            if (shared.Y < Above || shared.Y > Below)
+                continue;
+
+            if (Steepest is { } steepest && Math.Acos(Math.Clamp(up.Y, -1, 1)) > steepest + 1e-12)
+                continue;
+
+            if (facing is not null &&
+                DrawFor(seed, spot.Number, 0, FacingDraw) >= Math.Pow(Math.Max(0, up.Dot(facing)), FacingPower))
+                continue;
+
+            yield return new Place(
+                spot.Point.X, spot.Point.Z, spot.Number, 0, Y: spot.Point.Y, Up: spot.Normal);
+        }
+    }
+
+    /// <summary>
+    /// This method returns the move that stands a copy at a place on a surface the field covers all over: out of
+    /// the surface there, or upright if the field says, and sunk as it says.
+    /// </summary>
+    private Matrix StandingOn(Place place)
+    {
+        Matrix placed = Transforms.Translate(place.X, place.Y, place.Z);
+
+        if (!Upright)
+            placed *= Leaning(place.Up);
+
+        if (Sink != 0)
+            placed *= Transforms.Translate(0, -Sink, 0);
+
+        return placed;
+    }
+
+    /// <summary>
     /// This method returns whether a run of a path ends where it starts.
     /// </summary>
     private static bool IsClosed(GeneralPath path)
@@ -656,6 +775,7 @@ public class Field : Group
     private const int AlongDraw = 4;
     private const int AcrossDraw = 5;
     private const int PatchDraw = 6;
+    private const int FacingDraw = 7;
 
     /// <summary>
     /// This method returns the transform that stands a copy at a place: turned and sized as the field
@@ -717,7 +837,8 @@ public class Field : Group
     /// This method fills the field by dropping every copy straight down onto the given surface, which
     /// stands beside the field in the space they share: a copy stands where it lands, upright or leaning
     /// with the ground as the field says, and a place where nothing of the surface lies below, or where
-    /// the ground is too steep, too low or too high, stands nothing.
+    /// the ground is too steep, too low or too high, stands nothing.  A field covering the surface all over
+    /// is filled the same way, its copies spread over the whole of it rather than dropped.
     /// <para>
     /// **It runs when relative placement does**, between the field's group preparing its children and
     /// sorting them, for the same reason: the ground has to have been built and moved to where it stands
@@ -726,7 +847,7 @@ public class Field : Group
     /// gives it its box.
     /// </para>
     /// </summary>
-    /// <param name="ground">The surface to drop the copies onto.</param>
+    /// <param name="ground">The surface to drop the copies onto, or to cover all over.</param>
     internal void DropOnto(Surface ground)
     {
         Surfaces.Clear();
@@ -793,7 +914,7 @@ public class Field : Group
 
             Vector up = UpOf(_ground, at.X, at.Z, height.Value, top, _reach);
 
-            if (Math.Acos(Math.Clamp(up.Y, -1, 1)) > _field.Steepest + 1e-12)
+            if (_field.Steepest is { } steepest && Math.Acos(Math.Clamp(up.Y, -1, 1)) > steepest + 1e-12)
                 return null;
 
             Point landed = new Point(at.X, height.Value, at.Z) * _own;
@@ -856,7 +977,8 @@ public class Field : Group
 
     /// <summary>
     /// This method returns the rotation that tips a copy's up onto the given direction, about the line
-    /// square to both, by the angle between them.
+    /// square to both, by the angle between them -- or, for straight down, where every such line will
+    /// do, half a turn about X.
     /// </summary>
     private static Matrix Leaning(Vector up)
     {
@@ -864,7 +986,7 @@ public class Field : Group
         double sin = Math.Sqrt(up.X * up.X + up.Z * up.Z);
 
         if (sin < 1e-12)
-            return Transforms.Scale(1);
+            return cos > 0 ? Transforms.Scale(1) : Transforms.RotateAroundX(Math.PI, true);
 
         // The axis is up crossed with the new up, of unit length: (z, 0, -x) / sin.
         double kx = up.Z / sin, kz = -up.X / sin;

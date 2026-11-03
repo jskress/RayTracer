@@ -1504,6 +1504,324 @@ public class TestField
     /// A ball whose size is read from whatever it is handed, so that a copy's number shows up as
     /// something a picture can be measured for.
     /// </summary>
+    /// <summary>
+    /// This method stands a field beside a surface named 'rock' in a group, covering it all over with small balls
+    /// unless the field says what to stand, readies the group, and hands back the field.
+    /// </summary>
+    private static Field AllOver(Surface ground, Field field, Matrix group = null)
+    {
+        Group holder = new () { Transform = group ?? Transforms.Scale(1) };
+
+        ground.Name ??= "rock";
+        field.AllOver ??= "rock";
+        field.Prototype ??= _ => new Sphere { Transform = Transforms.Scale(0.01) };
+        holder.Add(ground).Add(field);
+        holder.PrepareForRendering();
+
+        return field;
+    }
+
+    // Where a copy stands, and its up, in the field's own space.
+    private static Point StandsAt(Surface copy) => copy.Transform * Point.Zero;
+
+    private static Vector UpOf(Surface copy) => (copy.Transform * new Vector(0, 1, 0)).Unit;
+
+    // How near each copy's nearest neighbor is, among the copies given.
+    private static double[] Nearest(List<Point> places) =>
+        places.Select(place => places.Where(other => other != place).Min(other => (other - place).Magnitude)).ToArray();
+
+    /// <summary>
+    /// A field all over a ball stands as many copies as its area holds at the spacing, each on the ball and out of
+    /// it, none crowding another, and as many in each part of it as any other.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldAllOverASurfaceCoversItEvenly()
+    {
+        Field field = AllOver(new Sphere { Transform = Transforms.Scale(2) }, new Field { Spacing = 0.25 });
+        List<Point> places = field.Surfaces.Select(StandsAt).ToList();
+        double wanted = 4 * Math.PI * 4 / (0.25 * 0.25);
+
+        Assert.AreEqual(wanted, places.Count, wanted * 0.03, "the ball held the wrong number of copies");
+
+        foreach (Surface copy in field.Surfaces)
+        {
+            Point at = StandsAt(copy);
+            Vector out_ = (at - Point.Zero).Unit;
+
+            Assert.AreEqual(2, (at - Point.Zero).Magnitude, 1e-6, $"a copy stood off the ball at {at}");
+            Assert.IsTrue(UpOf(copy).Dot(out_) > 1 - 1e-9, $"a copy at {at} did not stand out of the ball");
+        }
+
+        Assert.IsTrue(Nearest(places).Min() > 0.7 * 0.25, "two copies crowded each other");
+
+        for (int octant = 0; octant < 8; octant++)
+        {
+            int count = places.Count(at =>
+                (at.X > 0) == ((octant & 1) != 0) && (at.Y > 0) == ((octant & 2) != 0) && (at.Z > 0) == ((octant & 4) != 0));
+
+            Assert.AreEqual(places.Count / 8.0, count, places.Count * 0.02, $"octant {octant} held {count} copies");
+        }
+    }
+
+    /// <summary>
+    /// A field all over a box stretched flat covers each of its faces by that face's area, whatever the stretch.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldAllOverAStretchedShapeCoversEachFaceByItsArea()
+    {
+        Field field = AllOver(new Cube { Transform = Transforms.Scale(3, 0.5, 1.5) }, new Field { Spacing = 0.2 });
+        List<Point> places = field.Surfaces.Select(StandsAt).ToList();
+
+        void AssertFace(Func<Point, bool> on, double area, string face, Func<Point, Vector> facing)
+        {
+            List<Surface> copies = field.Surfaces.Where(copy => on(StandsAt(copy))).ToList();
+
+            Assert.AreEqual(area / 0.04, copies.Count, area / 0.04 * 0.1 + 3, $"the {face} face held {copies.Count} copies");
+
+            // Straight down from the bottom too, where every way of tipping a copy over will do but none may be left out.
+            Assert.IsTrue(copies.All(copy => UpOf(copy).Matches(facing(StandsAt(copy)))), $"a copy did not stand out of the {face}");
+        }
+
+        AssertFace(at => at.Y > 0.5 - 1e-6, 6 * 3, "top", _ => new Vector(0, 1, 0));
+        AssertFace(at => at.Y < -0.5 + 1e-6, 6 * 3, "bottom", _ => new Vector(0, -1, 0));
+        AssertFace(at => Math.Abs(at.X) > 3 - 1e-6, 2 * 1 * 3, "end", at => new Vector(Math.Sign(at.X), 0, 0));
+        AssertFace(at => Math.Abs(at.Z) > 1.5 - 1e-6, 2 * 6 * 1, "side", at => new Vector(0, 0, Math.Sign(at.Z)));
+    }
+
+    /// <summary>
+    /// Both sides of something thin are covered as evenly as either would be alone: a copy on top of a sheet does
+    /// not crowd one beneath it.
+    /// </summary>
+    [TestMethod]
+    public void TestAThinSheetIsCoveredOnBothSides()
+    {
+        Field field = AllOver(new Cube { Transform = Transforms.Scale(2, 0.005, 2) }, new Field { Spacing = 0.2 });
+        List<Point> top = field.Surfaces.Select(StandsAt).Where(at => at.Y > 0).ToList();
+        List<Point> bottom = field.Surfaces.Select(StandsAt).Where(at => at.Y < 0).ToList();
+
+        Assert.AreEqual(400, top.Count, 400 * 0.08, "the top held the wrong number of copies");
+        Assert.AreEqual(400, bottom.Count, 400 * 0.08, "the bottom held the wrong number of copies");
+        Assert.IsTrue(Nearest(top).Min() > 0.7 * 0.2, "two copies crowded each other on top");
+        Assert.IsTrue(Nearest(bottom).Min() > 0.7 * 0.2, "two copies crowded each other beneath");
+    }
+
+    /// <summary>
+    /// A copy stands out of the surface where it stands, even straight down under a ball; `upright` stands every one
+    /// upright instead.
+    /// </summary>
+    [TestMethod]
+    public void TestACopyAllOverStandsOutOfTheSurfaceOrUpright()
+    {
+        Field outward = AllOver(new Sphere(), new Field { Spacing = 0.1, Turn = 2 * Math.PI });
+        Field upright = AllOver(new Sphere(), new Field { Spacing = 0.1, Turn = 2 * Math.PI, Upright = true });
+        Surface lowest = outward.Surfaces.MinBy(copy => StandsAt(copy).Y);
+
+        Assert.IsTrue(StandsAt(lowest).Y < -0.99, "no copy stood near the bottom of the ball");
+
+        foreach (Surface copy in outward.Surfaces)
+            Assert.IsTrue(UpOf(copy).Dot((StandsAt(copy) - Point.Zero).Unit) > 1 - 1e-9, "a copy did not stand out of the ball");
+
+        foreach (Surface copy in upright.Surfaces)
+            Assert.IsTrue(UpOf(copy).Matches(new Vector(0, 1, 0)), "a copy did not stand upright");
+
+        // Stretched and turned, a ball faces where its own normal carried out says, not along its stretch.
+        Matrix stretched = Transforms.RotateAroundZ(30) * Transforms.Scale(2, 1, 1);
+        Matrix inverse = stretched.Invert();
+        Field egg = AllOver(new Sphere { Transform = stretched }, new Field { Spacing = 0.2 });
+
+        foreach (Surface copy in egg.Surfaces)
+        {
+            Vector normal = (inverse.Transpose() * (inverse * StandsAt(copy) - Point.Zero)).Unit;
+
+            Assert.IsTrue(UpOf(copy).Dot(normal) > 1 - 1e-9, $"a copy at {StandsAt(copy)} did not stand out of the egg");
+        }
+    }
+
+    /// <summary>
+    /// A field all over keeps to the heights, the slope and the facing it is given, all in the space it shares
+    /// with the ground: its copies stand below the line, on the gentle top, and favor what faces the way given.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldAllOverKeepsToItsLimits()
+    {
+        Matrix raised = Transforms.Translate(0, 3, 0);
+        Field all = AllOver(new Sphere { Transform = raised }, new Field { Spacing = 0.1 });
+        Field below = AllOver(new Sphere { Transform = raised }, new Field { Spacing = 0.1, Below = 3 });
+        Field gentle = AllOver(new Sphere { Transform = raised }, new Field { Spacing = 0.1, Steepest = Math.PI / 4 });
+        Field facing = AllOver(new Sphere { Transform = raised }, new Field { Spacing = 0.1, Facing = new Vector(0, 2, 0) });
+
+        Assert.IsTrue(below.Surfaces.All(copy => StandsAt(copy).Y <= 3), "a copy stood above the line");
+        Assert.AreEqual(all.Surfaces.Count / 2.0, below.Surfaces.Count, all.Surfaces.Count * 0.03);
+
+        Assert.IsTrue(gentle.Surfaces.All(copy => UpOf(copy).Y >= Math.Cos(Math.PI / 4) - 1e-9), "a copy stood on a steep place");
+        Assert.AreEqual(all.Surfaces.Count * (1 - Math.Cos(Math.PI / 4)) / 2, gentle.Surfaces.Count, all.Surfaces.Count * 0.02);
+
+        // Over a ball, the share facing up weighs in at a quarter of it all.
+        Assert.IsTrue(facing.Surfaces.All(copy => UpOf(copy).Y > 0), "a copy stood facing away");
+        Assert.AreEqual(all.Surfaces.Count / 4.0, facing.Surfaces.Count, all.Surfaces.Count * 0.03);
+    }
+
+    /// <summary>
+    /// What stands at a place is drawn from the place: patches cutting copies away leave every other one where it
+    /// stood, as it stood.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldAllOverDrawsFromEachPlace()
+    {
+        Field Covered(DensityShape patches) => AllOver(new Sphere { Transform = Transforms.Scale(2) }, new Field
+        {
+            Spacing = 0.2, Turn = 2 * Math.PI, SmallestSize = 0.5, LargestSize = 1.5, Patches = patches
+        });
+
+        Field whole = Covered(null);
+        Field patched = Covered(new DensityShape { Pattern = new GradientPattern() });
+        HashSet<string> wholes = whole.Surfaces.Select(copy => copy.Transform.ToString()).ToHashSet();
+
+        Assert.IsTrue(patched.Surfaces.Count < whole.Surfaces.Count * 0.9, "the patches cut nothing away");
+        Assert.IsTrue(patched.Surfaces.Count > 0, "the patches cut everything away");
+        Assert.IsTrue(patched.Surfaces.All(copy => wholes.Contains(copy.Transform.ToString())),
+            "a copy the patches kept moved, turned or changed its size");
+    }
+
+    /// <summary>
+    /// A field all over works in the space it shares with the ground, however both are moved, and measures its
+    /// spacing in its own space as a grid's is: halved, it holds four times as many.  Rays across the group find the
+    /// copies where they stand.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldAllOverWorksInTheSharedSpace()
+    {
+        Matrix rock = Transforms.Translate(1, 2, -1) * Transforms.Scale(1.5);
+        Field field = AllOver(new Sphere { Transform = rock }, new Field
+        {
+            Spacing = 0.2,
+            Transform = Transforms.Translate(-2, 0, 1) * Transforms.RotateAroundY(40) * Transforms.Scale(0.5),
+            Prototype = _ => new Sphere { Transform = Transforms.Scale(0.05) }
+        }, Transforms.Translate(3, 1, -2) * Transforms.RotateAroundY(35));
+        Point middle = rock * Point.Zero;
+        double wanted = 4 * Math.PI * 9 / (0.2 * 0.2);
+
+        Assert.AreEqual(wanted, field.Surfaces.Count, wanted * 0.03, "the spacing was not the field's own");
+
+        foreach (Surface copy in field.Surfaces.Take(50))
+        {
+            Point shared = field.Transform * StandsAt(copy);
+
+            Assert.AreEqual(1.5, (shared - middle).Magnitude, 1e-6, $"a copy stood off the rock at {shared}");
+        }
+
+        Group holder = (Group) field.Parent;
+        Surface first = field.Surfaces[0];
+        Point at = field.Transform * StandsAt(first);
+        List<Intersection> hits = [];
+
+        holder.AddIntersections(new Ray(at + new Vector(0, 0, -20), new Vector(0, 0, 1)), hits);
+
+        Assert.IsTrue(hits.Any(hit => hit.Surface.Parent == first || hit.Surface == first || hit.Portals.Through == first),
+            "a ray across the group did not find a copy where it stood");
+    }
+
+    /// <summary>
+    /// A field covers whatever it is told to, as it stands: the shape an instance shares, and a ball with a box cut
+    /// out of it, the cut faces included and each copy out of what is left.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldAllOverCoversInstancesAndCuts()
+    {
+        Field shared = AllOver(new Instance { Prototype = new Sphere { Transform = Transforms.Scale(2) } },
+            new Field { Spacing = 0.25 });
+
+        Assert.AreEqual(4 * Math.PI * 4 / 0.0625, shared.Surfaces.Count, 4 * Math.PI * 4 / 0.0625 * 0.03);
+        Assert.IsTrue(shared.Surfaces.All(copy => Math.Abs((StandsAt(copy) - Point.Zero).Magnitude - 2) < 1e-6),
+            "a copy stood off the shared ball");
+
+        Field cut = AllOver(new CsgSurface
+        {
+            Operation = CsgOperation.Difference,
+            Left = new Sphere(),
+            Right = new Cube { Transform = Transforms.Translate(1, 0, 0) }
+        }, new Field { Spacing = 0.05 });
+        List<Surface> onTheCut = cut.Surfaces.Where(copy => Math.Abs(StandsAt(copy).X) < 1e-6).ToList();
+
+        Assert.IsTrue(cut.Surfaces.All(copy => StandsAt(copy).X < 1e-6), "a copy stood on what was cut away");
+        Assert.AreEqual(Math.PI / 0.0025, onTheCut.Count, Math.PI / 0.0025 * 0.1, "the cut face was not covered");
+        Assert.IsTrue(onTheCut.All(copy => UpOf(copy).Matches(new Vector(1, 0, 0))), "a copy on the cut faced into the ball");
+    }
+
+    /// <summary>
+    /// A field all over something with nothing in it, as a snow cap is out of season, holds nothing.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldAllOverNothingHoldsNothing()
+    {
+        Assert.AreEqual(0, AllOver(new Group(), new Field { Spacing = 0.1 }).Surfaces.Count);
+    }
+
+    /// <summary>
+    /// A scene covers a surface all over, with every word a field all over may say, by a field written out and by
+    /// the block on a call of a primitive.
+    /// </summary>
+    [TestMethod]
+    public void TestASceneMayCoverASurfaceAllOver()
+    {
+        const string rock = "sphere { named 'rock'  material { pigment [0, 0, 0.8]  ambient 1  diffuse 0  specular 0 } }";
+        int written = Lit($$"""
+                            {{Ball}}
+                            {{rock}}
+                            field { of Ball(0)  all over 'rock'  spacing 0.25 }
+                            """);
+        int everything = Lit($$"""
+                               {{Ball}}
+                               {{rock}}
+                               field {
+                                   of Ball(0)  all over 'rock'  spacing 0.25  upright  facing vector [0, 1, 0] by 2
+                                   steepest 80  above -0.5  sink 0.02  turned 360  sized 0.8 to 1.2
+                               }
+                               """);
+        int called = Lit($$"""
+                           {{Ball}}
+                           {{rock}}
+                           primitive Dots(what) -> field { return field { of Ball(0)  all over what } }
+                           object Dots('rock') { spacing 0.25 }
+                           """);
+
+        Assert.IsTrue(written > 250, $"the copies covered only {written} pixels");
+        Assert.IsTrue(everything > 30 && everything < written / 2, $"the copies kept to the top covered {everything} pixels");
+        Assert.AreEqual(written, called, "a primitive's field did not cover the rock as one written out does");
+    }
+
+    /// <summary>
+    /// A field all over says so when it is told what it cannot do.
+    /// </summary>
+    [TestMethod]
+    public void TestWhatAFieldAllOverCannotDoIsRefused()
+    {
+        void AssertRefused(string field, string expected, string ground = "sphere { named 'rock' }")
+        {
+            string error = ErrorFrom($$"""
+                                       {{Ball}}
+                                       {{ground}}
+                                       {{field}}
+                                       """);
+
+            Assert.IsNotNull(error, $"'{field}' was not refused");
+            StringAssert.Contains(error, expected);
+        }
+
+        AssertRefused($"field {{ of Ball(0)  all over 'rock'  {Outline} }}", "no outline to fill");
+        AssertRefused("field { of Ball(0)  all over 'rock'  over 'rock' }", "not both");
+        AssertRefused("field { of Ball(0)  all over 'rock'  jitter 0.5 }", "no grid to jitter");
+        AssertRefused("field { of Ball(0)  all over 'rock'  tilted }", "out of it already");
+        AssertRefused($"field {{ of Ball(0)  {Outline}  upright }}", "may be stood upright");
+        AssertRefused($"field {{ of Ball(0)  {Outline}  over 'rock'  facing vector [0, 1, 0] }}", "has `steepest` for that");
+        AssertRefused("field { of Ball(0)  all over 'stone' }", "covers 'stone' all over, but the names here are 'rock'");
+        AssertRefused("field { of Ball(0)  all over 'rock' }", "goes on forever", "plane { named 'rock' }");
+        AssertRefused("field { of Ball(0)  all over 'rock'  spacing 0.001 }", "at most 500,000");
+        AssertRefused("field { of Ball(0)  all over 'rock'  facing vector [0, 1, 0] by 0 }", "more than nought");
+        AssertRefused("field { of Ball(0)  all over 'rock'  steepest 190 }", "level to upside down");
+        AssertRefused("field { of Ball(0)  all over 'rock'  on 'rock' }", "covering something all over is placed");
+    }
+
     private const string Ball = """
                                 primitive Ball(n) -> sphere {
                                     return sphere {

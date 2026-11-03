@@ -355,7 +355,7 @@ public class Hair : StrandSurface
     /// <param name="point">Where it is, in the host's own space.</param>
     /// <returns>The normal there, in the host's own space, or <c>null</c> if the surface struck has no
     /// way back to the host.</returns>
-    private static Vector NormalWithin(Surface host, Intersection hit, Point point)
+    internal static Vector NormalWithin(Surface host, Intersection hit, Point point)
     {
         List<Surface> chain = [];
         Surface surface = hit.Surface;
@@ -629,7 +629,7 @@ public class Hair : StrandSurface
     /// <summary>
     /// This method returns a direction picked evenly from every direction there is.
     /// </summary>
-    private static Vector RandomUnit(Random random)
+    internal static Vector RandomUnit(Random random)
     {
         double z = 2 * random.NextDouble() - 1;
         double turn = 2 * Math.PI * random.NextDouble();

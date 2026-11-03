@@ -1,0 +1,57 @@
+// A field all over a surface: the same stone covered three ways.  Pegs standing out of it wherever it is, over
+// its sides and underneath as well as on top; the same pegs stood upright; and flat crusts that favor the top,
+// in patches.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.6, -8.1]
+    look at [0, 0.62, 0]
+    field of view 50
+}
+
+background [0.66, 0.74, 0.84]
+
+point light { location [-8, 12, -10]  color [1, 0.97, 0.93] }
+point light { location [9, 5, -8]     color [0.28, 0.29, 0.33] }
+
+plane { material { pigment color [0.55, 0.57, 0.50]  specular 0 } }
+
+stone = material { pigment color [0.42, 0.40, 0.37]  specular 0.03 }
+
+Peg = sphere {
+    scale [0.025, 0.07, 0.025]
+    translate Y 0.045
+    material { pigment color [0.86, 0.62, 0.28]  specular 0.2 }
+}
+
+Crust = cylinder {
+    scale [0.07, 0.004, 0.05]
+    material { pigment color [0.80, 0.42, 0.06]  specular 0 }
+}
+
+// Out of the stone, wherever it is.
+group {
+    sphere { scale [0.95, 0.6, 0.75]  rotate Z 12  translate Y 0.62  material stone  named 'stone' }
+    field { of Peg  all over 'stone'  spacing 0.16  turned 360 }
+    translate X -2.3
+}
+
+// Upright, whichever way the stone faces.
+group {
+    sphere { scale [0.95, 0.6, 0.75]  rotate Z 12  translate Y 0.62  material stone  named 'stone' }
+    field { of Peg  all over 'stone'  spacing 0.16  upright }
+}
+
+// Favoring the top, in patches.
+group {
+    sphere { scale [0.95, 0.6, 0.75]  rotate Z 12  translate Y 0.62  material stone  named 'stone' }
+    field {
+        of Crust
+        all over 'stone'
+        spacing 0.07
+        turned 360  sized 0.6 to 1.4
+        facing vector [0, 1, 0] by 2
+        patches bozo { scale 0.35 } from 0.4 to 0.6
+    }
+    translate X 2.3
+}

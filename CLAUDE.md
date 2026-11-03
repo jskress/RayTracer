@@ -152,7 +152,14 @@ per copy (`index in n`).  `over 'name'` drops every copy straight down onto a na
 by `PlacementSettler` after placements, at the one moment children are prepared and not yet arranged), upright or
 `tilted` (slope from a few extra drops either side, in the shared space), skipping misses, `steepest`, `above`,
 `below`; a dropped field is left EMPTY when prepared and fills itself at the drop (`Field.Fill` with a `Dropping`),
-building only what lands and then running the group's own preparation over it.  A primitive call hands an empty
+building only what lands and then running the group's own preparation over it.  `all over 'name'` covers a named sibling's WHOLE
+surface instead, filled at the same moment (`Geometry/SurfaceSpread.cs`): Crofton lines as hair's roots (in the
+FIELD's space, so the spacing is the field's), at least 16384 and 5x the wanted crossings, thinned by Yuksel 2015
+weighted sample elimination to round(area / spacing^2) (`Crowd`: cell-sorted arrays; places whose normals differ by
+more than 120 degrees never crowd, so a plank's two faces are each covered whole), each copy's up the surface normal
+(`Field.Leaning`; straight down is half a turn about X) unless `upright`; `above`/`below`/`steepest` (now null =
+no limit, up to 180) and hair's `facing [by p]` (its own draw) are the shared space's, patches read at the 3D place,
+draws keyed by the place's number among those found, so cutting places leaves the rest put; at most 500,000.  A primitive call hands an empty
 group back bare, never as an instance: there is nothing in it to share (before instances could nest, a summer fir
 bough's empty snow stopped the bough being shared and every fir rebuilt its 2000 needle shoots, 140 MB a tree).
 Instances NEST: a hit carries `Intersection.Portals` (`Geometry/Portals.cs`: the innermost instance plus an immutable
