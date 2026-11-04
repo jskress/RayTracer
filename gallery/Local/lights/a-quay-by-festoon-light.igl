@@ -1,0 +1,126 @@
+// A quay at dusk, strung with festoons: strings of bulbs hung post to post along the edge and zigzag across a cafe
+// terrace, receding down the waterfront, their light pooling on the tables and their reflections running in the wet
+// paving; a trawler moored alongside, and shops with flats over them along the back.
+//
+// **Six hundred lamps, each a bulb's.**  Every bulb is a little ball of warm glass glowing of its own with a point
+// light at its middle -- its housing, which the light shines out through -- fading past a third of a meter as a bulb's
+// light does.  So more than a dozen fading lights, and the scene holds them in a light tree: a place looks at the
+// bulbs near enough to look wide from it in full, and at the rest by picking among them, each pick weighed by its
+// chance, guided toward where a glossy table mirrors the eye.  Every lamp looked at for every place took more than ten
+// times as long for the same picture.
+//
+// **The ambient is turned off.**  Every lamp lends a surface its material's ambient, which no distance thins; six
+// hundred lamps' of it was eighteen times the light of the bulbs themselves, and the tables came out white.  The dusk
+// sky's light is the fill here.
+
+import 'daylight' { Dusk, DuskLight }
+import 'water' { Water, SeaWater }
+import 'vessels' { Trawler }
+import 'buildings' { Terrace }
+import 'furniture' { DiningTable, DiningChair, FurnitureOak, FurnitureLinen }
+
+context {
+    parallel pixel scanner
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    angles are degrees
+    white balance 3400
+    scale ambient by 0
+    light tree samples 64
+    info {
+        title 'A Quay by Festoon Light'
+        author 'J. Stephen Kress'
+        description 'A quay at dusk strung with six hundred festoon bulbs, held in a light tree.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    exposure 0.3
+    location [-6, 3.25, 4.2]
+    look at [12, 3.6, 5.5]
+    field of view 62
+}
+
+background Dusk
+sky light { samples 16  color [0.9, 0.92, 1] }
+
+// -- The water and the quay -----------------------------------------------------------------------------------------
+
+object Water(4000, 4000, 'calm') { material SeaWater }
+
+Granite = pigment granite { [0, [0.16, 0.155, 0.15], 0.5, [0.21, 0.205, 0.195], 1, [0.27, 0.26, 0.245]]  scale 0.08 }
+Mortar = color [0.08, 0.075, 0.07]
+Slabs = material {
+    pigment brick { brick size [0.9, 100, 0.6]  mortar size 0.012  Mortar, Granite  translate [0, 50, 0.1] }
+    specular 0.25  shininess 30  reflective 0.04  fresnel
+}
+QuayFace = material {
+    pigment brick { brick size [1.25, 0.5, 100]  mortar size 0.015  Mortar, Granite  translate [0, 0.1, 50] }
+    specular 0.04  shininess 10
+}
+
+parallelogram { at [-60, -4, 0]  sides [180, 0, 0], [0, 5.6, 0]  material QuayFace }
+parallelogram { at [-60, 1.6, 0]  sides [180, 0, 0], [0, 0, 20]  material Slabs }
+
+// -- Festoons -------------------------------------------------------------------------------------------------------
+
+Wire = material { pigment [0.02, 0.02, 0.02]  specular 0.3  shininess 40 }
+Pole = material { pigment [0.06, 0.07, 0.065]  specular 0.3  shininess 40 }
+
+// One bulb: a ball of warm glass glowing of its own, a lamp at its middle fading past a third of a meter as a bulb's
+// light does, and the short drop it hangs from.
+primitive Bulb(warmth) -> group {
+    return group {
+        sphere {
+            scale 0.035
+            material { pigment kelvin(warmth)  emission 6  ambient 0  diffuse 0  specular 0 }
+        }
+        point light { location [0, 0, 0]  color kelvin(warmth) * 1.2  fade distance 0.35 }
+        cylinder { min Y 0  max Y 0.07  scale [0.006, 1, 0.006]  translate Y 0.03  material Wire }
+    }
+}
+
+// A string of bulbs hung between two places, sagging as said, its bulbs evenly along it below the wire.
+primitive Festoon(from, to, sag, bulbs) -> group {
+    return group {
+        strand { spline catenary { from from  to to  sag sag }  width 0.006  material Wire }
+        for bulb in [1, bulbs] {
+            object Bulb(2400 + 300 * random(bulb, 3)) {
+                translate point from + (point to - point from) * (bulb / (bulbs + 1))
+                translate Y -4 * sag * (bulb / (bulbs + 1)) * (1 - bulb / (bulbs + 1)) - 0.1
+            }
+        }
+    }
+}
+
+// Posts along the quay's edge and along the back of the terrace.
+for post in [0, 12] {
+    cylinder { min Y 1.6  max Y 5.2  scale [0.06, 1, 0.06]  translate [-8 + post * 7, 0, 0.8]  material Pole }
+    cylinder { min Y 1.6  max Y 5.2  scale [0.06, 1, 0.06]  translate [-8 + post * 7, 0, 11]  material Pole }
+}
+
+// Along the edge, post to post; and across the terrace, zigzag, front to back and back to front.
+for span in [0, 11] {
+    object Festoon([-8 + span * 7, 5.1, 0.8], [-1 + span * 7, 5.1, 0.8], 0.45, 14)
+    object Festoon([-8 + span * 7, 5.0, 0.8], [-1 + span * 7, 5.0, 11], 0.6, 18)
+    object Festoon([-1 + span * 7, 5.0, 0.8], [-8 + span * 7, 5.0, 11], 0.6, 18)
+}
+
+// -- Under them -----------------------------------------------------------------------------------------------------
+
+// Cafe tables under the canopy, a chair either side.  The furniture is in inches.
+for table in [0, 5] {
+    turn = 20 * random(table, 7)
+    x = -2 + table * 4.5
+    z = 4 + 3 * random(table, 8)
+
+    object DiningTable(32, 32) { scale 0.0254  rotate Y turn  translate [x, 1.6, z] }
+    object DiningChair(17) { translate Z -20  scale 0.0254  rotate Y turn  translate [x, 1.6, z] }
+    object DiningChair(17) { rotate Y 180  translate Z 20  scale 0.0254  rotate Y turn  translate [x, 1.6, z] }
+}
+
+object Trawler(16, 1) { translate [22, 0, -2.75] }
+object Terrace(6, 'summer', 3) { translate [-10, 1.6, 15] }
+object Terrace(5, 'summer', 5) { translate [30, 1.6, 15] }

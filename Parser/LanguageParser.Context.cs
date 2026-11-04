@@ -64,6 +64,40 @@ public partial class LanguageParser
             case "no.gamma":
                 updater.ApplyGammaResolver = new LiteralResolver<bool> { Value = false };
                 break;
+            case "no.light":
+                updater.LightTreeResolver = new LiteralResolver<bool?> { Value = false };
+                break;
+            case "light":
+            {
+                List<string> said = clause.Tokens.Select(token => token.Text).ToList();
+                int at = 0;
+
+                updater.LightTreeResolver = new LiteralResolver<bool?> { Value = true };
+
+                if (said.Contains("samples"))
+                {
+                    updater.LightTreeSamplesResolver = new TermResolver<int>
+                    {
+                        Term = clause.Term(at++),
+                        Validator = value => value < 1
+                            ? "A light tree must pick at least one of its far lights."
+                            : null
+                    };
+                }
+
+                if (said.Contains("split"))
+                {
+                    updater.LightTreeSplitResolver = new TermResolver<double>
+                    {
+                        Term = clause.Term(at),
+                        Validator = value => value < 0
+                            ? "How wide a cluster of lights may look before it is opened cannot be less than nothing."
+                            : null
+                    };
+                }
+
+                break;
+            }
             case "no.shadows":
                 updater.SuppressAllShadowsResolver = new LiteralResolver<bool> { Value = true };
                 break;

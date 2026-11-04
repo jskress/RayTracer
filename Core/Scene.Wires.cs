@@ -64,7 +64,10 @@ public partial class Scene
         double ambient = material.EffectiveAmbient * ownShare;
         TS color = TS.Black;
 
-        foreach (Light listed in Lights)
+        // Each light's answer worth what the scene's tree of lights says, one with no tree; see Scene.LightTree.
+        using LightPicks picks = LightsAt(frame.Center, null, _bounced == 0 && !_spreading);
+
+        foreach ((Light listed, double weight, bool held) in picks)
         {
             Light light = listed.At(hit.TimeIndex);
             int count = light.SampleCount;
@@ -79,7 +82,9 @@ public partial class Scene
                 LightSample sample = light.SampleAround(frame.Center, index);
                 TS emitted = light.EmittedToward<TS>(sample);
 
-                sum += pigment * emitted * ambient;
+                // Not a held light's ambient, which the light standing for all of theirs lends; see LightTree.
+                if (!held)
+                    sum += pigment * emitted * ambient;
 
                 double intensity = sample.Cone * light.FadingOver(sample.Distance);
                 Vector toward = sample.Direction;
@@ -113,7 +118,7 @@ public partial class Scene
                     sum += GlintOf(material, frame, eye, cosEye, toward, light, sample, pigment, metal) * reaching;
             }
 
-            color += one >= 0 || count == 1 ? sum : sum * (1.0 / count);
+            color += (one >= 0 || count == 1 ? sum : sum * (1.0 / count)) * weight;
         }
 
         if ((material.Reflective > 0 || metal is not null) && remaining >= 1)

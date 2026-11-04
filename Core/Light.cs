@@ -440,7 +440,7 @@ public abstract class Light : NamedThing
         TS lightReaching, Footprint footprint = null, Portals portals = default, double ownShare = 1,
         double? highlightShare = null, (double Near, double Far)? glass = null, Material material = null,
         FilmShares<TS>? film = null, bool highlights = true, (Coat Coat, double Outside, double Share)? coat = null,
-        Facets facets = null, BareMetal? metal = null)
+        Facets facets = null, BareMetal? metal = null, bool ambient = true)
         where TS : struct, ISpectrum<TS>
     {
         material ??= surface.Material ?? Material.Default;
@@ -462,7 +462,8 @@ public abstract class Light : NamedThing
 
         // Ambient light stands in for light that has bounced around the scene rather than come
         // straight from this source, so it is the one term a shadow does not take away.
-        TS ambientColor = color * material.EffectiveAmbient;
+        // A light a tree holds lends none of its own: the light standing for all the held lights' ambient does.
+        TS ambientColor = ambient ? color * material.EffectiveAmbient : TS.Black;
 
         // Under a coat, the light the ambient stands for reaches the surface from all round and leaves it
         // toward the eye, crossing the coat both ways.

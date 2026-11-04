@@ -318,8 +318,9 @@ public partial class Scene
         where TS : struct, ISpectrum<TS>
     {
         TS light = TS.Black;
+        using LightPicks picks = LightsAt(point, normal, _bounced == 0 && !_spreading);
 
-        foreach (Light each in Lights)
+        foreach ((Light each, double weight, bool held) in picks)
         {
             Light placed = each.At(intersection.TimeIndex);
             int count = placed.SampleCount;
@@ -332,15 +333,18 @@ public partial class Scene
                 if (sample.Direction.Dot(normal) <= 0)
                     continue;
 
-                TS reaching = GetLightReaching<TS>(
-                    point, sample.Direction, sample.Distance, intersection.TimeIndex, null, false,
-                    intersection.FootprintRadius, placed.Housing);
+                TS reaching = sample.Cone == 0
+                    ? TS.Black
+                    : GetLightReaching<TS>(
+                        point, sample.Direction, sample.Distance, intersection.TimeIndex, null, false,
+                        intersection.FootprintRadius, placed.Housing);
 
                 sum += placed.ApplyPhong(
-                    point, normal, normal, intersection.Surface, sample, reaching, material: Beneath, highlights: false);
+                    point, normal, normal, intersection.Surface, sample, reaching, material: Beneath, highlights: false,
+                    ambient: !held);
             }
 
-            light += count == 1 ? sum : sum * (1.0 / count);
+            light += (count == 1 ? sum : sum * (1.0 / count)) * weight;
         }
 
         return light;
@@ -361,9 +365,14 @@ public partial class Scene
         Point lit = crossing.OverPoint;
         TS light = TS.Black;
 
-        for (int index = 0; index < Lights.Count; index++)
+        // A walk is one of many, which together average a pick among a tree's lights as they average a lamp's
+        // one sample; see Scene.LightTree.
+        using LightPicks picks = LightsAt(lit, outward, false);
+
+        for (int index = 0; index < picks.Count; index++)
         {
-            Light each = Lights[index].At(crossing.TimeIndex);
+            (Light listed, double weight, bool held) = picks[index];
+            Light each = listed.At(crossing.TimeIndex);
             int count = each.SampleCount;
             int one = count > 1 ? Math.Min(count - 1, (int) (Draw(key, 8000 + index) * count)) : 0;
             LightSample sample = each.SampleToward(lit, one, outward);
@@ -371,11 +380,14 @@ public partial class Scene
             if (sample.Direction.Dot(outward) <= 0)
                 continue;
 
-            TS reaching = GetLightReaching<TS>(
-                lit, sample.Direction, sample.Distance, crossing.TimeIndex, null, false, 0, each.Housing);
+            TS reaching = sample.Cone == 0
+                ? TS.Black
+                : GetLightReaching<TS>(
+                    lit, sample.Direction, sample.Distance, crossing.TimeIndex, null, false, 0, each.Housing);
 
             light += each.ApplyPhong(
-                lit, outward, outward, crossing.Surface, sample, reaching, material: Beneath, highlights: false);
+                lit, outward, outward, crossing.Surface, sample, reaching, material: Beneath, highlights: false,
+                ambient: !held) * weight;
         }
 
         return light;

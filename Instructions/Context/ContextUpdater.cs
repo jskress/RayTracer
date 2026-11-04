@@ -153,6 +153,21 @@ public class ContextUpdater : Instruction
     public Resolver<int> CausticPhotonsResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for whether the scene's lights that fade are held in a tree.
+    /// </summary>
+    public Resolver<bool?> LightTreeResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how many picks among a light tree's far lights a place takes.
+    /// </summary>
+    public Resolver<int> LightTreeSamplesResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how wide a cluster of a light tree's lights may look before it is opened.
+    /// </summary>
+    public Resolver<double> LightTreeSplitResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how many surfaces a ray from the eye is followed through.
     /// </summary>
     public Resolver<int?> TraceDepthResolver { get; set; }
@@ -233,6 +248,9 @@ public class ContextUpdater : Instruction
         EmissionSamplesResolver.AssignTo(context, target => target.EmissionSamples, context, variables);
         DiffuseCacheResolver.AssignTo(context, target => target.DiffuseCacheError, context, variables);
         CausticPhotonsResolver.AssignTo(context, target => target.CausticPhotons, context, variables);
+        LightTreeResolver.AssignTo(context, target => target.LightTree, context, variables);
+        LightTreeSamplesResolver.AssignTo(context, target => target.LightTreeSamples, context, variables);
+        LightTreeSplitResolver.AssignTo(context, target => target.LightTreeSplit, context, variables);
         TraceDepthResolver.AssignTo(context, target => target.TraceDepth, context, variables);
         FilmCurveResolver.AssignTo(context, target => target.FilmCurve, context, variables);
         BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);

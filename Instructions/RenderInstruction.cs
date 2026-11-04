@@ -132,6 +132,10 @@ public class RenderInstruction : Instruction
         // to tell which side of each the sky is on.
         scene.OpenTheSky();
 
+        // And once every light is set out, the many that fade are held in a tree, if there are enough of them or the
+        // scene asks; see Scene.LightTree.
+        scene.ArrangeTheLights(sampleTimes.Length, context.LightTree, context.LightTreeSamples, context.LightTreeSplit);
+
         // What the scene holds is counted only now that the sky and anything glowing have added the
         // lights they bring, and the render is timed on its own, without the building before it.
         context.Statistics?.Describe(scene, context.Width, context.Height);

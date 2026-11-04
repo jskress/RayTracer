@@ -495,16 +495,7 @@ public partial class Scene
     /// <returns><c>true</c>, if the search goes on past it.</returns>
     private bool PassedByBouncedLight(Intersection hit)
     {
-        if (hit.Surface.NoShadow || hit.Portals.CastsNoShadow)
-            return true;
-
-        foreach (Light light in Lights)
-        {
-            if (light.Housing is { } housing && housing.Contains((hit.Surface, hit.Portals)))
-                return true;
-        }
-
-        return false;
+        return hit.Surface.NoShadow || hit.Portals.CastsNoShadow || HousesALight(hit.Surface, hit.Portals);
     }
 
     /// <summary>

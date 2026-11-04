@@ -121,6 +121,8 @@ branches, any one of the branches will do.
   - [Color Temperature](lights.md#color-temperature)
   - [Fading With Distance](lights.md#fading-with-distance)
   - [Sky Lights](lights.md#sky-lights)
+  - [Lights on Things](lights.md#lights-on-things)
+  - [Many Lights](lights.md#many-lights)
 - [Surfaces](surfaces.md)
   - [What Every Surface Has](surfaces.md#what-every-surface-has)
   - [The Primitives](surfaces.md#the-primitives)
