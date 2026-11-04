@@ -1,0 +1,91 @@
+// Three shapes no equation describes, on plinths in a dim gallery: a Mandelbulb in gold, a Mandelbox in copper, and
+// a Menger sponge in pale plaster, each under its own spotlight.
+//
+// **None of them can be asked where a ray meets it.**  Each is found by marching the ray in strides as long as the
+// shape says it is far at least: the Mandelbulb and the Mandelbox by iterating from the point and seeing how fast it
+// runs away, the sponge from the distance to its cube and to each level's cross of tunnels.  The Mandelbulb is the
+// Mandelbrot set made space, the point raised to the eighth power in White and Nylander's way and added back, round
+// after round; the Mandelbox folds the point into a box and through a sphere, magnifies it twice over and adds it
+// back; the sponge is a cube cut into twenty-seven, the middle and the face middles taken out, four times over.
+//
+// **The bulb and the box stand a little off the sets themselves**, at their `detail`: a set's own edge is crinkled
+// at every scale, and drawn exactly every pixel's facing and shadow fell at random among crinkles far finer than
+// itself.  Each detail here is about half a pixel at this distance; a closer look wants it smaller, and more
+// iterations.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    scale ambient by 0.3
+    info {
+        title 'A Cabinet of Fractals'
+        author 'J. Stephen Kress'
+        description 'A Mandelbulb in gold, a Mandelbox in copper and a Menger sponge in plaster, on plinths in a dim gallery.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.0, -6.4]
+    look at [0, 1.25, 0]
+    field of view 56
+}
+
+background [0.01, 0.01, 0.012]
+
+// The room: a dark polished floor and a wall behind.
+plane { material { pigment [0.05, 0.05, 0.055]  reflective 0.3  roughness 0.18  fresnel } }
+plane { rotate X -90  translate Z 3.5  material { pigment [0.20, 0.18, 0.16]  specular 0 } }
+
+// A plinth: a block of pale stone a meter high.
+primitive Plinth() -> cube {
+    return cube {
+        scale [0.55, 0.5, 0.55]
+        translate Y 0.5
+        material {
+            pigment granite { [0, [0.56, 0.55, 0.53], 1, [0.72, 0.71, 0.69]]  scale 0.3 }
+            specular 0.15  shininess 30
+        }
+    }
+}
+
+object Plinth() { translate X -2.2 }
+object Plinth()
+object Plinth() { translate X 2.2 }
+
+mandelbulb {
+    power 8
+    iterations 10
+    detail 0.008
+    rotate Y 25
+    scale 0.6
+    translate [-2.2, 1.64, 0]
+    material { metal 'gold'  roughness 0.22 }
+}
+
+mandelbox {
+    factor 2
+    iterations 9
+    detail 0.09
+    scale 0.085
+    rotate Y 35
+    translate [0, 1.52, 0]
+    material { metal 'copper'  roughness 0.3 }
+}
+
+menger {
+    iterations 4
+    scale 0.48
+    rotate Y 30
+    translate [2.2, 1.48, 0]
+    material { pigment [0.90, 0.88, 0.84]  specular 0.25  shininess 40 }
+}
+
+// A spotlight on each, from high in front, and a faint fill.
+spot light { location [-3, 4.6, -2.4]  point at [-2.2, 1.6, 0]  radius 14  falloff 24  color [1.1, 1.0, 0.9] }
+spot light { location [0, 4.8, -2.6]     point at [0, 1.5, 0]   radius 14  falloff 24  color [1.1, 1.0, 0.9] }
+spot light { location [3, 4.6, -2.4]   point at [2.2, 1.45, 0]  radius 14  falloff 24  color [1.1, 1.0, 0.9] }
+point light { location [0, 5, -9]  color [0.12, 0.12, 0.14] }

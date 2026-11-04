@@ -66,6 +66,13 @@ public abstract class DistanceEstimatedSurface : Surface
         Math.Max(DoubleExtensions.Epsilon, 4 * Accuracy * StretchInTheWorld(timeIndex, portals));
 
     /// <summary>
+    /// This property holds how far either way the field is looked at to find which way the surface faces: eight
+    /// accuracies, unless the shape shows detail only so fine (see <see cref="Mandelbulb.Detail"/>), when looking
+    /// finer would find crinkles no pixel shows, and a normal at random.
+    /// </summary>
+    protected virtual double NormalStep => Accuracy * 8;
+
+    /// <summary>
     /// This method must be provided by subclasses to say how far the nearest surface is from a point.
     /// It is negative inside the shape, nought on it, and positive outside.
     /// </summary>
@@ -136,6 +143,13 @@ public abstract class DistanceEstimatedSurface : Surface
         (double dx, double dy, double dz) = (ray.Direction.X, ray.Direction.Y, ray.Direction.Z);
         double distance = from;
         bool wasInside = DistanceAt(ox + from * dx, oy + from * dy, oz + from * dz) < 0;
+
+        // **Inside where the span starts means the shape reaches its own box there**, and the box face is the boundary
+        // the ray went in by, as the end of the span below closes a ray still inside: a Mandelbox reaches its box on
+        // every face, and without this three rays in five toward it went in at its box unrecorded and came out --
+        // an odd number of crossings, the rest of the ray solid.
+        if (wasInside)
+            intersections.Add(AtTheBox(ray, from, length));
 
         // **The estimate is only to be trusted outside**, and the march has to be told so.  Outside,
         // the number is how much room there is and stepping by it is both safe and quick.  Inside, an
@@ -220,7 +234,31 @@ public abstract class DistanceEstimatedSurface : Surface
         // being solid.  One ray in forty through a Julia set does this, the set reaching the radius
         // of two it is bounded by.
         if (wasInside)
-            intersections.Add(new Intersection(this, to / length));
+            intersections.Add(AtTheBox(ray, to, length));
+    }
+
+    /// <summary>
+    /// This method returns a crossing where the shape is cut by its box, facing as the box's face does there.  The
+    /// face is flat, and facing as the field's slope does instead -- swinging round whatever the field is measured
+    /// from -- shaded it as a cone: a ball cut by its box showed a dark line either side of its middle.
+    /// </summary>
+    /// <param name="ray">The ray, its direction of unit length.</param>
+    /// <param name="distance">How far along it the box is met.</param>
+    /// <param name="length">The length of the ray's own direction, to report the distance in.</param>
+    /// <returns>The crossing.</returns>
+    private PrecomputedNormalIntersection AtTheBox(Ray ray, double distance, double length)
+    {
+        Point at = ray.At(distance);
+        Point least = MarchingDomain.Minimum;
+        Point most = MarchingDomain.Maximum;
+        (double off, Vector normal)[] faces =
+        [
+            (Math.Abs(at.X - least.X), new Vector(-1, 0, 0)), (Math.Abs(at.X - most.X), new Vector(1, 0, 0)),
+            (Math.Abs(at.Y - least.Y), new Vector(0, -1, 0)), (Math.Abs(at.Y - most.Y), new Vector(0, 1, 0)),
+            (Math.Abs(at.Z - least.Z), new Vector(0, 0, -1)), (Math.Abs(at.Z - most.Z), new Vector(0, 0, 1))
+        ];
+
+        return new PrecomputedNormalIntersection(this, distance / length, faces.MinBy(face => face.off).normal);
     }
 
     /// <summary>
@@ -261,7 +299,11 @@ public abstract class DistanceEstimatedSurface : Surface
     /// <returns>The normal to the surface at the given point.</returns>
     public override Vector SurfaceNormalAt(Point point, Intersection intersection)
     {
-        double step = Accuracy * 8;
+        // Where the box cuts the shape, the box's face is the surface; see AtTheBox.
+        if (intersection is PrecomputedNormalIntersection cut)
+            return cut.PrecomputedNormal;
+
+        double step = NormalStep;
         (double x, double y, double z) = (point.X, point.Y, point.Z);
         Vector normal = new (
             DistanceAt(x + step, y, z) - DistanceAt(x - step, y, z),

@@ -36,7 +36,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `aberration` | Camera: `chromatic aberration`, how far the lens parts red from blue toward the corners. | [Chromatic aberration](cameras.md#chromatic-aberration) |
 | `above` | Field: the lowest ground a copy may stand on, dropped or all over.  Grown tree climbing a surface: the lowest its points may stand. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Climbing a surface](advanced-surfaces.md#climbing-a-surface) |
 | `absorption` | Medium: how much light it takes out per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
-| `accuracy` | Isosurface, parametric surface, distance surface, Julia set or swells: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface), [Swells](surfaces.md#swells) |
+| `accuracy` | Isosurface, parametric surface, distance surface, Julia set, Mandelbulb, Mandelbox, Menger sponge or swells: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface), [Swells](surfaces.md#swells) |
 | `across` | Shape grammar: a gabled `roof` whose ridge runs along the scope's Z rather than its X. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `agate` | Pattern: turbulent, wandering bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `agx` | Context: `film curve agx`, a film's curve over the whole range. | [Context](context.md#film-curve) |
@@ -147,6 +147,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `deposits` | Pattern: where a height field's erosion laid grit down. | [What the weather left](advanced-surfaces.md#what-the-weather-left) |
 | `depth` | Normal: how deep the roughening bites; also an L-system material depth; context: `trace depth`, `antialiasing depth` and `color depth`.  Saddle or swells: how far it reaches along Z.  Shape grammar: how deep a `faces` scope reaches in, and in its rules, the scope's depth. | [Materials](materials.md#roughening-the-surface), [Context](context.md#trace-depth), [Context](context.md#anti-aliasing), [Saddle](surfaces.md#saddle), [Swells](surfaces.md#swells), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `detail` | Mandelbulb or Mandelbox: how near the set its surface stands, the finest detail it shows. | [Mandelbulb](advanced-surfaces.md#mandelbulb), [Mandelbox](advanced-surfaces.md#mandelbox) |
 | `description` | Info: a description. | [Context](context.md#image-information) |
 | `diameter` | L-system control: the edge thickness. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `difference` | CSG: the first child with the rest carved out. | [Surfaces](surfaces.md#combining-surfaces) |
@@ -180,7 +181,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `faces` | Shape grammar: hands on each face of a box as a scope standing on it, its Z pointing in. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `facing` | Hair: the way a surface must face for hair to grow on it; `by` sets how strictly.  A field all over a surface, or a grown tree climbing one: the same, for its copies or points.  Pattern: which way a surface faces in the world, `toward` a direction.  Joint: which of its ways is turned to face what it aims at. | [Advanced Surfaces](advanced-surfaces.md#hair), [Covering a surface all over](advanced-surfaces.md#covering-a-surface-all-over), [Climbing a surface](advanced-surfaces.md#climbing-a-surface), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Aiming](animation.md#aiming) |
-| `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `factor` | L-system control: how thickness shrinks with depth.  Mandelbox: how much each round magnifies, its "scale". | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Mandelbox](advanced-surfaces.md#mandelbox) |
 | `fade` | Light: `fade distance` names where the light is worth its color; `fade power` how fast it thins past there.  Decal: `fade from` … `to` … sets the angles it fades between, and `no fade` turns that off. | [Lights](lights.md#fading-with-distance), [Materials](materials.md#fading) |
 | `fainter` | Turbulence/noise: dims each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `falloff` | Spotlight: the outer cone where light fades out. | [Lights](lights.md#spotlights) |
@@ -198,6 +199,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `flop` | Pattern: the angle a surface is seen at, against the light's reflection, for paint whose color shifts with it. | [Pigments & Patterns](pigments-and-patterns.md#a-color-that-shifts-with-the-angle) |
 | `flow` | Pattern: how much water runs over a place on a height field. | [What the weather left](advanced-surfaces.md#what-the-weather-left) |
 | `focal` | Camera: `focal point`/`focal distance` for depth of field. | [Cameras](cameras.md#depth-of-field) |
+| `fold` | Mandelbox: how far a coordinate may go before the box fold reflects it back. | [Mandelbox](advanced-surfaces.md#mandelbox) |
 | `font` | Text: which font face to use, or a list of them to fall back through. | [Advanced Surfaces](advanced-surfaces.md#text), [Managing Fonts](fonts.md#falling-back-to-another-font) |
 | `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
 | `fracture` | Surface: a solid broken into pieces, each the part of it nearest a seed. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
@@ -248,14 +250,14 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `index` | Interior, film or coat: `index of refraction`, written out.  A `field`: `index in n` names each copy's number.  A shape grammar's `repeat`: `index in n` names each part's number. | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films), [A clear coat](materials.md#a-clear-coat), [Advanced Surfaces](advanced-surfaces.md#field), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |
 | `inherited` | Material: take the material handed down from the surrounding group; with decals in a block, paint them on top of it. | [Materials](materials.md#markings-that-survive-a-repaint) |
-| `inner` | Disc: `inner radius`, making a washer. | [Surfaces](surfaces.md#disc) |
+| `inner` | Disc: `inner radius`, making a washer.  Mandelbox: `inner radius`, inside which its sphere fold magnifies by its greatest. | [Surfaces](surfaces.md#disc), [Mandelbox](advanced-surfaces.md#mandelbox) |
 | `intel` | Context: `denoise intel`, Intel's Open Image Denoise. | [Context](context.md#denoising) |
 | `interior` | What a surface is made of: its index of refraction and clarity.  Also what fills the space inside it. | [Materials](materials.md#transparency-and-interiors), [Scene Files](scene-files.md#the-space-between-things) |
 | `intersection` | CSG: only where all children overlap. | [Surfaces](surfaces.md#combining-surfaces) |
 | `ior` | Interior, film or coat: index of refraction (short form). | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films), [A clear coat](materials.md#a-clear-coat) |
 | `isosurface` | A surface made by a function of x, y and z rather than by a shape. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `italic` | Font style: slanted. | [Advanced Surfaces](advanced-surfaces.md#text) |
-| `iterations` | Julia set: how many times the iteration is applied. | [Surfaces](advanced-surfaces.md#julia) |
+| `iterations` | Julia set, Mandelbulb or Mandelbox: how many times the iteration is applied; Menger sponge: how many times the cube is cut. | [Surfaces](advanced-surfaces.md#julia), [Mandelbulb](advanced-surfaces.md#mandelbulb), [Mandelbox](advanced-surfaces.md#mandelbox), [Menger Sponge](advanced-surfaces.md#menger-sponge) |
 | `jitter` | Area light: `no jitter` turns off sample dithering.  Field: how far a copy may stray from its grid place, as a share of the spacing. | [Lights](lights.md#area-lights), [Field](advanced-surfaces.md#field) |
 | `joining` | Grown tree: the pipe model's exponent, how branches add up where they join. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `joint` | Surface: a group turned about a pivot, by an angle about an axis, or to aim or reach. | [Joints](animation.md#joints) |
@@ -287,6 +289,8 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `loop` | Keys: begin again once the last key is reached. | [Keys](animation.md#keys) |
 | `loose` | Fracture: the pieces are separate stones, each in a place of its own in its pattern. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `lsystem` | Surface: a shape grown from an L-system. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `mandelbox` | Surface: Tom Lowe's fractal of box and sphere folds. | [Mandelbox](advanced-surfaces.md#mandelbox) |
+| `mandelbulb` | Surface: the Mandelbulb, the Mandelbrot set made space. | [Mandelbulb](advanced-surfaces.md#mandelbulb) |
 | `map` | `normal map`: a picture of the normals themselves, as a texture set ships one. | [Normal maps](materials.md#normal-maps) |
 | `marble` | Pattern: veined, usually with turbulence; runs up its map and back down, a `triangle` wave, unless another is said. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `mark` | A named place on a thing, carried wherever it goes, to aim at, reach with or span between. | [Marks and Spans](animation.md#marks-and-spans) |
@@ -297,6 +301,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `max` | Extrusion: the high Y of the solid (`max Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid, and the far end of a decal's reach (`max Y`, `max radius`).  Also `max()` in an expression. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Materials](materials.md#reach), [Functions](advanced-surfaces.md#what-a-function-may-hold) |
 | `medium` | What fills a piece of space; in a context block, `medium samples` and `medium bounces`.  Also a font weight. | [Scene Files](scene-files.md#filling-that-space) |
 | `melanin` | Material, for hair only: colors it as natural hair is colored — a named shade, or amounts of eumelanin and pheomelanin. | [How hair is lit](advanced-surfaces.md#how-hair-is-lit) |
+| `menger` | Surface: a Menger sponge, a cube cut into twenty-seven again and again. | [Menger Sponge](advanced-surfaces.md#menger-sponge) |
 | `metal` | Material: a real metal, by name (`'gold'`, `'chromium'`, ...) or by the color it mirrors, with an `edge` color for how it fares at a slant. | [Metals](materials.md#metals) |
 | `metallic` | Finish: POV-Ray's tint of the highlight and of what is mirrored by the surface color.  May run from one amount to another by a pattern, a metalness map: beside `metal`, how much of each place is bare. | [Materials](materials.md#metallic), [Metals](materials.md#metals) |
 | `min` | Extrusion: the low Y of the solid (`min Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid, and the near end of a decal's reach (`min Y`, `min radius`).  Also `min()` in an expression. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Materials](materials.md#reach) |
@@ -326,6 +331,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `or` | True when either condition is; the same operator as `\|\|`. | [Scene Files](scene-files.md#expressions) |
 | `orthographic` | Camera projection: parallel, with no perspective shrink. | [Cameras](cameras.md#projections) |
 | `out` | Keys: `ease out`, slowing as it arrives. | [Keys](animation.md#keys) |
+| `outer` | Mandelbox: `outer radius`, inside which its sphere fold turns a point inside out. | [Mandelbox](advanced-surfaces.md#mandelbox) |
 | `over` | A `for` loop with no name for its count.  Also a field's `over '<name>'`, dropping its copies onto that surface, and its `all over '<name>'`, covering the whole of it; and how long a swarm's `burst … over` takes. | [Surfaces](surfaces.md#repeating-things), [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Covering a surface all over](advanced-surfaces.md#covering-a-surface-all-over), [Swarms](animation.md#swarms) |
 | `overhang` | Shape grammar: how far a `roof` reaches past the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `panoramic` | Camera projection: a cylindrical, wide horizontal view. | [Cameras](cameras.md#projections) |
@@ -356,7 +362,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `poly` | Wave shape: the value to a given power, written `poly 3 wave`. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `portal` | Surface: the sky comes into a room through it -- a window, a door, a skylight -- and a sky light looks in through it. | [Surfaces](surfaces.md#portal), [Lights](lights.md#through-a-window) |
 | `position` | Text layout: `horizontal`/`vertical position`. | [Advanced Surfaces](advanced-surfaces.md#text) |
-| `power` | Light: with `fade`, how quickly it thins with distance.  Two is what light really does. | [Lights](lights.md#fading-with-distance) |
+| `power` | Light: with `fade`, how quickly it thins with distance.  Two is what light really does.  Mandelbulb: the power the point is raised to each round. | [Lights](lights.md#fading-with-distance), [Mandelbulb](advanced-surfaces.md#mandelbulb) |
 | `primitive` | Declares a [thing of your own](scene-files.md#things-of-your-own) that a scene can make. | [Scene Files](scene-files.md#things-of-your-own) |
 | `productions` | L-system: the rewrite rules. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `profile` | Sweep: the 2D cross-section carried along.  Light: `profile 'file.ies'`, how bright a real fitting is each way, from an IES file. | [Advanced Surfaces](advanced-surfaces.md#sweep), [Light Profiles](lights.md#light-profiles) |

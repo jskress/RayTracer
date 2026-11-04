@@ -244,6 +244,9 @@ public partial class LanguageParser
             "paraboloid" => ParseParaboloidClause(clause),
             "sdf" => ParseSdfClause(clause),
             "julia" => ParseJuliaClause(clause),
+            "mandelbulb" => ParseMandelbulbClause(clause),
+            "mandelbox" => ParseMandelboxClause(clause),
+            "menger" => ParseMengerClause(clause),
             "hyperboloid" => ParseHyperboloidClause(clause),
             "saddle" => ParseSaddleClause(clause),
             "quadric" => ParseQuadricClause(clause),
@@ -365,6 +368,12 @@ public partial class LanguageParser
                 "sdfEntryClause", HandleSdfEntryClause, validate: false),
             "julia" => ParseObjectResolver<JuliaFractalResolver>(
                 "juliaEntryClause", HandleJuliaEntryClause, validate: false),
+            "mandelbulb" => ParseObjectResolver<MandelbulbResolver>(
+                "mandelbulbEntryClause", HandleMandelbulbEntryClause, validate: false),
+            "mandelbox" => ParseObjectResolver<MandelboxResolver>(
+                "mandelboxEntryClause", HandleMandelboxEntryClause, validate: false),
+            "menger" => ParseObjectResolver<MengerSpongeResolver>(
+                "mengerEntryClause", HandleMengerEntryClause, validate: false),
             "hyperboloid" => ParseObjectResolver<HyperboloidResolver>(
                 "extrudedSurfaceEntryClause", HandleHyperboloidEntryClause, validate: false),
             "saddle" => ParseObjectResolver<SaddleResolver>(
@@ -461,6 +470,9 @@ public partial class LanguageParser
             "paraboloid" => "startParaboloidClause",
             "sdf" => "startSdfClause",
             "julia" => "startJuliaClause",
+            "mandelbulb" => "startMandelbulbClause",
+            "mandelbox" => "startMandelboxClause",
+            "menger" => "startMengerClause",
             "hyperboloid" => "startHyperboloidClause",
             "saddle" => "startSaddleClause",
             "quadric" => "startQuadricClause",

@@ -380,7 +380,21 @@ sets off (every ray leaving its surface) or when chords carried past their ends 
 a few pixels; a pinched one keeps the nine-plane, 32-step search.  A distance-estimated surface (`sdf`, `julia`,
 `DistanceEstimatedSurface.March`) counts an arrival within its accuracy as a crossing only when a look two
 accuracies past finds the other side: taken as crossing, a graze turned inside and outside about, the ray ran out
-"inside" and was closed at its box, and shadow rays met the phantom (a Julia set came out peppered).  An isosurface's and
+"inside" and was closed at its box, and shadow rays met the phantom (a Julia set came out peppered).  A march that
+STARTS inside (the shape reaching its box there) records the box face as its entry, as one ending inside records its
+exit: a Mandelbox reaches its box on every face, and three rays in five toward it had odd crossings.  Both box crossings
+face as the box's face does (`AtTheBox`, a `PrecomputedNormalIntersection`): facing as the field slopes, a ball cut
+by its `bounded by` was shaded as a cone with a dark line either side of its middle.  Beside `julia`:
+`mandelbulb { power iterations detail }` (`Geometry/Mandelbulb.cs`, White-Nylander triplex power, axis Y, ball of
+two), `mandelbox { factor fold inner radius outer radius iterations detail }` (`Geometry/Mandelbox.cs`, Lowe's box and
+sphere folds; `factor` because `scale` is the transform; reach 2 fold (s+1)/(s-1) above one, 2 fold below minus one,
+sampled; escape at max(10, 2 reach)) and `menger { iterations }` (`Geometry/MengerSponge.cs`, Quilez's sponge distance:
+true outside the cube, a lower bound in it).  The bulb and the box stand off their sets at `detail` (field = estimate
+- detail, unescaped points inside; the box's |z|/|dz| has no sign of its own; their boxes grown by four details, or
+the box cut the standing-off surface flat on every face) with normals over half the detail
+(`DistanceEstimatedSurface.NormalStep`): drawn at the set's exact edge after N rounds, or with normals over eight
+accuracies, both came out a speckled dust, every pixel's facing and shadow at random among crinkles far finer than it.
+An isosurface's and
 `swells`' interval march (`March`) narrows a span whose ends differ in sign only once it is under 64 accuracies
 (`StraddleSpan`), else subdivides it as any other: narrowed at once, a span holding three crossings recorded one, and
 a ray skimming a swell's crest went through it (complete over cheap, the user's call 2026-10-24: 4.5-9x on those scenes).

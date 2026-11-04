@@ -134,9 +134,9 @@ public class TestSheetSurfaces
         HashSet<string> solids =
         [
             "Plane", "Swells", "Paraboloid", "Hyperboloid", "Quadric",
-            // Both are marched by distance, and both are solids: the field is negative within them,
+            // All are marched by distance, and all are solids: the field is negative within them,
             // which is what "inside" means for a distance.
-            "SignedDistanceSurface", "JuliaFractal",
+            "SignedDistanceSurface", "JuliaFractal", "Mandelbulb", "Mandelbox", "MengerSponge",
             "Sphere", "Cube", "Cylinder", "Conic", "Torus", "Egg", "Superellipsoid", "Blob",
             "Isosurface", "Extrusion", "Lathe", "Tube", "TubeSegment", "TubeQuadSegment",
             "TubeCubicSegment", "CsgSurface", "Group", "Instance", "HeightField", "LSystem",
