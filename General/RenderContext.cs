@@ -297,6 +297,24 @@ public class RenderContext
     public int CausticPhotons { get; set; }
 
     /// <summary>
+    /// This property holds whether the scene's lights that fade are held in a tree (see
+    /// <see cref="RayTracer.Core.LightTree"/>): asked for (<c>true</c>), refused (<c>false</c>), or left to how many
+    /// there are (<c>null</c>, the default: a tree once there are more than sixteen).
+    /// </summary>
+    public bool? LightTree { get; set; }
+
+    /// <summary>
+    /// This property holds how many picks among a light tree's far lights a place first met from the eye takes.
+    /// </summary>
+    public int LightTreeSamples { get; set; } = Core.LightTree.DefaultSamples;
+
+    /// <summary>
+    /// This property holds how wide a cluster of a light tree's lights may look, its radius over its distance, before
+    /// its lights are each looked at in full.
+    /// </summary>
+    public double LightTreeSplit { get; set; } = Core.LightTree.DefaultSplit;
+
+    /// <summary>
     /// This field holds how many photons a scene's caustics are made of when it asks for them without
     /// saying how many.
     /// </summary>

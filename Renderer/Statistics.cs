@@ -289,6 +289,12 @@ public class Statistics
         AddLine(lines, "Lights", lights.Count == 0
             ? "none"
             : $"{Number(census.Lights.Values.Sum())}: {Joined(lights)}");
+
+        if (census.LightTree is { } tree)
+        {
+            AddLine(lines, "Light tree",
+                $"{Plural(tree.Held, "light")} that fade, {Plural(tree.Samples, "pick")} a place, split {tree.Split:0.###}");
+        }
     }
 
     /// <summary>

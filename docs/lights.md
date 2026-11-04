@@ -526,11 +526,73 @@ The complete example is [`docs/examples/lights/lamps.igl`](examples/lights/lamps
   a scene's top level may set out lights as well as surfaces.
 
 A light on a thing is an ordinary light once the scene is built, and costs what any light of its sort
-costs: each lit point looks toward every light, so a street of a hundred lit lamps is a hundred lights.
-That is still far cheaper than a lamp lit by a glowing [medium](surfaces.md#a-surface-that-gives-light), which
-looks toward every part of the glow.
+costs: a street of a hundred lit lamps is a hundred lights.  A lit point looks toward every one of them,
+until there are more than [a few dozen that fade](#many-lights).  That is still far cheaper than a lamp lit
+by a glowing [medium](surfaces.md#a-surface-that-gives-light), which looks toward every part of the glow.
 
 The [Reading Corner](../gallery/Local/lights/a-reading-corner.igl) is a room lit by two lamps carrying
 their own lights.  [A Bar After Hours](../gallery/Local/lights/a-bar-after-hours.igl) has no lamp at all:
 in a scene that follows [bounced light](context.md#bounced-light), whatever glows of its own lights the room,
 and there its neon signs and a strip of LEDs are the only light there is.
+
+### Many Lights
+
+A street of lamps, a festoon of bulbs, a city seen from a hill: a scene may hold hundreds of lights, and a
+place looking toward every one of them pays for every one, near or far.  But a lamp that [fades](#fading-with-distance)
+gives a place a kilometer off next to nothing, and a place under a string of bulbs is lit by the dozen
+nearest it.  So once a scene holds **more than sixteen lights that fade**, they are held in a *light tree*,
+and each place looks at a few of them, picked by how much each could give it:
+
+![A quay at dusk, strung with six hundred festoon bulbs](../gallery/Local/lights/a-quay-by-festoon-light.png)
+
+- **Near lights are looked at in full.**  The lights are grouped into a tree of nested boxes.  Going down
+  it from a place, a box that looks wide from there -- its radius at least a quarter of its distance -- is
+  opened, and so on, until every light in what was opened is looked at as it always was.  A lamp at the
+  table is never left to chance.
+- **Far lights are picked.**  What was not opened is where the near lights give way to the far, and among
+  those the place takes sixteen picks, each down the tree by how much each part could give it: its lamps'
+  power, what is left of it over the distance, which way the lamps shine and how square the place faces
+  them, and, on a glossy place, how near they lie to where it mirrors the eye.  Every light picked counts
+  for one over its chance of being picked, so the picture is right on average.
+- **Lights that do not fade are never in it**, nor distant lights, sky lights, glows and glowing surfaces:
+  a light that gives as much a kilometer off as at arm's length cannot be told from its neighbours by
+  distance.  They are looked at whole, as ever.
+- **Each lamp's ambient is given whole.**  A lamp lends every surface its material's
+  [ambient](context.md#ambient), which no distance thins and no shadow takes away, so the ambient of all the
+  tree's lamps is added at every place in full, never picked.
+
+What it costs is grain: a far light picked by chance makes a place a little brighter or darker than its
+neighbour, more on a glossy surface catching far lamps at a slant.  [Anti-aliasing](context.md#anti-aliasing)
+averages much of it, and more picks less:
+
+```
+context { light tree samples 64  split 0.25 }
+```
+
+| Setting | What it does |
+| --- | --- |
+| `light tree` | Holds the lights that fade in a tree, as few as two of them; unsaid, a tree is built once there are more than sixteen. |
+| `samples n` | How many picks among the far lights a place first seen from the eye takes; 16 unless said.  A place met along a bounce, in a medium or by a walk under a surface takes one, the many such places averaging it. |
+| `split s` | How wide a box may look, its radius over its distance, before it is opened; 0.25 unless said.  Nought opens everything: every light looked at in full, as with no tree. |
+| `no light tree` | Every light looked at by every place, however many there are. |
+
+Measured on four hundred lamps in a grid over a floor, at 400x300:
+
+| | Rays a sample | Off from every lamp's, on average |
+| --- | --- | --- |
+| Every lamp | 293 | — |
+| `samples 8 split 0.5` | 7.8 | 2.1 levels |
+| `samples 16 split 0.25` (the default) | 17.9 | 0.75 levels |
+| `samples 32 split 0.25` | 28.2 | 0.44 levels |
+
+And on the [quay](../gallery/Local/lights/a-quay-by-festoon-light.igl) above, six hundred bulbs at 480x360: about
+twenty seconds of rendering at the default sixteen picks and under half a minute at the scene's sixty-four,
+against about five minutes for every lamp; the picture is off from every lamp's by 1.2 levels a pixel on
+average at sixteen picks, and by 0.5 at sixty-four.
+
+**Six hundred lamps' ambient is a great deal of light.**  Every lamp lends ambient, and the default ambient
+was set for a scene of one or two; a scene of many lamps wants its ambient turned well down, or off with a
+[sky light](#sky-lights) for the fill -- `scale ambient by 0` on the quay, where it was eighteen times the light
+of the bulbs themselves.  The lamps behind frosted glass are still each looked at, being shared with what
+the glass lets through; `--stats` says how many lights a scene's tree holds.
+

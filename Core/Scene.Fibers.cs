@@ -80,9 +80,13 @@ public partial class Scene
         double ambient = material.EffectiveAmbient;
         TS color = TS.Black;
 
-        for (int number = 0; number < (withinTheHair ? 0 : Lights.Count); number++)
+        // Each light's answer worth what the scene's tree of lights says, one with no tree; see Scene.LightTree.
+        using LightPicks picks = withinTheHair ? default : LightsAt(frame.Center, null, _bounced == 0 && !_spreading);
+
+        for (int number = 0; number < picks.Count; number++)
         {
-            Light light = Lights[number].At(hit.TimeIndex);
+            (Light listed, double weight, bool held) = picks[number];
+            Light light = listed.At(hit.TimeIndex);
             int count = light.SampleCount;
             (int taken, double odds) = TakenOf(count, hit, number);
             TS sum = TS.Black;
@@ -94,8 +98,10 @@ public partial class Scene
                 TS emitted = light.EmittedToward<TS>(sample);
 
                 // Ambient light stands in for light bounced about the scene, as it does for a surface,
-                // and is shown in the color the hair is matched to.
-                sum += own * emitted * ambient;
+                // and is shown in the color the hair is matched to -- but not a held light's, which the light
+                // standing for every held light's ambient lends; see LightTree.Ambient.
+                if (!held)
+                    sum += own * emitted * ambient;
 
                 // A strand that did not draw this light this time takes only its ambient from it.
                 double intensity = odds > 0 ? sample.Cone * light.FadingOver(sample.Distance) / odds : 0;
@@ -117,7 +123,7 @@ public partial class Scene
                 sum += scattered * emitted * reaching * (Math.PI * intensity);
             }
 
-            color += taken == 1 ? sum : sum * (1.0 / taken);
+            color += (taken == 1 ? sum : sum * (1.0 / taken)) * weight;
         }
 
         // The light scattered among the strands arrives from every way, more from some than others, and

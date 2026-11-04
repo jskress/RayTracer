@@ -542,6 +542,17 @@ surface by way of mirrors and glass, so a bounce that meets the sky or a glowing
 finds nothing there: it would be the same light counted twice.  A sky that is only a backdrop, with no
 sky light, sends no photons, and a bounce still finds it.
 
+### A Light Tree
+
+```
+context { light tree samples 16  split 0.25 }
+```
+
+A scene holding more than sixteen lights that fade holds them in a tree, so that each place looks at the
+near ones in full and picks among the far ones rather than looking toward every one; `light tree` asks for
+one however few there are, `samples` says how many picks a place takes and `split` how near a cluster must
+be to be opened.  `no light tree` looks toward every light.  See [Many Lights](lights.md#many-lights).
+
 ### Color Depth and Grayscale
 
 What reaches the image file, as opposed to what was rendered:

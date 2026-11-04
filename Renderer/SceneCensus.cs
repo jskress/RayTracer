@@ -72,6 +72,12 @@ public class SceneCensus
     /// </summary>
     public IReadOnlyDictionary<string, long> Lights => _lights;
 
+    /// <summary>
+    /// This property holds how many lights the scene's light tree holds, how many picks a place takes among its far
+    /// ones and how wide a cluster may look before it is opened, or <c>null</c> for a scene with no tree.
+    /// </summary>
+    public (int Held, int Samples, double Split)? LightTree { get; private set; }
+
     // The kinds whose own name says better what they are than their class's does.
     private static readonly Dictionary<Type, string> Names = new ()
     {
@@ -103,6 +109,9 @@ public class SceneCensus
 
             census._lights[kind] = census._lights.GetValueOrDefault(kind) + 1;
         }
+
+        if (scene.LightTree is { } tree)
+            census.LightTree = (tree.Count, tree.Samples, tree.Split);
 
         return census;
     }

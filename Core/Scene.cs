@@ -518,8 +518,9 @@ public partial class Scene : NamedThing, IDisposable
         where TS : struct, ISpectrum<TS>
     {
         TS arriving = TS.Black;
+        using LightPicks picks = LightsAt(where, null, false);
 
-        foreach (Light each in Lights)
+        foreach ((Light each, double weight, _) in picks)
         {
             Light light = each.At(timeIndex);
 
@@ -532,6 +533,10 @@ public partial class Scene : NamedThing, IDisposable
             int count = light.SampleCount;
             int pick = count == 1 ? 0 : (index + (int) (ShiftFor(where, 141) * count)) % count;
             LightSample sample = light.SampleToward(where, pick);
+
+            if (sample.Cone == 0)
+                continue;
+
             TS reaching = GetLightReaching<TS>(
                 where, sample.Direction, sample.Distance, timeIndex, null, false, 0, light.Housing);
 
@@ -557,7 +562,7 @@ public partial class Scene : NamedThing, IDisposable
             double phase = medium.PhaseFor(sample.Direction.Dot(heading));
 
             arriving += light.EmittedToward<TS>(sample) * reaching *
-                (sample.Cone * phase * light.FadingOver(sample.Distance));
+                (sample.Cone * phase * light.FadingOver(sample.Distance) * weight);
         }
 
         return arriving;
@@ -1190,11 +1195,21 @@ public partial class Scene : NamedThing, IDisposable
         // well as on it, is the hair light's to carry; see GetHitColor.
         if (!fromBeyond)
         {
-            // Under a film, the film colors a metal's highlight as it colors what the metal mirrors.
-            foreach (Light light in Lights)
+            // Under a film, the film colors a metal's highlight as it colors what the metal mirrors.  Each light's
+            // answer is worth what the scene's tree of lights says, which with no tree is one; see Scene.LightTree.
+            bool first = _bounced == 0 && !_spreading;
+            using LightPicks picks = LightsAt(
+                intersection.LitPoint, intersection.Normal, first,
+                transparency <= 0 && !material.PigmentMayTransmit && !intersection.Surface.IsASheet && !underneath &&
+                !through,
+                first && LightTree is not null
+                    ? LightTree.Lobe.Of(intersection.Material, intersection.Normal, intersection.Eye)
+                    : default);
+
+            foreach ((Light light, double weight, bool held) in picks)
                 surfaceColor += Illuminate<TS>(
                     light, intersection, ownShare, looks, glass, looksThrough, film, coated, facets,
-                    film is null ? metal : null);
+                    film is null ? metal : null, held) * weight;
         }
 
         if ((underneath || through) && fromBeyond)
@@ -1446,7 +1461,7 @@ public partial class Scene : NamedThing, IDisposable
     private TS Illuminate<TS>(
         Light light, Intersection intersection, double ownShare, int looks, (double, double)? glass,
         int looksThrough, FilmShares<TS>? film, (Coat Coat, double Outside, int Looks)? coated = null,
-        Facets facets = null, BareMetal? metal = null)
+        Facets facets = null, BareMetal? metal = null, bool held = false)
         where TS : struct, ISpectrum<TS>
     {
         // A light standing on something moving is where that stood at this ray's instant.
@@ -1472,7 +1487,7 @@ public partial class Scene : NamedThing, IDisposable
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, only, one, intersection, looks, glass, looksThrough, facets), glass,
                 intersection.Material, film, highlights: _bounced == 0,
-                coat: CoatShareOf(light, only, intersection, coated), facets: facets, metal: metal);
+                coat: CoatShareOf(light, only, intersection, coated), facets: facets, metal: metal, ambient: !held);
         }
 
         TS sum = TS.Black;
@@ -1488,7 +1503,7 @@ public partial class Scene : NamedThing, IDisposable
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, sample, index, intersection, looks, glass, looksThrough, facets), glass,
                 intersection.Material, film, coat: CoatShareOf(light, sample, intersection, coated),
-                facets: facets, metal: metal);
+                facets: facets, metal: metal, ambient: !held);
         }
 
         return sum * (1.0 / count);

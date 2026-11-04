@@ -273,7 +273,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `leopard` | Pattern: rounded spots. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `level` | Erosion: the second word of `sea level`. | [Erosion](advanced-surfaces.md#erosion) |
 | `life` | Swarm: how long a copy lasts, in seconds, `life a to b`. | [Swarms](animation.md#swarms) |
-| `light` | Font weight; also a light source, which may stand in a group.  A surface's `gives light`, and a `physical sky`'s `no light`, leaving its sun out. | [Advanced Surfaces](advanced-surfaces.md#text), [Lights](lights.md), [Lights on Things](lights.md#lights-on-things), [Surfaces](surfaces.md#a-surface-that-gives-light), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
+| `light` | Font weight; also a light source, which may stand in a group.  A surface's `gives light`, and a `physical sky`'s `no light`, leaving its sun out.  Context: `light tree`, and `no light tree`. | [Advanced Surfaces](advanced-surfaces.md#text), [Lights](lights.md), [Lights on Things](lights.md#lights-on-things), [Surfaces](surfaces.md#a-surface-that-gives-light), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky), [Many Lights](lights.md#many-lights) |
 | `limits` | Joint: `limits a to b`, the least and the most it may be turned. | [Joints](animation.md#joints) |
 | `line` | Path/spline: a straight segment; also `line gap` and the line scanner. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `linear` | Pattern qualifier: a `linear` stripe or gradient along an axis.  Quadric: the coefficients of `x`, `y` and `z`.  Keys: the value comes to the key at an even pace. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Surfaces](surfaces.md#quadric), [Keys](animation.md#keys) |
@@ -303,7 +303,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `move` | Path/spline: lift the pen to a new point; also an L-system turtle move.  Shape grammar: moves a scope along its own axes. | [Advanced Surfaces](advanced-surfaces.md#paths), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `named` | Gives the thing being defined a name. | [Materials](materials.md#naming-and-reusing) |
 | `neutral` | Context: `film curve neutral`, which eases light brighter than eight tenths of white toward white, keeping its hue. | [Context](context.md#film-curve) |
-| `no` | Begins `no shadow`, `no shadows`, `no caustics`, `no gamma`, `no jitter`, `no center`, `no fade`, and a `physical sky`'s `no light`. | [Surfaces](surfaces.md#no-shadow), [Materials](materials.md#fading), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
+| `no` | Begins `no shadow`, `no shadows`, `no caustics`, `no gamma`, `no jitter`, `no center`, `no fade`, `no light tree`, and a `physical sky`'s `no light`. | [Surfaces](surfaces.md#no-shadow), [Materials](materials.md#fading), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `noise` | Mottling: dims a color by noise.  Also the `noise` function, one smooth layer of it. | [Pigments & Patterns](pigments-and-patterns.md#mottling), [Scene Files](scene-files.md#functions) |
 | `none` | Context: `film curve none`, which cuts light off at white. | [Context](context.md#film-curve) |
 | `normal` | Roughens a surface: a pattern that tilts the normal, or with `map` a normal map; a blob plane or a disc: which way it faces. | [Materials](materials.md#roughening-the-surface), [Normal maps](materials.md#normal-maps), [Blob](surfaces.md#a-plane-component), [Disc](surfaces.md#disc) |
@@ -392,7 +392,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rules` | Shape grammar: the block holding its rules, each a name, `->` and what it does. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `saddle` | Surface: a hyperbolic paraboloid, cut to a rectangle. | [Surfaces](surfaces.md#saddle) |
 | `sag` | Catenary: how far its middle hangs below the straight line between its ends. | [Catenary](advanced-surfaces.md#catenary) |
-| `samples` | Context: `medium samples`, `diffuse samples`, `emission samples`, `reflection samples`, `subsurface samples` and `weathering samples`.  Camera: `blur samples`.  A medium's or a sky light's own count, a glowing surface's `gives light samples`, and how finely a function height field is gridded. | [Scene Files](scene-files.md#scattering), [Context](context.md#rough-reflections), [Cameras](cameras.md#depth-of-field), [Lights](lights.md#sky-lights), [Height Field](advanced-surfaces.md#height-field) |
+| `samples` | Context: `medium samples`, `diffuse samples`, `emission samples`, `reflection samples`, `subsurface samples` and `weathering samples`, and a `light tree`'s `samples`, its picks a place.  Camera: `blur samples`.  A medium's or a sky light's own count, a glowing surface's `gives light samples`, and how finely a function height field is gridded. | [Scene Files](scene-files.md#scattering), [Context](context.md#rough-reflections), [Cameras](cameras.md#depth-of-field), [Lights](lights.md#sky-lights), [Height Field](advanced-surfaces.md#height-field), [Many Lights](lights.md#many-lights) |
 | `scale` | Transform: resize (a surface or a 2D path); also a sweep spline point's cross-section size, and `scale ambient by` in a context block. | [Transforms](transforms.md#scale), [Context](context.md#ambient) |
 | `scallop` | Wave shape: a row of rounded arches meeting in cusps. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `scanner` | Context: which scanning strategy renders the image. | [Context](context.md#scanners) |
@@ -436,7 +436,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `spin` | Body: how fast it is turning at time nought, about each axis, in degrees a second.  Swarm: how fast a copy tumbles, `spin a to b`. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `splash` | Weather: dirt kicked up from the ground, up to a height in the model's own units. | [Weathering a Model](materials.md#weathering-a-model) |
 | `spline` | Sweep: the 3D path the profile follows; also the way a loft, a tube, a strand, a rope or a chain runs, written out, a `catenary`, or named.  Named, `Name = spline { ... }`, to be followed by `along` and handed to any of those by its name. | [Advanced Surfaces](advanced-surfaces.md#sweep), [Along a Spline](animation.md#along-a-spline), [Catenary](advanced-surfaces.md#catenary) |
-| `split` | Shape grammar: divides a scope along an axis into parts of fixed sizes and `~` shares. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `split` | Shape grammar: divides a scope along an axis into parts of fixed sizes and `~` shares.  Context's `light tree`: how wide a cluster of lights may look before it is opened. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar), [Many Lights](lights.md#many-lights) |
 | `spot` | A `spot light` (a cone). | [Lights](lights.md#spotlights) |
 | `spread` | Swarm: how far from its way a copy may be thrown, an angle.  Grown tree: the furthest its wood runs from its root, measured along it. | [Swarms](animation.md#swarms), [Climbing a surface](advanced-surfaces.md#climbing-a-surface) |
 | `square` | Pattern: a four-color square tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -486,6 +486,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `transform` | Applies a named transform to a surface. | [Transforms](transforms.md#naming-a-transform) |
 | `translate` | Transform: move a surface or a 2D path. | [Transforms](transforms.md#translate) |
 | `transparency` | Finish: how much light passes through. | [Materials](materials.md#transparency-and-interiors) |
+| `tree` | Context: `light tree`, holding the many lights that fade so a place looks at the near ones and picks among the far. | [Many Lights](lights.md#many-lights) |
 | `triangle` | Shape: a flat triangle (also a wave shape). | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `triangular` | Pattern: a six-color triangular tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `triplanar` | Image map: lay the picture flat square to each axis and blend the three by the way the surface faces, at the world's size. | [Laid by the way a surface faces](pigments-and-patterns.md#laid-by-the-way-a-surface-faces) |

@@ -107,7 +107,7 @@ public partial class LanguageParser
             'channel', 'red', 'green', 'blue', 'alpha', 'map', 'directx', 'vignetting', 'distortion', 'chromatic',
             'aberration', 'loft', 'section', 'straight', 'triplanar', 'shuffled', 'catenary', 'sag', 'rope', 'chain',
             'lay', 'strands', 'link', 'wire', 'erosion', 'rivers', 'scree', 'repose', 'rain', 'sea', 'level', 'flow',
-            'deposits',
+            'deposits', 'tree',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -278,7 +278,8 @@ public partial class LanguageParser
         }
         settingOffClause:
         {
-            no > [ gamma | shadows ] ?? 'Expecting "gamma" or "shadows" to follow "no" here.'
+            no > [ gamma | shadows | { light > tree ?? 'Expecting "tree" to follow "no light" here.' } ] ??
+                'Expecting "gamma", "shadows" or "light tree" to follow "no" here.'
         }
         contextPropertyClause:
         {
@@ -314,6 +315,14 @@ public partial class LanguageParser
         causticsClause:
         {
             caustics > { photons > _expression }{?}
+        }
+        // Whether the scene's lights that fade are held in a tree, so a place looks at a few, picked by how much each
+        // could give it: how many picks a place first met from the eye takes among the far ones, and how wide a
+        // cluster may look before its lights are each looked at in full.
+        lightTreeClause:
+        {
+            light > tree ?? 'Expecting "tree" to follow "light" here.' >
+            { samples > _expression }{?} > { split > _expression }{?}
         }
         // How the light a render ends with is developed into a picture: eased toward white, by a film's
         // curve, or cut off at white.
@@ -356,7 +365,8 @@ public partial class LanguageParser
         contextEntryClause:
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
-            settingOffClause | mediumSamplesClause | diffuseLightClause | causticsClause | traceDepthClause |
+            settingOffClause | mediumSamplesClause | diffuseLightClause | causticsClause | lightTreeClause |
+            traceDepthClause |
             filmCurveClause | subsurfaceSamplesClause | weatheringSamplesClause | emissionSamplesClause |
             reflectionSamplesClause | antiAliasingClause |
             scaleAmbientClause |

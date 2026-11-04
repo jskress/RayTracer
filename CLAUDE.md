@@ -213,7 +213,23 @@ as a `ListedLight`, so loops and choices may set lights out, at a scene's top le
 in the world after the scene is arranged -- once for every placement, walking instance chains, and once for every
 sample time if the group moves (`Light.At(timeIndex)`, asked by every shading loop) -- and records its `Housing`:
 the closed surfaces of its own group round it (odd crossings on all of seven looks), which its shadow rays skip,
-keyed with their portals so one lamp's bulb is not the next one's.  Placed lights are ordinary lights to the shading.  `along <path>` lays copies along each run of a
+keyed with their portals so one lamp's bulb is not the next one's.  Placed lights are ordinary lights to the shading.  A scene with more than sixteen FADING point/spot/area lights
+(`LightTree.Fades`: a FadeDistance, power above nought; a light that never fades cannot be ruled out by distance)
+holds them in a `LightTree` (`Core/LightTree.cs`, built by `Scene.ArrangeTheLights` after the sky's openings;
+`context { light tree [samples n] [split s] }` asks for one of as few as two, `no light tree` refuses): Conty-Kulla
+importance (pbrt-v4's `LightBounds::Importance`, each node's fading over the nearest the box can be in place of the
+inverse square, one-sided for an opaque solid, guided on a glossy place by its highlight's lobe -- strength = Schlick
+F at the eye's slant / (4 pi a^2) / half the diffuse, power 1/(2a^2); a flat boost doubled a floor's grain) with
+Estevez-Kulla splitting: from the root a node whose radius is at least `split` (0.25) of its distance is opened, its
+leaves taken whole (at most 64 unless split is 0), the rest sampled by `samples` (16) picks spread evenly over their
+importance, ONE number stretched down the tree (pbrt's SampleDiscrete), each pick worth 1/(picks x chance), repeats
+merged.  Every shading loop asks `Scene.LightsAt(place, normal, first, oneSided, lobe)` for (light, weight, held):
+the scene's list at weight one with no tree (x 1.0, so bit-identical), else `Always` (not held), `LightTree.Ambient`
+-- one light carrying all held lights' light, its sample worth nothing (cone 0, no shadow ray), so a surface takes
+only the AMBIENT every held lamp lends, which no distance thins (left to the picks, 600 bulbs' ambient sparkled) --
+and the picks, whose own ambient is off (`ApplyPhong(ambient: false)`).  Places along a bounce, in a medium or a walk
+take one pick.  The frosted-glass glow (`GlowsAimedThrough`) still loops every lamp, its MIS assuming each is aimed at.
+Every light's housing is one set (`Scene.HousesALight`).  `along <path>` lays copies along each run of a
 path instead of filling an outline (`Field.PathPlaces`, walking a `PathGuide` by distance): each turned so its +X runs
 with the path (-Z faces the path's right), the spacing fitted to whole gaps (both ends of an open run, no doubled seam
 on a closed one), `rows n apart d` each spaced along its OWN length, `offset` to the path's left, jitter drawn from
