@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 175 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 176 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -1720,7 +1720,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Terrain</b> &mdash; 6 images &middot; ground, drawn or described</summary>
+<summary><b>Terrain</b> &mdash; 7 images &middot; ground, drawn or described</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1729,6 +1729,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/terrain/a-dry-riverbed.igl">A Dry Riverbed</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/terrain/an-alpine-valley.png">
+      <img alt="An Alpine Valley" height="120" src="Local/terrain/an-alpine-valley.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/terrain/an-alpine-valley.igl">An Alpine Valley</a>
     </td>
   </tr>
   <tr style="border: none;">

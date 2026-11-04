@@ -174,6 +174,7 @@ branches, any one of the branches will do.
   - [Text](advanced-surfaces.md#text)
   - [Tapered Text](advanced-surfaces.md#tapered-text)
   - [Height Field](advanced-surfaces.md#height-field)
+    - [Erosion](advanced-surfaces.md#erosion)
   - [Object Files](advanced-surfaces.md#object-files)
   - [L-Systems](advanced-surfaces.md#l-systems)
   - [Grown Tree](advanced-surfaces.md#grown-tree)

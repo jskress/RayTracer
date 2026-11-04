@@ -37,7 +37,9 @@ internal sealed class ArrangedSurfaces
     /// </para>
     /// </summary>
     /// <param name="surfaces">The surfaces to arrange.</param>
-    internal void Arrange(List<Surface> surfaces)
+    /// <param name="stretch">How long each of the space's own axes comes out in the world, if it is stretched
+    /// into it (see <see cref="BoundingVolumeHierarchy.Build"/>).</param>
+    internal void Arrange(List<Surface> surfaces, (double X, double Y, double Z)? stretch = null)
     {
         List<(Surface Surface, BoundingBox Box)> placed = [];
 
@@ -56,7 +58,7 @@ internal sealed class ArrangedSurfaces
             // hit by nothing and is left out of both lists.
         }
 
-        _hierarchy = BoundingVolumeHierarchy.Build(placed);
+        _hierarchy = BoundingVolumeHierarchy.Build(placed, stretch);
 
         // Whatever was not worth arranging is walked the old way.  Below the threshold the walk is
         // faster than any search of it, and this is the common case by count: most groups an author
@@ -65,6 +67,14 @@ internal sealed class ArrangedSurfaces
             ? placed.Select(entry => entry.Surface).ToList()
             : null;
     }
+
+    /// <summary>
+    /// This method counts the surfaces a ray would be handed, those arranged in boxes it crosses and those walked.
+    /// </summary>
+    /// <param name="ray">The ray, in the space the surfaces are arranged in.</param>
+    /// <returns>How many surfaces the ray would be handed.</returns>
+    internal int CountHandedTo(Ray ray) =>
+        (_hierarchy?.CountHandedTo(ray) ?? _walked?.Count ?? 0) + (_unbounded?.Count ?? 0);
 
     /// <summary>
     /// This method adds every crossing the ray makes with what has been arranged.

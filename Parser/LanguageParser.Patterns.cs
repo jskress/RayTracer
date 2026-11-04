@@ -3,6 +3,7 @@ using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Extensions;
+using RayTracer.Geometry;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
 using RayTracer.Instructions.Patterns;
@@ -70,6 +71,9 @@ public partial class LanguageParser
             "crevices" => (new CrevicesPatternResolver(), new CrevicesPattern().DiscretePigmentsNeeded),
             "edges" => (new EdgesPatternResolver(), new EdgesPattern().DiscretePigmentsNeeded),
             "facing" => (new FacingPatternResolver(), new FacingPattern().DiscretePigmentsNeeded),
+            "flow" => (new ErosionPatternResolver { Map = ErosionMap.Flow }, 0),
+            "deposits" => (new ErosionPatternResolver { Map = ErosionMap.Deposits }, 0),
+            "wear" => (new ErosionPatternResolver { Map = ErosionMap.Wear }, 0),
             "dents" => (new DentsPatternResolver
             {
                 SeedResolver = seedResolver

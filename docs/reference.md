@@ -144,6 +144,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `degrees` | Angle unit: `angles are degrees`.  Also the postfix operator, `90 degrees`, turning an angle in degrees into the radians the functions take. | [Context](context.md#angles), [Scene Files](scene-files.md#angles-are-radians) |
 | `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern).  What a medium's `emission by density` reads its map at.  Also hair: how many strands grow on each unit of area. | [Scene Files](scene-files.md#giving-a-medium-a-shape), [Hair](advanced-surfaces.md#hair), [Light by Density](scene-files.md#a-medium-whose-light-follows-its-density) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `deposits` | Pattern: where a height field's erosion laid grit down. | [What the weather left](advanced-surfaces.md#what-the-weather-left) |
 | `depth` | Normal: how deep the roughening bites; also an L-system material depth; context: `trace depth`, `antialiasing depth` and `color depth`.  Saddle or swells: how far it reaches along Z.  Shape grammar: how deep a `faces` scope reaches in, and in its rules, the scope's depth. | [Materials](materials.md#roughening-the-surface), [Context](context.md#trace-depth), [Context](context.md#anti-aliasing), [Saddle](surfaces.md#saddle), [Swells](surfaces.md#swells), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `description` | Info: a description. | [Context](context.md#image-information) |
 | `diameter` | L-system control: the edge thickness. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -171,6 +172,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `else` | The second way out of a [choice](scene-files.md#choosing-inside-a-body) in a function or primitive, and the other way out of an `if` where surfaces are listed; optional there.  A shape grammar's `if`, the other way. | [Scene Files](scene-files.md#choosing-inside-a-body), [Surfaces](surfaces.md#choosing-what-to-make) |
 | `emission` | Medium: how much light it gives off per unit of distance, as one color, as a pigment, or `by density`, from a map read at its density.  Material: light the surface gives off of its own.  Context: `emission samples`. | [Scene Files](scene-files.md#filling-that-space), [Materials](materials.md#emission), [Context](context.md#bounced-light), [Light by Density](scene-files.md#a-medium-whose-light-follows-its-density) |
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
+| `erosion` | Height field: how its ground has been worn before it is drawn: `rivers`, `scree`, `rain`. | [Erosion](advanced-surfaces.md#erosion) |
 | `error` | Context: `diffuse cache error`, how far the cache of bounced light may stray. | [Context](context.md#a-cache-of-bounced-light) |
 | `exposure` | Camera: how many stops brighter or darker it takes the light. | [Cameras](cameras.md#exposure) |
 | `extrude` | Shape grammar: gives a scope a height, a lot raised into a mass. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -193,6 +195,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `flat` | Fracture: broken only across X and Z, every crack running straight down. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `flatness` | Patch: how flat before dicing stops. | [Surfaces](surfaces.md#patch) |
 | `flop` | Pattern: the angle a surface is seen at, against the light's reflection, for paint whose color shifts with it. | [Pigments & Patterns](pigments-and-patterns.md#a-color-that-shifts-with-the-angle) |
+| `flow` | Pattern: how much water runs over a place on a height field. | [What the weather left](advanced-surfaces.md#what-the-weather-left) |
 | `focal` | Camera: `focal point`/`focal distance` for depth of field. | [Cameras](cameras.md#depth-of-field) |
 | `font` | Text: which font face to use, or a list of them to fall back through. | [Advanced Surfaces](advanced-surfaces.md#text), [Managing Fonts](fonts.md#falling-back-to-another-font) |
 | `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
@@ -268,6 +271,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `left` | Text layout: `text alignment left` and `horizontal position left`.  Placement: `left of`, beside another on its `-X` side, touching; `align left with`, its `-X` edge level with another's. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another) |
 | `length` | L-system control: the step length.  Also hair: how long a strand is.  A catenary: how long the cable is.  Context's `animation`: how long it runs, in seconds.  A body's `tether`: how long the string is.  Also the `length` function, of a vector or a spline. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Hair](advanced-surfaces.md#hair), [Saying How Long](animation.md#saying-how-long), [Tethers](animation.md#tethers), [Scene Files](scene-files.md#functions) |
 | `leopard` | Pattern: rounded spots. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `level` | Erosion: the second word of `sea level`. | [Erosion](advanced-surfaces.md#erosion) |
 | `life` | Swarm: how long a copy lasts, in seconds, `life a to b`. | [Swarms](animation.md#swarms) |
 | `light` | Font weight; also a light source, which may stand in a group.  A surface's `gives light`, and a `physical sky`'s `no light`, leaving its sun out. | [Advanced Surfaces](advanced-surfaces.md#text), [Lights](lights.md), [Lights on Things](lights.md#lights-on-things), [Surfaces](surfaces.md#a-surface-that-gives-light), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `limits` | Joint: `limits a to b`, the least and the most it may be turned. | [Joints](animation.md#joints) |
@@ -359,6 +363,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `radians` | Angle unit: `angles are radians`.  Also the postfix operator, `1.5 radians`, which says out loud that an angle is already in radians. | [Context](context.md#angles), [Scene Files](scene-files.md#angles-are-radians) |
 | `radii` | Torus/egg: the two radii. | [Surfaces](surfaces.md#torus) |
 | `radius` | A radius: sphere blob, disc, spotlight, tube point, a tube along a spline, a rope, a toroidal decal's ring, a wrapped decal's reach, a hair's curl, how far light travels under a surface, how far `crevices` and `edges`, and weather, look, and the ball a body or a swarm's copy strikes things as. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Rope](advanced-surfaces.md#rope), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair), [Light under the surface](materials.md#light-under-the-surface), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Bodies](animation.md#bodies) |
+| `rain` | Erosion: rain running down the ground, about so many drops for each point of its grid. | [Erosion](advanced-surfaces.md#erosion) |
 | `ramp` | Wave shape: a sawtooth. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `rate` | Context's `animation`: frames a second, 30 unless said.  Swarm: copies thrown a second, in a steady flow rather than a `burst`. | [Saying How Long](animation.md#saying-how-long), [Swarms](animation.md#swarms) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
@@ -370,10 +375,12 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `regular` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `render` | Names which scene and camera to render. | [Scene Files](scene-files.md#the-render-command) |
 | `repeat` | Shape grammar: tiles a scope along an axis with as many parts of about a size as fit. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `repose` | Erosion: the steepest angle loose rock rests at, which scree lies at and a river's valley sides fall back to. | [Erosion](advanced-surfaces.md#erosion) |
 | `return` | The answer a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `ribbon` | Surface: a flat strand of a given width running through a series of points. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
 | `right` | Text layout: `text alignment right` and `horizontal position right`.  Placement: `right of`, beside another on its `+X` side, touching; `align right with`, its `+X` edge level with another's. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another) |
 | `ripples` | Pattern: concentric rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `rivers` | Erosion: rivers cutting their valleys, how far back into the land. | [Erosion](advanced-surfaces.md#erosion) |
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `roof` | Shape grammar: roofs a box scope, `gable`, `hip` or `flat`. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -391,9 +398,11 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `scanner` | Context: which scanning strategy renders the image. | [Context](context.md#scanners) |
 | `scattering` | Medium: how much light it turns aside per unit of distance. | [Scene Files](scene-files.md#scattering) |
 | `scene` | Groups a camera, lights and surfaces into a named scene. | [Scene Files](scene-files.md#scenes-and-cameras) |
+| `scree` | Erosion: crags shedding scree into aprons at their feet, for how long. | [Erosion](advanced-surfaces.md#erosion) |
 | `sdf` | Surface: a shape written as a signed distance function. | [Surfaces](advanced-surfaces.md#signed-distance-surface) |
+| `sea` | Erosion: `sea level`, below which the ground does not wear and water ends. | [Erosion](advanced-surfaces.md#erosion) |
 | `section` | Loft: one cross-section — its `path`, its transforms, and how far along the loft's spline it stands, `at`. | [Loft](advanced-surfaces.md#loft) |
-| `seed` | Fixes the random start of a pattern, light, camera or hair. | [Pigments & Patterns](pigments-and-patterns.md#seeding), [Cameras](cameras.md#depth-of-field), [Lights](lights.md#area-lights) |
+| `seed` | Fixes the random start of a pattern, light, camera or hair, or the rain an erosion lets fall. | [Pigments & Patterns](pigments-and-patterns.md#seeding), [Cameras](cameras.md#depth-of-field), [Lights](lights.md#area-lights), [Erosion](advanced-surfaces.md#erosion) |
 | `serial` | Context: the single-threaded `serial scanner`. | [Context](context.md#scanners) |
 | `shadow` | `no shadow`: the surface casts none. | [Surfaces](surfaces.md#no-shadow) |
 | `shadows` | `no shadows`: the whole scene casts none. | [Surfaces](surfaces.md#no-shadow) |
@@ -514,7 +523,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `wave` | Swells: one train of waves.  Shaping: bends a pattern's value by a wave shape. | [Surfaces](surfaces.md#swells) |
 | `wavelength` | Swells: how far apart a wave train's crests are. | [Surfaces](surfaces.md#swells) |
 | `waves` | Pattern: overlapping wave crests. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
-| `wear` | Weather: wear on the edges, `to` the material it bares. | [Weathering a Model](materials.md#weathering-a-model) |
+| `wear` | Weather: wear on the edges, `to` the material it bares.  Pattern: where a height field's erosion carried ground away. | [Weathering a Model](materials.md#weathering-a-model), [What the weather left](advanced-surfaces.md#what-the-weather-left) |
 | `weather` | Surface: the weather a group or object has been out in: `grime`, `dust`, `wear`, `splash`, `radius`. | [Weathering a Model](materials.md#weathering-a-model) |
 | `weathering` | Context: `weathering samples`, how many directions `crevices` and `edges` look about in. | [Context](context.md#weathering-samples) |
 | `weight` | Field: how often one of the things it is filled with is picked against the others. | [Advanced Surfaces](advanced-surfaces.md#field) |
@@ -946,6 +955,14 @@ something that may repeat, and a branch is a choice between the ways through it.
   <source media="(prefers-color-scheme: dark)" srcset="images/advanced/heightFieldClause-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="images/advanced/heightFieldClause.svg">
   <img alt="A height field" src="images/advanced/heightFieldClause.svg">
+</picture>
+
+**Erosion** — How a height field's ground has been worn before it is drawn. &nbsp; [_advanced surfaces_](advanced-surfaces.md#erosion)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/erosionClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/erosionClause.svg">
+  <img alt="Erosion" src="images/advanced/erosionClause.svg">
 </picture>
 
 ### Built-in names

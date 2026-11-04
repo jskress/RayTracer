@@ -195,4 +195,55 @@ public class TestGroups
 
         Assert.IsTrue(expected.Matches(normal));
     }
+
+    /// <summary>
+    /// A group's children are cut into boxes by where they spread in the world, not in the group's own space.  Rough
+    /// ground written in meters up over its own unit square across, then stretched nine kilometers each way -- as a
+    /// height field said in meters is -- spreads three thousand of its own units up and one across: cut by its own
+    /// spread, every box was a slab as wide as the land, since rough ground at any one height lies all over it, and
+    /// a ray straight down was handed most of the triangles.  Cut by the world's, it is handed a few.
+    /// </summary>
+    [TestMethod]
+    public void TestAStretchedGroupIsDividedAsItStandsInTheWorld()
+    {
+        Group Slope(Matrix transform)
+        {
+            Group group = new () { Transform = transform };
+
+            for (int row = 0; row < 60; row++)
+            {
+                for (int column = 0; column < 60; column++)
+                {
+                    double x = column / 60.0, z = row / 60.0, step = 1 / 60.0;
+                    Point At(double u, double v) => new (u, 3000 * Rough(u, v), v);
+
+                    group.Add(new Triangle
+                    {
+                        Point1 = At(x, z), Point2 = At(x + step, z), Point3 = At(x + step, z + step)
+                    });
+                    group.Add(new Triangle
+                    {
+                        Point1 = At(x, z), Point2 = At(x + step, z + step), Point3 = At(x, z + step)
+                    });
+                }
+            }
+
+            group.PrepareForRendering();
+
+            return group;
+        }
+
+        // Ground as rough as noise: a height for each corner of the grid, as good as random.
+        static double Rough(double u, double v)
+        {
+            double value = Math.Sin(Math.Round(u * 60) * 12.9898 + Math.Round(v * 60) * 78.233) * 43758.5453;
+
+            return value - Math.Floor(value);
+        }
+
+        Ray down = new (new Point(0.31, 5000, 0.57), new Vector(0, -1, 0));
+        int stretched = Slope(Transforms.Scale(9000, 1, 9000)).ChildrenHandedTo(down);
+
+        Assert.IsTrue(stretched < 60, $"a ray straight down was handed {stretched} of 7200 triangles");
+    }
 }

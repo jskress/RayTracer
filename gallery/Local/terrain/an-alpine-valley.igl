@@ -1,0 +1,210 @@
+// An alpine valley on a clear morning: a river winding down a broad floor of meadow between stands of fir, scree under
+// the crags, and snow on the peaks closing round its head.  Nine kilometers of land, written as a function of where
+// you are and then out in the weather.
+//
+// **The land is the function's; its look is the weather's.**  The function writes only the valley and the ranges --
+// ridged noise rising out of a winding floor -- and an `erosion` block wears them before a triangle is made: the rivers
+// cut their valleys back into every range, branching as the water that made them does, and the sides of what they cut
+// fall back to the angle loose rock rests at; the crags shed scree into aprons at their feet; and rain runs down every
+// slope, scoring gullies and laying its grit in fans and flat floors, all but what it brings to a river, which carries
+// it off.
+//
+// **The ground is dressed by what the weather did to it.**  Three maps of the wearing are patterns a material reads:
+// `flow`, how much water runs over a place, is the river itself where it is most -- a dark, wet stripe of water down
+// the floor and a tarn in every hollow high up -- and darkens the rock down its gullies and the grass where it is wet;
+// `deposits`, where grit was laid down, is scree on the slopes and gravel in the fans.  With `facing` for how steeply
+// the ground lies -- rock where it is steep, grass where it is gentle, snow above the snow line only where it can lie
+// -- that is all the scene says about what the ground is made of.
+//
+// The firs stand on the lower slopes where the ground lies gentler than scree, below the tree line, in stands with
+// clearings between them; and a faint haze in the box of air round the land stands the far peaks back.
+
+import 'trees' { Fir }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    info {
+        title 'An Alpine Valley'
+        author 'J. Stephen Kress'
+        description 'A river valley worn by its rivers, its scree and its rain, and dressed by the maps the wearing left.'
+        copyright true
+        software __software__
+    }
+}
+
+// A kilometer up the valley's east side near its foot, looking up it to the peaks at its head.
+camera {
+    exposure 0.3
+    location [900, 1150, -4350]
+    look at [-250, 520, 1500]
+    field of view 52
+}
+
+background physical sky { sun elevation 38  sun azimuth 40  turbidity 2.4  brightness 3 }
+sky light { samples 12 }
+
+// -- The land ----------------------------------------------------------------------------------------------------
+
+// Ridged noise: sharp crests, octave on octave.
+function Ridge(x, z, f, o) -> number {
+    return 1 - abs(2 * noise(f * x, o, f * z) - 1)
+}
+
+function Peaks(x, z) -> number {
+    return 0.50 * pow(Ridge(x, z, 3, 0), 2) + 0.25 * pow(Ridge(x, z, 6, 0.3), 2) + 0.12 * Ridge(x, z, 12, 0.6)
+         + 0.06 * Ridge(x, z, 24, 0.9) + 0.03 * Ridge(x, z, 48, 1.2) + 0.015 * Ridge(x, z, 96, 1.5)
+}
+
+// How far a place lies from the middle of the main valley, which winds up the land along +Z.
+function Away(x, z) -> number {
+    return abs(x - 0.5 - 0.07 * sin(4.2 * z + 0.8) - 0.025 * sin(11 * z + 2))
+}
+
+// How much a place is the valley: one on its floor, falling to nought over two kilometers of its sides, their foot
+// wandering as spurs come down into it; and nought past its head, where the ranges close round it.
+function Valley(x, z) -> number {
+    return (1 - smoothstep(0.045, 0.30, Away(x, z) + 0.04 * (Ridge(x, z, 9, 3.3) - 0.5))) * (1 - smoothstep(0.6, 0.9, z))
+}
+
+// In meters: the valley's floor rising gently from 120 m at the near edge, about a kilometer wide, and the ranges
+// rising out of it, tallest toward its head.
+function Land(x, z) -> number {
+    return 120 + 150 * z + 300 * min(Away(x, z), 0.05)
+           + pow(1 - Valley(x, z), 1.3) * 3000 * (0.25 + 0.75 * Peaks(x, z)) * (0.75 + 0.25 * z)
+}
+
+// -- What it is made of -------------------------------------------------------------------------------------------
+
+// Patterns are read in the field's own space, nine kilometers across one unit and a meter up one, so a feature s
+// meters across is scaled [s / 9000, s, s / 9000].
+Granite = pigment granite { [0, [0.36, 0.34, 0.32], 0.5, [0.27, 0.26, 0.25], 1, [0.42, 0.40, 0.37]]  scale [0.0011, 10, 0.0011] }
+DarkGranite = pigment granite { [0, [0.22, 0.21, 0.20], 0.5, [0.17, 0.16, 0.16], 1, [0.27, 0.25, 0.23]]  scale [0.0011, 10, 0.0011] }
+WetRock = pigment granite { [0, [0.13, 0.13, 0.12], 1, [0.19, 0.18, 0.17]]  scale [0.0006, 5, 0.0006] }
+
+// The rock mottled light and dark over a few hundred meters, as weather and lichen leave a face.
+Mottled = pigment bozo { [0, Granite, 0.45, Granite, 0.7, DarkGranite, 1, DarkGranite]  scale [0.05, 420, 0.05] }
+
+RockFace = pigment flow { [0, Mottled, 0.12, Mottled, 0.28, WetRock] }
+Talus = pigment granite { [0, [0.52, 0.50, 0.46], 0.5, [0.38, 0.36, 0.34], 1, [0.46, 0.44, 0.41]]  scale [0.0006, 5, 0.0006] }
+// Grass varies over a few tens of meters and again over a few hundred: lusher and drier, greener and yellower.
+Lush = pigment bozo { [0, [0.13, 0.21, 0.07], 1, [0.20, 0.28, 0.10]]  scale [0.0035, 30, 0.0035] }
+Dry = pigment bozo { [0, [0.27, 0.30, 0.13], 1, [0.36, 0.35, 0.18]]  scale [0.0035, 30, 0.0035] }
+Turf = pigment bozo { [0, Lush, 0.45, Lush, 0.75, Dry, 1, Dry]  scale [0.03, 270, 0.03] }
+Wet = pigment bozo { [0, [0.08, 0.14, 0.05], 1, [0.12, 0.18, 0.07]]  scale [0.002, 18, 0.002] }
+Sward = pigment flow { [0, Turf, 0.22, Turf, 0.38, Wet] }
+
+Rock = material {
+    pigment RockFace
+    normal granite { depth 0.25  scale [0.006, 50, 0.006] }
+    specular 0.03  shininess 8
+}
+Scree = material {
+    pigment Talus
+    normal granite { depth 0.15  scale [0.0015, 14, 0.0015] }
+    specular 0.02  shininess 6
+}
+Meadow = material { pigment Sward  specular 0 }
+Snow = material { pigment [0.92, 0.93, 0.96]  specular 0  glints { size 0.0008  roughness 0.7 } }
+River = material { pigment [0.02, 0.035, 0.04]  reflective 0.02  fresnel  specular 0 }
+
+// Below the snow: rock where it is steep, scree where the crags shed it, meadow where the ground lies gentle.
+Loose = material blend deposits { [0.25, Rock, 0.55, Scree] }
+Below = material blend facing { [0.86, Rock, 0.90, Loose, 0.93, Loose, 0.955, Meadow] }
+
+// Above the snow line: snow wherever the ground lies gentle enough to hold it.
+Above = material blend facing { [0.85, Rock, 0.89, Snow] }
+
+Ground = material blend linear Y gradient {
+    turbulence 0.08
+    [0, Below, 0.37, Below, 0.41, Above]
+    scale [1, 4000, 1]
+}
+
+// The air: a faint haze in the lowest few kilometers, a seventh of the light gone over eight of them and its own pale
+// blue in its place, so the far peaks stand back.  It casts no shadow, so the sun lights the ground whole.
+cube {
+    material {
+        transparency 1
+        interior { medium { absorption 0.00002  emission [0.0000068, 0.0000082, 0.0000108] } }
+    }
+    no shadow
+    scale [4600, 2600, 4600]
+    translate Y 2600
+}
+
+heightfield {
+    function { Land(x, z) }
+    samples 1536
+    smooth
+    erosion { rivers 0.2  scree 0.15  rain 1 }
+    material blend flow { [0.48, Ground, 0.52, River] }
+    named 'valley'
+    translate [-0.5, 0, -0.5]
+    scale [9000, 1, 9000]
+}
+
+// -- The forest -----------------------------------------------------------------------------------------------------
+
+// The valley's sides, from a third of a kilometer off the river out to the ranges.
+EastSlopes = path {
+    move to 987, -4500
+    line to 955, -3750
+    line to 815, -3000
+    line to 711, -2250
+    line to 709, -1500
+    line to 748, -750
+    line to 692, 0
+    line to 452, 750
+    line to 72, 1500
+    line to -291, 2250
+    line to -469, 3000
+    line to 4400, 3000
+    line to 4400, -4500
+    close
+}
+
+WestSlopes = path {
+    move to 327, -4500
+    line to 295, -3750
+    line to 155, -3000
+    line to 51, -2250
+    line to 49, -1500
+    line to 88, -750
+    line to 32, 0
+    line to -208, 750
+    line to -588, 1500
+    line to -951, 2250
+    line to -1129, 3000
+    line to -4400, 3000
+    line to -4400, -4500
+    close
+}
+
+// Firs on the lower slopes, where the ground lies gentler than scree and below the tree line, in stands with clearings
+// between them.
+field {
+    of Fir(24, 'summer', 1), Fir(28, 'summer', 2), Fir(20, 'summer', 3)
+    within EastSlopes
+    spacing 14  jitter 0.9
+    turned 360  sized 0.8 to 1.2
+    patches bozo { scale 450 } from 0.4 to 0.5
+    over 'valley'
+    below 1500
+    steepest 32
+    sink 1
+}
+
+field {
+    of Fir(24, 'summer', 1), Fir(28, 'summer', 2), Fir(20, 'summer', 3)
+    within WestSlopes
+    spacing 14  jitter 0.9
+    turned 360  sized 0.8 to 1.2
+    patches bozo { scale 450 } from 0.4 to 0.5
+    over 'valley'
+    below 1500
+    steepest 32
+    sink 1
+}

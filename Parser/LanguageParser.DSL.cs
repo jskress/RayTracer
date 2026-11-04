@@ -106,7 +106,8 @@ public partial class LanguageParser
             'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span', 'falls', 'burst',
             'channel', 'red', 'green', 'blue', 'alpha', 'map', 'directx', 'vignetting', 'distortion', 'chromatic',
             'aberration', 'loft', 'section', 'straight', 'triplanar', 'shuffled', 'catenary', 'sag', 'rope', 'chain',
-            'lay', 'strands', 'link', 'wire',
+            'lay', 'strands', 'link', 'wire', 'erosion', 'rivers', 'scree', 'repose', 'rain', 'sea', 'level', 'flow',
+            'deposits',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -564,7 +565,7 @@ public partial class LanguageParser
         patternClause:
         [
             imagePatternClause | agate | boxed | brick | checker | crevices | cubic | edges | facing | flop | hexagon | leopard | planar |
-            radial | ripples | square | triangular | waves |
+            radial | ripples | square | triangular | waves | flow | deposits | wear |
             {
                 [ bozo | crackle | dents | granite | wrinkles ] > withSeedClause{?}
             } | marble | wood |
@@ -1968,8 +1969,20 @@ public partial class LanguageParser
         heightFieldEntryClause:
         [
             imageClause | fieldFunctionClause | { samples > _expression } |
-            { clip > _expression } | open | smooth | surfaceEntryClause
+            { clip > _expression } | open | smooth | startErosionClause | surfaceEntryClause
         ]
+        // How a height field's ground has been worn before it is drawn: rivers cutting their valleys back into it,
+        // crags shedding scree at their feet, rain running down it; and the sea they end in.
+        startErosionClause:
+        {
+            erosion > openBrace ?? 'Expecting an open brace to follow "erosion" here.'
+        }
+        erosionEntryClause:
+        [
+            { [ rivers | scree | repose | rain ] > _expression } |
+            { sea > level ?? 'Expecting "level" to follow "sea" here.' > _expression } |
+            withSeedClause
+        ] ?? 'Expecting an erosion property here.'
         
         // Triangle clauses.
         startTriangleClause:

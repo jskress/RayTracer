@@ -42,6 +42,7 @@ surface-bilinear-patch.png|docs/examples/advanced/bilinear-patch.igl|320|240
 surface-bilinear-normals.png|docs/examples/advanced/bilinear-patch-normals.igl|320|240
 adv-generic-shape.png|docs/examples/advanced/generic-shape.igl|320|240
 adv-height-field.png|docs/examples/advanced/height-field.igl|340|250
+adv-erosion.png|docs/examples/advanced/erosion.igl|640|240
 adv-isosurface.png|docs/examples/advanced/isosurface.igl|320|240
 adv-parametric.png|docs/examples/advanced/parametric.igl|320|240
 adv-lathe.png|docs/examples/advanced/lathe.igl|320|240
