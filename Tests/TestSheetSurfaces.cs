@@ -157,6 +157,8 @@ public class TestSheetSurfaces
             "Fracture", "Polyhedron", "RoundedPolyhedron",
             // A shape grammar holds the walls, roofs and placed things its rules made.
             "ShapeGrammar",
+            // A grid of tiles holds whatever stands in each cell, laid by wave function collapse.
+            "TileGrid",
             // A swarm holds copies of the one thing it throws, and what answers a ray is a copy.
             "Swarm",
             // A joint is a group, and a mark is answered by no ray at all.

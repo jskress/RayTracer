@@ -91,7 +91,7 @@ public partial class LanguageParser
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metal', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'neutral', 'no', 'noise', 'none', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
-            'sdf', 'julia', 'iterations', 'c', 'mandelbulb', 'mandelbox', 'menger', 'outer', 'fold', 'detail', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
+            'sdf', 'julia', 'iterations', 'c', 'mandelbulb', 'mandelbox', 'menger', 'outer', 'fold', 'detail', 'tiles', 'tile', 'cell', 'turns', 'tries', 'fit', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'portal', 'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reach', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -1128,6 +1128,30 @@ public partial class LanguageParser
             { fold > _expression } | { iterations > _expression } | { detail > _expression } |
             { accuracy > _expression } | surfaceEntryClause
         ]
+        // A grid laid with tiles by wave function collapse: how many cells, how big, the tiles -- each what stands in
+        // its cell, what lies on its sides, whether it turns and how often it is drawn -- and what lies outside.
+        startTilesClause:
+        {
+            tiles > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "tiles" here.'
+        }
+        tilesEntryClause:
+        [
+            { size > _expression } | { cell > _expression } |
+            { tile > openBrace ?? 'Expecting an open brace to follow "tile" here.' } |
+            { edge > _expression } | { above > _expression } | { below > _expression } |
+            { tries > _expression } |
+            { fit > _expression > to > _expression ?? 'Expecting "to" and the label it fits, here.' } |
+            surfaceEntryClause
+        ]
+        tileEntryClause:
+        [
+            { [ front | back | left | right | top | bottom | sides ] > _expression } |
+            turns | { weight > _expression } | nothing |
+            { [ _identifier | _keyword ] > leftParen{?} }
+        ] ?? 'Expecting a tile property, or what stands in the tile, here.'
         startMengerClause:
         {
             menger > [
@@ -2151,6 +2175,7 @@ public partial class LanguageParser
             startMandelbulbClause     => 'mandelbulb' |
             startMandelboxClause      => 'mandelbox' |
             startMengerClause         => 'menger' |
+            startTilesClause          => 'tiles' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -2248,6 +2273,7 @@ public partial class LanguageParser
             startMandelbulbClause     => 'mandelbulb' |
             startMandelboxClause      => 'mandelbox' |
             startMengerClause         => 'menger' |
+            startTilesClause          => 'tiles' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -2320,6 +2346,7 @@ public partial class LanguageParser
             startMandelbulbClause     => 'mandelbulb' |
             startMandelboxClause      => 'mandelbox' |
             startMengerClause         => 'menger' |
+            startTilesClause          => 'tiles' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -2452,7 +2479,7 @@ public partial class LanguageParser
                 startParametricClause |
                 startParaboloidClause | startHyperboloidClause | startSaddleClause |
                 startQuadricClause | startSdfClause | startJuliaClause |
-                startMandelbulbClause | startMandelboxClause | startMengerClause |
+                startMandelbulbClause | startMandelboxClause | startMengerClause | startTilesClause |
                 startObjectFileClause | startObjectClause |
                 startCsgClause | startGroupClause
             ]
@@ -2482,7 +2509,7 @@ public partial class LanguageParser
             [
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
-                isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia | mandelbulb | mandelbox | menger |
+                isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia | mandelbulb | mandelbox | menger | tiles |
                 patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | loft | rope | chain | grown | fracture | shapes | swarm | joint | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
@@ -2568,8 +2595,12 @@ public partial class LanguageParser
             [ _identifier | _keyword ] > assignment > _expression
         }
 
-        // Top-level clause.
+        // Top-level clause.  An assignment is tried first, as it is in a group's body: a scene may name a value with
+        // any word, `tiles = 'glaze.png'` included, and tried after the surfaces, the word's own clause took the
+        // name and refused what followed it.
         [
+            setThingToVariable        => 'HandleSetThingToVariableClause' |
+            setVariableClause         => 'HandleSetVariableClause' |
             startPrimitiveClause      => 'HandleStartPrimitiveClause' |
             startCallClause           => 'HandleStartCallClause' |
             startFunctionClause       => 'HandleStartFunctionClause' |
@@ -2591,6 +2622,7 @@ public partial class LanguageParser
             startMandelbulbClause     => 'HandleStartMandelbulbClause' |
             startMandelboxClause      => 'HandleStartMandelboxClause' |
             startMengerClause         => 'HandleStartMengerClause' |
+            startTilesClause          => 'HandleStartTilesClause' |
             startHyperboloidClause    => 'HandleStartHyperboloidClause' |
             startSaddleClause         => 'HandleStartSaddleClause' |
             startQuadricClause        => 'HandleStartQuadricClause' |
@@ -2635,9 +2667,7 @@ public partial class LanguageParser
             background                => 'HandleBackgroundClause' |
             startEnvironmentClause    => 'HandleStartEnvironmentClause' |
             environmentClause         => 'HandleEnvironmentClause' |
-            renderClause              => 'HandleRenderClause' |
-            setThingToVariable        => 'HandleSetThingToVariableClause' |
-            setVariableClause         => 'HandleSetVariableClause'
+            renderClause              => 'HandleRenderClause'
         ] ?? 'Unsupported object type found.'
         """";
 

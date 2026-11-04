@@ -1,0 +1,11 @@
+railroad-ebnf-beta
+title "Tiles"
+
+tiles = "tiles" [ name ] "{" { "size" vector | "cell" ( number | vector )
+      | "tile" "{" { tileEntry } "}"
+      | ( "edge" | "above" | "below" ) string | "fit" string "to" string
+      | "tries" number | property } "}" ;
+
+tileEntry = ( "front" | "back" | "left" | "right" | "top" | "bottom" | "sides" ) string
+          | "turns" | "weight" number | "nothing"
+          | name [ "(" [ expression { "," expression } ] ")" ] ;

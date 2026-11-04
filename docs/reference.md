@@ -34,7 +34,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | Keyword | Meaning | Documented in |
 | --- | --- | --- |
 | `aberration` | Camera: `chromatic aberration`, how far the lens parts red from blue toward the corners. | [Chromatic aberration](cameras.md#chromatic-aberration) |
-| `above` | Field: the lowest ground a copy may stand on, dropped or all over.  Grown tree climbing a surface: the lowest its points may stand. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Climbing a surface](advanced-surfaces.md#climbing-a-surface) |
+| `above` | Field: the lowest ground a copy may stand on, dropped or all over.  Grown tree climbing a surface: the lowest its points may stand.  Tiles: what lies over the grid's top layer. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Climbing a surface](advanced-surfaces.md#climbing-a-surface), [Tiles](advanced-surfaces.md#tiles) |
 | `absorption` | Medium: how much light it takes out per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
 | `accuracy` | Isosurface, parametric surface, distance surface, Julia set, Mandelbulb, Mandelbox, Menger sponge or swells: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface), [Swells](surfaces.md#swells) |
 | `across` | Shape grammar: a gabled `roof` whose ridge runs along the scope's Z rather than its X. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -67,14 +67,14 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `axisU` | Area light: one edge of the panel. | [Lights](lights.md#area-lights) |
 | `axisV` | Area light: the other edge of the panel. | [Lights](lights.md#area-lights) |
 | `azimuth` | `physical sky`: which way round the sun lies, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
-| `back` | With `align`, names the `+Z` edge. | [Transforms](transforms.md#placing-one-thing-against-another) |
+| `back` | With `align`, names the `+Z` edge.  Tile: what lies on its `+Z` side. | [Transforms](transforms.md#placing-one-thing-against-another), [Tiles](advanced-surfaces.md#tiles) |
 | `background` | Sets the sky, a pigment, seen where no ray hits a surface. | [Scene Files](scene-files.md#background) |
 | `balance` | Context: `white balance`, the temperature, or the lamp, whose light comes out white. | [Context](context.md#white-balance) |
 | `banded` | Pigment map qualifier: step between entries rather than blend. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `banked` | `along`: leaning into a bend as a rider would feel to be up, by the speed and the curvature. | [Along a Spline](animation.md#along-a-spline) |
 | `baseline` | Text layout: sit the block on the first line's baseline. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `behind` | Places a surface behind another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
-| `below` | Field: the highest ground a copy may stand on, dropped or all over.  Grown tree climbing a surface: the highest its points may stand. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Climbing a surface](advanced-surfaces.md#climbing-a-surface) |
+| `below` | Field: the highest ground a copy may stand on, dropped or all over.  Grown tree climbing a surface: the highest its points may stand.  Tiles: what lies under the grid's bottom layer. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Climbing a surface](advanced-surfaces.md#climbing-a-surface), [Tiles](advanced-surfaces.md#tiles) |
 | `bilinear` | Surface: the warped quadrilateral four corners span, optionally shaded from corner normals. | [Surfaces](surfaces.md#bilinear-patch) |
 | `black` | Font weight: the heaviest.  (The color is `Black`, capitalized.) | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `blades` | Camera: how many blades its opening is made of, shaping what is out of focus and the rays of its glare. | [Cameras](cameras.md#blades) |
@@ -84,7 +84,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `blur` | Camera: `blur samples`, rays per pixel for the lens. | [Cameras](cameras.md#depth-of-field) |
 | `body` | Surface: moved by gravity, the air, what it strikes and what it is tied to, from where it stands at time nought. | [Bodies](animation.md#bodies) |
 | `bold` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
-| `bottom` | Text layout: align the block by its bottom, the last line's descender line.  Placement: `align bottom with`, its `-Y` edge level with another's. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another) |
+| `bottom` | Text layout: align the block by its bottom, the last line's descender line.  Placement: `align bottom with`, its `-Y` edge level with another's.  Tile: what lies on its underside. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another), [Tiles](advanced-surfaces.md#tiles) |
 | `bounce` | Body or swarm: how much of its speed into what it strikes it keeps coming away, nought to one. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `bounces` | Medium: how many further turns of a light's path are followed; context: `diffuse bounces`, how many times light is followed from surface to surface. | [Scene Files](scene-files.md#multiple-scattering), [Context](context.md#bounced-light) |
 | `bouncing` | Pattern qualifier: a gradient that ramps up then back down. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -103,6 +103,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `case` | One arm of a [selection](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `catenary` | The curve a cable hangs in between two places, `from` and `to`, by its `sag` or its `length`: a spline, named or written where one goes, `spline catenary { ... }`. | [Catenary](advanced-surfaces.md#catenary) |
 | `caustics` | Context: follow light from the lamps through mirrors and glass to where it lands; a surface's `no caustics` turns none of it. | [Context](context.md#caustics), [Surfaces](surfaces.md#no-caustics) |
+| `cell` | Tiles: how big a cell of the grid is, a number or a vector. | [Tiles](advanced-surfaces.md#tiles) |
 | `center` | Blob sphere or disc: its center.  Text layout: center the block or a line; also `no center` on a sweep. | [Blob](surfaces.md#blob), [Disc](surfaces.md#disc), [Text](advanced-surfaces.md#text), [Sweep](advanced-surfaces.md#sweep) |
 | `centered` | With `on`, says what a placement's remaining directions are middled on. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `chain` | Surface: oval links along a spline, each through the next and turned a quarter from it, sized by its `link`, `wire` and `width`. | [Chain](advanced-surfaces.md#chain) |
@@ -167,7 +168,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `dust` | Weather: dust or sand settled on whatever faces up. | [Weathering a Model](materials.md#weathering-a-model) |
 | `ease` | Keys: the value comes to the key slowly, `ease in`, `ease out` or `ease in out`. | [Keys](animation.md#keys) |
 | `east` | Superellipsoid: its east-west roundness. | [Surfaces](surfaces.md#superellipsoid) |
-| `edge` | Material: after `metal` and a color, how each color fares at a slant. | [Metals](materials.md#metals) |
+| `edge` | Material: after `metal` and a color, how each color fares at a slant.  Tiles: what the outside of the grid presents along its four sides. | [Metals](materials.md#metals), [Tiles](advanced-surfaces.md#tiles) |
 | `edges` | Pattern: how far a place stands out, within a `radius` -- where paint wears. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
 | `elevation` | `physical sky`: how high the sun stands above the horizon, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
@@ -194,6 +195,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `filter` | Interior: how much the substance colors light passing through.  Context: `denoise filter`, the renderer's own denoiser. | [Materials](materials.md#transparency-and-interiors), [Context](context.md#denoising) |
 | `finer` | Turbulence/noise: shrinks each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `fisheye` | Camera projection: a circular, very wide view. | [Cameras](cameras.md#projections) |
+| `fit` | Tiles: `fit 'a' to 'b'`, two words a tile's sides may say that fit each other and nothing else. | [Tiles](advanced-surfaces.md#tiles) |
 | `flat` | Fracture: broken only across X and Z, every crack running straight down. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `flatness` | Patch: how flat before dicing stops. | [Surfaces](surfaces.md#patch) |
 | `flop` | Pattern: the angle a surface is seen at, against the light's reflection, for paint whose color shifts with it. | [Pigments & Patterns](pigments-and-patterns.md#a-color-that-shifts-with-the-angle) |
@@ -209,7 +211,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `friction` | Body or swarm: how hard it grips what it slides or rolls on. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `frizz` | Hair: how far strands wander. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `from` | Blob cylinder: its start point; where a catenary hangs from; a decal's `fade from`; where a field's patches begin, `from <a> to <b>`; where a swarm throws its copies from; the first place a `span` stands between. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Swarms](animation.md#swarms), [Marks and Spans](animation.md#marks-and-spans) |
-| `front` | With `of`, places a surface in front of another, touching; `align front with`, its `-Z` edge level with another's. | [Transforms](transforms.md#placing-one-thing-against-another) |
+| `front` | With `of`, places a surface in front of another, touching; `align front with`, its `-Z` edge level with another's.  Tile: what lies on its `-Z` side. | [Transforms](transforms.md#placing-one-thing-against-another), [Tiles](advanced-surfaces.md#tiles) |
 | `function` | Declares a function of your own.  Also an isosurface's arithmetic, and a medium's `density function`. | [Scene Files](scene-files.md#functions-of-your-own), [Advanced Surfaces](advanced-surfaces.md#isosurface), [Media](scene-files.md#giving-a-medium-a-shape) |
 | `gable` | Shape grammar: a `roof` of two slopes meeting at a ridge, its gable ends in the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `gables` | Shape grammar: the material of a gabled `roof`'s gable ends. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -273,7 +275,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `layout` | Text: alignment, positioning, line gap, and a path to lay the text along. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `leaf` | L-system or grown tree: the surface drawn for a leaf; a grown tree may name several, after commas. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `lean` | Hair: how far strands lean from straight out, as an angle. | [Advanced Surfaces](advanced-surfaces.md#hair) |
-| `left` | Text layout: `text alignment left` and `horizontal position left`.  Placement: `left of`, beside another on its `-X` side, touching; `align left with`, its `-X` edge level with another's. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another) |
+| `left` | Text layout: `text alignment left` and `horizontal position left`.  Placement: `left of`, beside another on its `-X` side, touching; `align left with`, its `-X` edge level with another's.  Tile: what lies on its `-X` side. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another), [Tiles](advanced-surfaces.md#tiles) |
 | `length` | L-system control: the step length.  Also hair: how long a strand is.  A catenary: how long the cable is.  Context's `animation`: how long it runs, in seconds.  A body's `tether`: how long the string is.  Also the `length` function, of a vector or a spline. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Hair](advanced-surfaces.md#hair), [Saying How Long](animation.md#saying-how-long), [Tethers](animation.md#tethers), [Scene Files](scene-files.md#functions) |
 | `leopard` | Pattern: rounded spots. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `level` | Erosion: the second word of `sea level`. | [Erosion](advanced-surfaces.md#erosion) |
@@ -318,7 +320,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `normals` | Smooth triangle or bilinear patch: the normal at each corner. | [Surfaces](surfaces.md#triangle-and-smooth-triangle), [Bilinear Patch](surfaces.md#bilinear-patch) |
 | `north` | Superellipsoid: its north-south roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `not` | Negates a condition; the same operator as `!`. | [Scene Files](scene-files.md#expressions) |
-| `nothing` | Shape grammar: puts nothing in a scope. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `nothing` | Shape grammar: puts nothing in a scope.  Tile: stands nothing in its cell. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar), [Tiles](advanced-surfaces.md#tiles) |
 | `null` | The empty value. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `number` | The kind a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `object` | `object file` (loads a mesh), `object` (reuse by name), or `object Name(...)`, calling a primitive of your own. | [Advanced Surfaces](advanced-surfaces.md#object-files), [Surfaces](surfaces.md#reusing-a-surface), [Scene Files](scene-files.md#things-of-your-own) |
@@ -387,7 +389,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `repose` | Erosion: the steepest angle loose rock rests at, which scree lies at and a river's valley sides fall back to. | [Erosion](advanced-surfaces.md#erosion) |
 | `return` | The answer a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `ribbon` | Surface: a flat strand of a given width running through a series of points. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
-| `right` | Text layout: `text alignment right` and `horizontal position right`.  Placement: `right of`, beside another on its `+X` side, touching; `align right with`, its `+X` edge level with another's. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another) |
+| `right` | Text layout: `text alignment right` and `horizontal position right`.  Placement: `right of`, beside another on its `+X` side, touching; `align right with`, its `+X` edge level with another's.  Tile: what lies on its `+X` side. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another), [Tiles](advanced-surfaces.md#tiles) |
 | `ripples` | Pattern: concentric rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `rivers` | Erosion: rivers cutting their valleys, how far back into the land. | [Erosion](advanced-surfaces.md#erosion) |
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -411,7 +413,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `sdf` | Surface: a shape written as a signed distance function. | [Surfaces](advanced-surfaces.md#signed-distance-surface) |
 | `sea` | Erosion: `sea level`, below which the ground does not wear and water ends. | [Erosion](advanced-surfaces.md#erosion) |
 | `section` | Loft: one cross-section — its `path`, its transforms, and how far along the loft's spline it stands, `at`. | [Loft](advanced-surfaces.md#loft) |
-| `seed` | Fixes the random start of a pattern, light, camera or hair, or the rain an erosion lets fall. | [Pigments & Patterns](pigments-and-patterns.md#seeding), [Cameras](cameras.md#depth-of-field), [Lights](lights.md#area-lights), [Erosion](advanced-surfaces.md#erosion) |
+| `seed` | Fixes the random start of a pattern, light, camera or hair, or the rain an erosion lets fall.  Tiles: `with seed`, the draws a grid is laid by. | [Pigments & Patterns](pigments-and-patterns.md#seeding), [Cameras](cameras.md#depth-of-field), [Lights](lights.md#area-lights), [Erosion](advanced-surfaces.md#erosion), [Tiles](advanced-surfaces.md#tiles) |
 | `serial` | Context: the single-threaded `serial scanner`. | [Context](context.md#scanners) |
 | `shadow` | `no shadow`: the surface casts none. | [Surfaces](surfaces.md#no-shadow) |
 | `shadows` | `no shadows`: the whole scene casts none. | [Surfaces](surfaces.md#no-shadow) |
@@ -422,11 +424,11 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `shininess` | Finish: how tight the highlight is. | [Materials](materials.md#ambient-diffuse-and-specular) |
 | `shuffled` | Image map: after `planar` or `triplanar`, cut the picture into tiles each shifted (and turned) by an amount of its own, so that it never repeats. | [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat) |
 | `shutter` | Camera: how long the shutter is open, for motion blur. | [Cameras](cameras.md#motion-blur) |
-| `sides` | Parallelogram: its two edge vectors. | [Surfaces](surfaces.md#parallelogram) |
+| `sides` | Parallelogram: its two edge vectors.  Tile: what lies on all four of its upright sides. | [Surfaces](surfaces.md#parallelogram), [Tiles](advanced-surfaces.md#tiles) |
 | `since` | Swarm: when it began throwing, before nought for one already in full flow; a `burst` says `at` instead. | [Swarms](animation.md#swarms) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `sink` | Field: how far a copy is sunk into the ground, dropped or all over. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
-| `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's.  Image map: `shuffled size s`, how far apart its tiles stand.  Glints: how big a facet is. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar), [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat), [Glints](materials.md#glints) |
+| `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's.  Image map: `shuffled size s`, how far apart its tiles stand.  Glints: how big a facet is.  Tiles: how many cells the grid has across, up and along. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar), [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat), [Glints](materials.md#glints), [Tiles](advanced-surfaces.md#tiles) |
 | `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`, and `by <pattern>` to set them by one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals.  Height field: shaded as the smooth surface it stands for.  Keys: `keys smooth` passes through every key without stopping. | [Surfaces](surfaces.md#triangle-and-smooth-triangle), [Height Field](advanced-surfaces.md#height-field), [Keys](animation.md#keys) |
@@ -482,11 +484,13 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `thin` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `threshold` | Blob or isosurface: the field level that forms its skin.  Context: `antialiasing threshold`, how far two samples must differ before the sampler looks closer. | [Surfaces](surfaces.md#blob), [Advanced Surfaces](advanced-surfaces.md#isosurface), [Context](context.md#anti-aliasing) |
 | `tightness` | Spotlight: how fast light fades across the cone. | [Lights](lights.md#spotlights) |
+| `tile` | Tiles: one tile — what stands in its cell, what lies on its sides, whether it turns and how often it is drawn. | [Tiles](advanced-surfaces.md#tiles) |
+| `tiles` | Surface: a grid filled with tiles whose sides fit their neighbors', laid by wave function collapse. | [Tiles](advanced-surfaces.md#tiles) |
 | `tilted` | Field: a dropped copy leans with the ground rather than standing upright. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `tint` | Coat: the color it gives what lies beneath it, seen square-on. | [A clear coat](materials.md#a-clear-coat) |
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
-| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, where a catenary hangs to, a decal's `fade from` … `to`, a film's `thickness … to`, a material's `roughness … to` and `metallic … to`, weather's `wear … to`, the material it bares, a body's `tether to`, a swarm's `speed … to` and `life … to`, a joint's `limits … to` and a span's `to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films), [Tethers](animation.md#tethers) |
-| `top` | Text layout: align the block by its top, the font's ascender line.  Placement: `align top with`, its `+Y` edge level with another's. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another) |
+| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, where a catenary hangs to, a decal's `fade from` … `to`, a film's `thickness … to`, a material's `roughness … to` and `metallic … to`, weather's `wear … to`, the material it bares, a body's `tether to`, a swarm's `speed … to` and `life … to`, a joint's `limits … to` and a span's `to`.  Tiles: `fit 'a' to 'b'`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films), [Tethers](animation.md#tethers), [Tiles](advanced-surfaces.md#tiles) |
+| `top` | Text layout: align the block by its top, the font's ascender line.  Placement: `align top with`, its `+Y` edge level with another's.  Tile: what lies on its top. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another), [Tiles](advanced-surfaces.md#tiles) |
 | `toroidal` | Image map: wrap the image around a torus; also a decal wrapped around a ring. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Materials](materials.md#projections) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |
 | `toVertical` | L-system turtle: level back to vertical. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -498,6 +502,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `tree` | Context: `light tree`, holding the many lights that fade so a place looks at the near ones and picks among the far. | [Many Lights](lights.md#many-lights) |
 | `triangle` | Shape: a flat triangle (also a wave shape). | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `triangular` | Pattern: a six-color triangular tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `tries` | Tiles: how many times a grid is begun again when it is laid into a corner, before it is refused. | [Tiles](advanced-surfaces.md#tiles) |
 | `triplanar` | Image map: lay the picture flat square to each axis and blend the three by the way the surface faces, at the world's size. | [Laid by the way a surface faces](pigments-and-patterns.md#laid-by-the-way-a-surface-faces) |
 | `tropism` | L-system control or grown tree: the direction growth bends toward. | [Advanced Surfaces](advanced-surfaces.md#bending-with-tropism), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `true` | Boolean literal. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
@@ -510,6 +515,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turned` | Field: how far its copies may be turned about the up axis, the whole spread.  Camera: `blades n turned a`, how far the blades are turned.  Light: `profile … turned a`, how far a profile is turned about its straight down.  Image map: `shuffled turned a`, how far each tile may be turned either way. | [Advanced Surfaces](advanced-surfaces.md#field), [Cameras](cameras.md#blades), [Light Profiles](lights.md#light-profiles), [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `turns` | Tile: it may be laid in any of four quarter turns about Y, its sides turning with it. | [Tiles](advanced-surfaces.md#tiles) |
 | `twig` | Grown tree: how thick the end of a twig is. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `twist` | How far a ribbon turns about its own length, end to end. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
 | `u` | Parametric surface: the span the first parameter runs over. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
@@ -536,7 +542,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `wear` | Weather: wear on the edges, `to` the material it bares.  Pattern: where a height field's erosion carried ground away. | [Weathering a Model](materials.md#weathering-a-model), [What the weather left](advanced-surfaces.md#what-the-weather-left) |
 | `weather` | Surface: the weather a group or object has been out in: `grime`, `dust`, `wear`, `splash`, `radius`. | [Weathering a Model](materials.md#weathering-a-model) |
 | `weathering` | Context: `weathering samples`, how many directions `crevices` and `edges` look about in. | [Context](context.md#weathering-samples) |
-| `weight` | Field: how often one of the things it is filled with is picked against the others. | [Advanced Surfaces](advanced-surfaces.md#field) |
+| `weight` | Field: how often one of the things it is filled with is picked against the others.  Tile: how often it is drawn against the others. | [Advanced Surfaces](advanced-surfaces.md#field), [Tiles](advanced-surfaces.md#tiles) |
 | `wheelbase` | `along`: ride on two places that far apart, both on the spline, as a rigid vehicle does. | [Along a Spline](animation.md#along-a-spline) |
 | `white` | Context: `white balance`, the temperature, or the lamp, whose light comes out white. | [Context](context.md#white-balance) |
 | `whole` | Fracture: its pieces are whole cells, kept where their seeds lie inside the solid, never cut by it. | [Advanced Surfaces](advanced-surfaces.md#fracture) |

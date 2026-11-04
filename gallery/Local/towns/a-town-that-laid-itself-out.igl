@@ -1,0 +1,330 @@
+// A town nobody planned: every street, house and yard here was laid by wave function collapse.
+//
+// The scene does not say where anything goes.  It says what a piece of town may be -- a length of road, a
+// corner, a junction, a row of houses, a yard, a green -- and what lies on each side of each piece, and
+// `tiles` fills a grid of eleven by eleven with them so that every side meets a side it fits.  So a road
+// runs on into a road, every house fronts one, back yards back onto back yards, and nothing runs off the
+// edge of town into the fields.  Change the seed and another town lays itself out; this is seed three.
+//
+// **What a side says is the whole design.**  A road's sides are `road` where the road goes on and `curb`
+// where it does not.  A plot's are `yard`, and `frontage` where it faces a street.  Yards fit yards and
+// roads fit roads, as any two sides saying the same thing do -- but a frontage must not fit a frontage, or
+// two rows of houses stand face to face with nothing between them, which is what the first try at this
+// scene laid all over.  So the two are paired:
+//
+//     fit 'curb' to 'frontage'
+//
+// and a label in a pair fits only its partner.  A curb meets a frontage, a frontage a curb, and that one
+// line is why every row of houses here has a street in front of it.
+//
+// **Every kind of plot a street can leave has to be there**, or a cell the streets close in has no tile
+// that fits and the attempt starts again.  A cell may front one road, two at a corner, two either side,
+// three, or four, and there is a tile for each: a row of houses, a corner row, two rows back to back, a
+// green, and a green with nothing around it but road.  A cell fronting none is a yard, hedged, with a tree
+// in it or a vegetable garden.  The edge of the grid is `yard`, so the town's last cells are yards and the
+// backs of houses, as a town's edge is.
+//
+// **A tile is built once and stood wherever it is laid**, turned as its sides say, so the town costs what
+// its twelve kinds of plot and five kinds of road cost, not what its hundred and twenty-one cells would.
+// That is also why there are five rows of houses of one shape: the same row laid down every street would be
+// noticed.
+//
+// The fields around it are a checker of checkers -- two fields and three within one -- so each field is one
+// crop, and no two fields side by side are alike.
+//
+// You will need the libraries, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'roads'            { Junction, Curb, Pavement }
+import 'buildings'        { Row }
+import 'trees'            { Oak, Birch, Maple, Elm }
+import 'street-furniture' { Bench }
+import 'daylight'         { LateAfternoonFrom, LateAfternoonLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Town That Laid Itself Out'
+        author 'J. Stephen Kress'
+        description 'Streets, row houses and yards laid by wave function collapse, in hedged fields.'
+        copyright true
+        software __software__
+    }
+}
+
+// From a hill to the south-west, the sun low behind the camera's right shoulder so that the fronts facing
+// it are lit and every row throws its shadow across the yards behind it.
+camera {
+    location [-112, 52, -146]
+    look at [2, 4, 6]
+    field of view 48
+    exposure 0.3
+}
+
+background LateAfternoonFrom(15)
+
+light LateAfternoonLight
+
+Season = 'summer'
+
+// -- What everything is made of --------------------------------------------------------------------
+
+Lawn = material {
+    pigment granite with seed 19 {
+        [0.06, color [0.118, 0.142, 0.082],
+         0.16, color [0.148, 0.178, 0.102],
+         0.22, color [0.172, 0.208, 0.119],
+         0.30, color [0.202, 0.242, 0.139],
+         0.41, color [0.242, 0.288, 0.166]]
+        scale 1.7
+    }
+    specular 0.03  shininess 8
+}
+Leafy = material {
+    pigment granite with seed 5 {
+        [0.0, color [0.06, 0.10, 0.04],
+         0.5, color [0.10, 0.16, 0.06],
+         1.0, color [0.14, 0.21, 0.08]]
+        scale 0.4
+    }
+    normal granite { depth 0.8  scale 0.15 }
+    specular 0.02  shininess 6
+}
+WallBrick = material { pigment [0.42, 0.22, 0.15]  specular 0.05 }
+Fencing = material { pigment [0.36, 0.28, 0.20]  specular 0.04 }
+Soil = material {
+    pigment granite with seed 7 { [0.0, color [0.20, 0.14, 0.09], 1.0, color [0.28, 0.20, 0.13]]  scale 0.3 }
+    specular 0.02
+}
+
+// -- The ground ------------------------------------------------------------------------------------
+
+// The town's lawns and grass strips, a little below the road, as the roads library asks.
+parallelogram { material Lawn  at [-77, -0.125, -77]  sides [154, 0, 0], [0, 0, 154] }
+
+// The fields, a hundred and fifty meters by ninety-five, each one crop: checkers of two fields and of three
+// within a checker of one.
+Pasture = color [0.15, 0.21, 0.09]
+Grazed = color [0.24, 0.29, 0.12]
+Barley = color [0.50, 0.43, 0.21]
+Plowed = color [0.29, 0.22, 0.14]
+
+plane {
+    material {
+        pigment checker {
+            checker { Pasture, Barley  scale [2, 1, 2] },
+            checker { Plowed, Grazed  scale [3, 1, 3] }
+            scale [150, 10000, 95]
+        }
+        specular 0.02
+    }
+    translate Y -0.13
+}
+
+// The hedgerows between them, broken where the town stands.
+primitive Hedgerow(from, to, across) -> cube {
+    return cube { material Leafy  scale [(to - from) / 2, 1.1, 0.9]  translate [(from + to) / 2, 0.97, across] }
+}
+
+for line in [-10, 10] {
+    if (abs(line * 150) < 95) {
+        object Hedgerow(-1500, -95, line * 150) { rotate Y 90 }
+        object Hedgerow(95, 1500, line * 150) { rotate Y 90 }
+    }
+    else {
+        object Hedgerow(-1500, 1500, line * 150) { rotate Y 90 }
+    }
+}
+for line in [-15, 15] {
+    if (abs(line * 95) < 95) {
+        object Hedgerow(-1500, -95, line * 95)
+        object Hedgerow(95, 1500, line * 95)
+    }
+    else {
+        object Hedgerow(-1500, 1500, line * 95)
+    }
+}
+
+// Copses in the fields, everywhere but the town and a margin around it.
+Outskirts = path {
+    move to -700, -700  line to 700, -700  line to 700, 700  line to -700, 700  close
+    move to -92, -92  line to -92, 92  line to 92, 92  line to 92, -92  close
+}
+
+field {
+    of Oak(11, Season, 11), Oak(9, Season, 12), Elm(12, Season, 13), Birch(10, Season, 14)
+    within Outskirts
+    spacing 9  jitter 0.9  turned 360
+    patches bozo { scale 90 } from 0.64 to 0.67
+    sized 0.8 to 1.25
+    translate Y -0.13
+}
+
+// -- The streets -----------------------------------------------------------------------------------
+
+// A cell is fourteen meters: a roadway six wide down the middle of a road cell, a curb and a sidewalk 1.8 wide
+// behind it (the roads library's `Pavement`), and a grass strip two meters wide to the cell's edge.
+
+// One edge of a road cell, drawn along z = +3 with the road on its -Z side: the curb and the sidewalk behind
+// it.  `closed` says no road leaves the cell this way, so the curb runs the whole side; `plus` and `minus`
+// say whether one leaves at the +X and -X ends, the curb running on along its edge.  Where two edges meet at
+// a corner, the one the corner is at the PLUS end of covers it, so no curb or slab is laid twice.
+primitive Side(closed, plus, minus) -> group {
+    curbLow = -3 - 4 * minus
+    curbHigh = 3.15 + 3.85 * plus
+    paveLow = -3.15 - 3.85 * minus
+    paveHigh = 4.95 + 2.05 * plus
+
+    return group {
+        if (closed == 1) {
+            object Curb(curbHigh - curbLow, Season, 1) { translate [(curbLow + curbHigh) / 2, 0, 3] }
+            object Pavement(paveHigh - paveLow, 1.8, Season, 1) { translate [(paveLow + paveHigh) / 2, 0, 4.05] }
+        }
+        if (closed == 0 && plus == 1) {
+            object Curb(4, Season, 1) { translate [5, 0, 3] }
+            object Pavement(3.85, 1.8, Season, 1) { translate [5.075, 0, 4.05] }
+        }
+        if (closed == 0 && minus == 1) {
+            object Curb(3.85, Season, 1) { translate [-5.075, 0, 3] }
+            object Pavement(2.05, 1.8, Season, 1) { translate [-5.975, 0, 4.05] }
+        }
+    }
+}
+
+// A road cell, its road leaving by the sides flagged: right (+X), back (+Z), left (-X) and front (-Z).  The
+// deck is the roads library's junction, a piece of road with no markings, which is what a residential street
+// carries; each edge is a `Side` turned to it.
+primitive Street(r, b, l, f) -> group {
+    return group {
+        object Junction(6, 6, Season, 1)
+        if (r == 1) { object Junction(6, 4, Season, 1) { translate X 5 } }
+        if (l == 1) { object Junction(6, 4, Season, 1) { translate X -5 } }
+        if (b == 1) { object Junction(6, 4, Season, 1) { rotate Y 90  translate Z 5 } }
+        if (f == 1) { object Junction(6, 4, Season, 1) { rotate Y 90  translate Z -5 } }
+
+        object Side(1 - b, r, l)
+        object Side(1 - r, f, b) { rotate Y 90 }
+        object Side(1 - f, l, r) { rotate Y 180 }
+        object Side(1 - l, b, f) { rotate Y 270 }
+    }
+}
+
+// -- The plots -------------------------------------------------------------------------------------
+
+// Every plot fronts its street at -Z.  `rotate Y 90` turns its back edge to its right, and 270 to its left.
+
+// Half a hedge just inside a plot's back edge, at z = +7: the plot next door grows the other half.
+primitive Hedge(from, to) -> cube {
+    return cube { material Leafy  scale [(to - from) / 2, 0.75, 0.15]  translate [(from + to) / 2, 0.62, 6.85] }
+}
+
+// A low brick wall along a plot's front.
+primitive FrontWall() -> cube {
+    return cube { material WallBrick  scale [7, 0.35, 0.15]  translate [0, 0.22, -6.8] }
+}
+
+// Three houses in a row behind their front yards, with fences between their back yards.
+primitive Houses(variant) -> group {
+    return group {
+        object Row(3, Season, variant) { scale 1.6  translate [0, -0.14, -3.8] }
+        for fence in [-1, 1] {
+            cube { material Fencing  scale [0.03, 0.8, 4.4]  translate [fence * 1.96, 0.67, 2.5] }
+        }
+    }
+}
+
+// A plot fronting one street, with a tree in one of its back yards, or none.
+primitive RowHouses(variant, tree) -> group {
+    return group {
+        object Houses(variant)
+        if (tree == 1) { object Birch(8, Season, variant) { translate [-3.9, -0.13, 3.6] } }
+        if (tree == 2) { object Maple(7, Season, variant) { translate [3.9, -0.13, 4] } }
+        object FrontWall()
+        object Hedge(-7, 7)
+        object Hedge(-6.7, 6.65) { rotate Y 90 }
+        object Hedge(-6.65, 6.7) { rotate Y 270 }
+    }
+}
+
+// A corner plot, fronting streets at -Z and +X, its row standing back from the side street.
+primitive CornerPlot(variant) -> group {
+    return group {
+        object Houses(variant) { translate X -0.8 }
+        object FrontWall()
+        object FrontWall() { rotate Y 270 }
+        object Hedge(-7, 6.65)
+        object Hedge(-6.65, 6.7) { rotate Y 270 }
+    }
+}
+
+// A plot between two streets, a row fronting each, back to back across their yards.
+primitive Through(variant) -> group {
+    return group {
+        object Row(3, Season, variant) { scale 1.6  translate [0, -0.14, -3.8] }
+        object Row(3, Season, variant + 5) { scale 1.6  rotate Y 180  translate [0, -0.14, 3.8] }
+        object FrontWall()
+        object FrontWall() { rotate Y 180 }
+        object Hedge(-6.65, 6.65) { rotate Y 90 }
+        object Hedge(-6.65, 6.65) { rotate Y 270 }
+    }
+}
+
+// A green, fronting three streets or four: a lawn, a tree and a bench.
+primitive Green(streets) -> group {
+    return group {
+        object Maple(9, Season, streets)
+        object Bench(1.8, Season, 1) { translate [0, -0.13, -3.5] }
+        if (streets < 4) { object Hedge(-7, 7) }
+    }
+}
+
+// A yard fronting none, all around its neighbors' yards: with a tree, or a vegetable garden, and hedged all
+// around -- each hedge stopping short of the next one around, so no two are laid over each other.
+primitive Yard(kind) -> group {
+    return group {
+        if (kind == 0) { object Oak(10, Season, 3) { translate [1.5, -0.13, 1] } }
+        if (kind == 1) { object Birch(11, Season, 2) { translate [-2, -0.13, -1.5] } }
+        if (kind == 2) {
+            for row in [0, 5] {
+                cube { material Soil  scale [5.5, 0.08, 0.5]  translate [0, -0.1, row * 2 - 5] }
+            }
+        }
+        for side in [0, 3] {
+            object Hedge(-7, 6.7) { rotate Y side * 90 }
+        }
+    }
+}
+
+// -- The town --------------------------------------------------------------------------------------
+
+// Straight roads are drawn most, corners and junctions less, crossroads and dead ends least: a town of
+// crossroads is a grid, and one of dead ends never joins up.  A weight is shared among a tile's four turns.
+tiles {
+    size [11, 1, 11]
+    cell 14
+    edge 'yard'
+    fit 'curb' to 'frontage'
+
+    tile { Street(1, 0, 1, 0)  right 'road'  left 'road'  back 'curb'  front 'curb'  turns  weight 6 }
+    tile { Street(1, 1, 0, 0)  right 'road'  back 'road'  left 'curb'  front 'curb'  turns  weight 3 }
+    tile { Street(1, 1, 1, 0)  right 'road'  back 'road'  left 'road'  front 'curb'  turns  weight 2 }
+    tile { Street(1, 1, 1, 1)  sides 'road'  weight 0.4 }
+    tile { Street(1, 0, 0, 0)  right 'road'  back 'curb'  left 'curb'  front 'curb'  turns  weight 0.5 }
+
+    tile { Yard(0)  sides 'yard' }
+    tile { Yard(1)  sides 'yard' }
+    tile { Yard(2)  sides 'yard' }
+    tile { RowHouses(1, 0)  front 'frontage'  back 'yard'  left 'yard'  right 'yard'  turns  weight 2 }
+    tile { RowHouses(2, 1)  front 'frontage'  back 'yard'  left 'yard'  right 'yard'  turns  weight 2 }
+    tile { RowHouses(3, 0)  front 'frontage'  back 'yard'  left 'yard'  right 'yard'  turns  weight 2 }
+    tile { RowHouses(7, 2)  front 'frontage'  back 'yard'  left 'yard'  right 'yard'  turns  weight 2 }
+    tile { RowHouses(8, 0)  front 'frontage'  back 'yard'  left 'yard'  right 'yard'  turns  weight 2 }
+    tile { CornerPlot(4)  front 'frontage'  right 'frontage'  back 'yard'  left 'yard'  turns  weight 2 }
+    tile { Through(6)  front 'frontage'  back 'frontage'  left 'yard'  right 'yard'  turns  weight 2 }
+    tile { Green(3)  front 'frontage'  left 'frontage'  right 'frontage'  back 'yard'  turns }
+    tile { Green(4)  sides 'frontage'  weight 0.5 }
+
+    with seed 3
+}

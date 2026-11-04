@@ -119,6 +119,8 @@ public partial class LanguageParser
                 return ParseMandelboxClause(clause);
             case MengerSpongeResolver:
                 return ParseMengerClause(clause);
+            case TileGridResolver:
+                return ParseTilesClause(clause);
             case HyperboloidResolver:
                 return ParseHyperboloidClause(clause);
             case SaddleResolver:

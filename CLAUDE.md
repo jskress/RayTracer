@@ -153,7 +153,16 @@ quarter (`BuildBrickFlank`) on walls facing X: no face can land in a joint plane
 middle of the scope's near face in its axes, unscaled.  A roof is convex polytopes in (u along ridge, y, v) carried
 by a handedness-keeping frame.  Uses: buildings `Terrace`/`Apartments`/`Chapel` (meters), winter as
 `weather { snow }` (`Weather.Snow`: facing-up blend, whole above the edge band, unlike `dust`'s noise-broken
-cover).  A `Field` fills a 2D outline in the X/Z plane on a jittered grid with copies of one or
+cover).  A `TileGrid` (`tiles { size cell tile { <surface|call|nothing> front 'w' ... sides top bottom turns weight }
+edge above below fit 'a' to 'b' tries }`, a Group) is laid when RESOLVED, as a grammar is
+(`TileGridResolver.SetProperties`, nothing without tiles): Gumin's simple tiled wave function collapse
+(`Geometry/WaveFunctionCollapse.cs`), states = tile x turn (`turns`: sides[(side + turn) % 4], placed by `RotateAroundY(90
+turn)`, weight shared among turns), support counting, least entropy first, draws splitmix-hashed from (seed, attempt,
+cell, purpose), begun again up to `tries` (100) on a contradiction, refused at once when the outside rules out a cell
+before any draw.  Sides fit when equal or either unsaid -- except a word in a `fit` pair, which fits only its partner:
+equality alone let a house's `curb` front face another house's, rows facing rows with no road (the town's first try).
+Each tile built once, stood by `Instance` where it may be shared, cell middles over the origin on the cell's floor.
+`gallery/Local/towns/a-town-that-laid-itself-out.igl`.  A `Field` fills a 2D outline in the X/Z plane on a jittered grid with copies of one or
 several things (`of A, B weight 2`), each built once and stood by `Instance` where picked, `turned` and `sized`;
 what stands at a place, its turn and its size are hashed from the place's grid cell (`Field.DrawFor`), never drawn
 in order, and the jitter keeps its old in-order stream so fields asking for none of it are unchanged.  The
