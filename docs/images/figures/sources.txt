@@ -97,6 +97,10 @@ surface-primitives.png|docs/examples/surfaces/primitives.igl|640|300
 surface-shapes.png|docs/examples/surfaces/shapes.igl|620|220
 transform-order.png|docs/examples/transforms/order.igl|420|420
 
+# Four renders of docs/examples/context/denoising.igl at 320x240, set two by two: as it stands, `--denoise filter`,
+# `--denoise intel` (which needs Intel's oidnDenoise on the path), and with `diffuse samples 1024` in place of its
+# sixteen -- so no one render makes it.  The commands are at the top of the scene.
+context-denoising.png||640|480
 # An icon comes from a FontAwesome zip that has to be installed with `libraries --fa-zip`, so
 # this one cannot be rendered from a fresh clone.
 path-icon.png||400|300

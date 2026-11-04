@@ -1,5 +1,6 @@
 using System.Globalization;
 using RayTracer.Core;
+using RayTracer.Core.Denoising;
 
 namespace RayTracer.Renderer;
 
@@ -172,6 +173,17 @@ public class Statistics
     public TimeSpan RenderTime { get; private set; }
 
     /// <summary>
+    /// This property reports how much of the time rendering took went on smoothing the grain out of the picture:
+    /// gathering its guides and denoising it.
+    /// </summary>
+    public TimeSpan DenoiseTime { get; private set; }
+
+    /// <summary>
+    /// This property reports which denoiser smoothed the picture, if one did.
+    /// </summary>
+    public DenoiseMethod DenoisedBy { get; private set; }
+
+    /// <summary>
     /// This method notes what the scene about to be rendered holds, and the size of the picture it
     /// is rendered at.
     /// </summary>
@@ -195,6 +207,17 @@ public class Statistics
     }
 
     /// <summary>
+    /// This method notes that a denoiser smoothed the picture, and how long that took of the render's time.
+    /// </summary>
+    /// <param name="method">The denoiser.</param>
+    /// <param name="time">How long gathering the guides and denoising took.</param>
+    public void AddDenoising(DenoiseMethod method, TimeSpan time)
+    {
+        DenoisedBy = method;
+        DenoiseTime += time;
+    }
+
+    /// <summary>
     /// This method writes everything out for a person to read: what the render cost, and what the
     /// scene held, laid out as a short report.
     /// </summary>
@@ -203,7 +226,8 @@ public class Statistics
     public List<string> AsReport(string title)
     {
         List<string> lines = [$"Statistics for {title}", ""];
-        double seconds = RenderTime.TotalSeconds;
+        TimeSpan tracing = RenderTime - DenoiseTime;
+        double seconds = tracing.TotalSeconds;
 
         if (Width > 0)
             AddLine(lines, "Image", $"{Width} x {Height}, {Plural(Pixels, "pixel")}");
@@ -216,7 +240,14 @@ public class Statistics
         if (seconds > 0)
         {
             AddLine(lines, "Rendering",
-                $"{Duration(RenderTime)}, {Number((long) Math.Round(SceneRays / seconds))} rays a second");
+                $"{Duration(tracing)}, {Number((long) Math.Round(SceneRays / seconds))} rays a second");
+        }
+
+        if (DenoisedBy != DenoiseMethod.Off)
+        {
+            AddLine(lines, "Denoising",
+                $"{Duration(DenoiseTime)}, by " +
+                (DenoisedBy == DenoiseMethod.Intel ? "Intel's Open Image Denoise" : "the renderer's own filter"));
         }
 
         if (Census is not null)

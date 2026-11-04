@@ -479,7 +479,7 @@ sky looked at through portals is shared with a [rough](materials.md#roughness) s
 photograph's is, so a window's smear on a satin floor is smooth.  The gallery's
 [A Room by Daylight](../gallery/Local/interiors/a-room-by-daylight.igl) is a room lit this way, by an
 afternoon sky and its sun through three windows, with [bounced light](context.md#bounced-light) carrying
-the sun's patches round the room.
+the sun's patches round the room, looked for in a few directions a place and [denoised](context.md#denoising).
 
 ### Lights on Things
 
@@ -555,15 +555,15 @@ and each place looks at a few of them, picked by how much each could give it:
   them, and, on a glossy place, how near they lie to where it mirrors the eye.  Every light picked counts
   for one over its chance of being picked, so the picture is right on average.
 - **Lights that do not fade are never in it**, nor distant lights, sky lights, glows and glowing surfaces:
-  a light that gives as much a kilometer off as at arm's length cannot be told from its neighbours by
+  a light that gives as much a kilometer off as at arm's length cannot be told from its neighbors by
   distance.  They are looked at whole, as ever.
 - **Each lamp's ambient is given whole.**  A lamp lends every surface its material's
   [ambient](context.md#ambient), which no distance thins and no shadow takes away, so the ambient of all the
   tree's lamps is added at every place in full, never picked.
 
 What it costs is grain: a far light picked by chance makes a place a little brighter or darker than its
-neighbour, more on a glossy surface catching far lamps at a slant.  [Anti-aliasing](context.md#anti-aliasing)
-averages much of it, and more picks less:
+neighbor, more on a glossy surface catching far lamps at a slant.  [Anti-aliasing](context.md#anti-aliasing)
+averages much of it, [denoising](context.md#denoising) smooths out what is left, and more picks make less:
 
 ```
 context { light tree samples 64  split 0.25 }

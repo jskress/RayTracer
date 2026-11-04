@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Core.Denoising;
 using RayTracer.General;
 using RayTracer.Graphics;
 
@@ -168,6 +169,11 @@ public class ContextUpdater : Instruction
     public Resolver<double> LightTreeSplitResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how the grain is smoothed out of the picture once it is rendered.
+    /// </summary>
+    public Resolver<DenoiseMethod> DenoiseResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how many surfaces a ray from the eye is followed through.
     /// </summary>
     public Resolver<int?> TraceDepthResolver { get; set; }
@@ -251,6 +257,7 @@ public class ContextUpdater : Instruction
         LightTreeResolver.AssignTo(context, target => target.LightTree, context, variables);
         LightTreeSamplesResolver.AssignTo(context, target => target.LightTreeSamples, context, variables);
         LightTreeSplitResolver.AssignTo(context, target => target.LightTreeSplit, context, variables);
+        DenoiseResolver.AssignTo(context, target => target.Denoise, context, variables);
         TraceDepthResolver.AssignTo(context, target => target.TraceDepth, context, variables);
         FilmCurveResolver.AssignTo(context, target => target.FilmCurve, context, variables);
         BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);

@@ -553,6 +553,62 @@ near ones in full and picks among the far ones rather than looking toward every 
 one however few there are, `samples` says how many picks a place takes and `split` how near a cluster must
 be to be opened.  `no light tree` looks toward every light.  See [Many Lights](lights.md#many-lights).
 
+### Denoising
+
+```
+context { denoise }
+```
+
+Much of what lights a picture is found by looking in a few directions picked at each place: the light bounced
+off everything else, the sky through a window, a [tree of lamps](lights.md#many-lights)' picks, a rough surface's
+reflection.  Each place's few looks land a little differently from its neighbor's, and the picture comes out
+grainy, the grain going only as the square root of how many looks a place takes.  A denoiser smooths it out once
+the picture is rendered:
+
+![A room lit by bounced light, as rendered, smoothed by the filter, smoothed by Intel's denoiser, and looked for in a thousand directions](images/figures/context-denoising.png)
+
+A room lit by its ceiling, which a lamp shines up at, so that every place sees only bounced light, looked for in
+sixteen directions: as rendered (top left), then smoothed by the renderer's own filter (top right) and by Intel's
+(bottom left), and beside them looked for in 1,024 directions (bottom right).  The render took a second, the
+filter a fifth of one and Intel's a tenth; the thousand directions took thirty-one seconds, and still show a little
+grain.  As rendered, the picture is sixteen levels in 255 from the thousand directions' on average; smoothed by
+either, two or three, which is about as near as the thousand directions' own grain lets it be measured.  The scene
+is [`docs/examples/context/denoising.igl`](examples/context/denoising.igl).
+
+| Written | What smooths the picture |
+| --- | --- |
+| `denoise` | Intel's Open Image Denoise, if its `oidnDenoise` tool is on the path; the renderer's own filter if not, which a render says once. |
+| `denoise intel` | Intel's, and a render that cannot find it is refused before it starts. |
+| `denoise filter` | The renderer's own filter. |
+
+`--denoise best`, `intel`, `filter` or `off` on the command line takes the place of what the scene says.
+
+**Both are guided by what each pixel shows apart from the light on it**: the color of its surface, which way the
+surface faces, and where it is.  Grain is smoothed out across a surface, and the smoothing stops where its color,
+its facing or its place says the surface does -- at a pattern's edge, a corner, the outline of a thing against what
+is behind it.  The guides are gathered through the same places in each pixel as its light was, and through a
+smooth mirror or clear glass they are what it shows, so a reflection keeps its edges too.  Gathering them costs a
+look into the scene for each of those places and no lighting at all: on the
+[festoon-lit quay](../gallery/Local/lights/a-quay-by-festoon-light.igl), anti-aliased at 480x360, ten seconds
+against two minutes and a quarter of rendering, either denoiser's own work a fraction of a second of that.
+
+- **Intel's** is a network trained on rendered pictures, the best denoiser freely to be had; it keeps fine
+  detail -- lamps mirrored in a wet road, the grain of wood -- that a filter cannot tell from grain.  It runs on
+  the processor in a second or two for a picture of this size.  On a Mac it is `brew install open-image-denoise`;
+  elsewhere, its release from [openimagedenoise.github.io](https://openimagedenoise.github.io/), with
+  `oidnDenoise` put on the path.  (An editor that runs the renderer may not see the path a terminal does.)
+- **The renderer's own filter** smooths the light on each surface out across up to 32 pixels either way, keeping
+  each pixel's light from mixing with another's that differs by more than the grain there, which keeps a shadow's
+  edge and a lamp's glint in a mirror; it is quick and needs nothing installed, but it leaves blotches where the
+  grain is heavy, and it smooths away faint light the grain drowns.
+
+**A denoiser smooths only grain.**  What comes out the same at every place is not grain, and stays: a plain sky
+looked at in too few directions makes steps in the light, and an area light's samples a soft shadow in layers, both
+the same wherever they are, and both mended only by more samples.  The grain is smoothed before the lens's
+[chromatic aberration](cameras.md#chromatic-aberration) and [glare](cameras.md#glare) spread the picture, so a lamp's
+star is not taken for grain.  Each frame of an animation is smoothed alone, so what is left of the grain may move
+from frame to frame.
+
 ### Color Depth and Grayscale
 
 What reaches the image file, as opposed to what was rendered:

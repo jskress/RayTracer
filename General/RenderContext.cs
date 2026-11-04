@@ -315,6 +315,12 @@ public class RenderContext
     public double LightTreeSplit { get; set; } = Core.LightTree.DefaultSplit;
 
     /// <summary>
+    /// This property holds how the grain is smoothed out of the picture once it is rendered, if it is: see
+    /// <see cref="Core.Denoising.Denoiser"/>.
+    /// </summary>
+    public Core.Denoising.DenoiseMethod Denoise { get; set; }
+
+    /// <summary>
     /// This field holds how many photons a scene's caustics are made of when it asks for them without
     /// saying how many.
     /// </summary>
@@ -421,6 +427,8 @@ public class RenderContext
 
         if (options.FilmCurve is { } curve)
             FilmCurve = FilmCurve.Named(curve);
+
+        Denoise = options.Denoise ?? Denoise;
 
         // Antialiasing is the scene's to ask for and the command line's to overrule.  It is left
         // alone unless `-a` was actually given, which is why the option is null until it is: a

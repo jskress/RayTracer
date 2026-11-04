@@ -1,0 +1,63 @@
+// A room lit by one lamp shining up at its ceiling, so that all its light reaches the room bounced off the ceiling
+// and the walls -- looked for in only sixteen directions a place, so the picture comes out grainy.  The
+// figure in context.md#denoising sets it beside the same render smoothed by each denoiser, and beside it looked for
+// in a thousand directions:
+//
+//     dotnet run -- -i docs/examples/context/denoising.igl -w 320 -h 240 -o noisy.png
+//     dotnet run -- -i docs/examples/context/denoising.igl -w 320 -h 240 -o filter.png --denoise filter
+//     dotnet run -- -i docs/examples/context/denoising.igl -w 320 -h 240 -o intel.png --denoise intel
+//
+// and, with `diffuse samples 1024` in place of sixteen, the reference.
+context {
+    parallel pixel scanner
+    angles are degrees
+    diffuse bounces 2
+    diffuse samples 16
+}
+
+camera {
+    location [1.2, 1.5, -2.3]
+    look at [-0.3, 0.8, 1.2]
+    field of view 62
+    exposure 0.7
+}
+
+Plaster = material { pigment [0.82, 0.8, 0.76]  specular 0 }
+
+// The room, seen from inside: four meters by five, and two and a half high.
+cube {
+    scale [2, 1.25, 2.5]
+    translate [0, 1.25, 0]
+    material Plaster
+}
+
+// A floor of tiles, which the denoising must leave as sharp as it found them.
+plane {
+    translate Y 0.001
+    material {
+        pigment checker { [0.55, 0.42, 0.3], [0.25, 0.18, 0.12]  scale 0.5 }
+        specular 0.1  shininess 20
+    }
+}
+
+// The lamp, its light thrown up onto the ceiling, and what that light falls on.
+spot light {
+    location [0, 1.9, 1]
+    point at [0, 2.5, 1]
+    radius 50
+    falloff 70
+    color [3, 2.8, 2.5]
+}
+
+sphere {
+    scale 0.45
+    translate [-0.6, 0.45, 1.3]
+    material { pigment [0.75, 0.2, 0.15]  specular 0.3  shininess 60 }
+}
+
+cube {
+    scale [0.35, 0.6, 0.35]
+    rotate Y 25
+    translate [0.9, 0.6, 1.8]
+    material { pigment [0.2, 0.35, 0.7]  specular 0.1 }
+}

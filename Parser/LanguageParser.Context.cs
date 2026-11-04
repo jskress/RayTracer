@@ -1,6 +1,7 @@
 using Lex.Clauses;
 using Lex.Tokens;
 using RayTracer.Basics;
+using RayTracer.Core.Denoising;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Graphics;
@@ -98,6 +99,15 @@ public partial class LanguageParser
 
                 break;
             }
+            // `denoise`, with Intel's or the renderer's own filter said, or the best that can be had.
+            case "denoise":
+                updater.DenoiseResolver = new LiteralResolver<DenoiseMethod>
+                {
+                    Value = clause.Tokens.Count < 2 ? DenoiseMethod.Best
+                        : clause.Tokens[1].Text == "intel" ? DenoiseMethod.Intel
+                        : DenoiseMethod.Filter
+                };
+                break;
             case "no.shadows":
                 updater.SuppressAllShadowsResolver = new LiteralResolver<bool> { Value = true };
                 break;
