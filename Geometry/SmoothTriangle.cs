@@ -57,6 +57,36 @@ public class SmoothTriangle : Triangle
     }
 
     /// <summary>
+    /// This method returns the normal of the flat triangle in the world, facing the way its corners' normals do
+    /// together, which is the side the triangle is met from.
+    /// <para>
+    /// **Its own normal faces where the round surface would, and at a graze that may be away from the eye on a
+    /// facet facing it**: on a crest, or where a slope turns over into a skyline, the normal blended from the corners
+    /// tips past square to the eye.  Taken at its word, the triangle was met from inside, its normal turned into the
+    /// ground, and the place lit as the underside of the hill -- black, a speckle along every eroded crest.
+    /// </para>
+    /// <para>
+    /// A triangle whose corners say no plain side -- their normals lying near its own plane, as the book's example
+    /// triangle's do -- has none to be met from, and its shading normal decides as it always has.  The two are
+    /// compared in the world: in a height field's own space, a land nine kilometers across one unit and a meter up
+    /// one is nine thousand times as steep, and its facets and normals all lie nearly flat on their sides.
+    /// </para>
+    /// </summary>
+    /// <param name="intersection">Where the ray met the triangle.</param>
+    /// <returns>The flat triangle's normal in the world, or <c>null</c> for a triangle with no plain side.</returns>
+    internal override Vector FacetAt(Intersection intersection)
+    {
+        int time = intersection.TimeIndex;
+        Portals portals = intersection.Portals;
+        Vector flat = NormalToWorld((Point2 - Point1).Cross(Point3 - Point1), time, portals).Unit;
+        Vector corners = NormalToWorld(Normal1, time, portals).Unit + NormalToWorld(Normal2, time, portals).Unit +
+                         NormalToWorld(Normal3, time, portals).Unit;
+        double side = flat.Dot(corners) / 3;
+
+        return Math.Abs(side) < 0.1 ? null : side < 0 ? -flat : flat;
+    }
+
+    /// <summary>
     /// This method returns how far above the flat triangle a ray leaving it, on the side its normals face, sets off:
     /// up to about where the round surface its normals describe would be (Hanika 2021, "Hacking the Shadow
     /// Terminator").

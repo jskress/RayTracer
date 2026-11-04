@@ -1930,6 +1930,7 @@ and then scaled to whatever size the scene wants.
 | `clip` | Ignore anything darker than a given brightness, from nought to one, cutting the terrain off there. |
 | `open` | Leave the sides and underside off. |
 | `smooth` | Shade the terrain as the smooth surface it stands for. |
+| `erosion` | Wear the ground before it is drawn, by its rivers, its scree and its rain; see [Erosion](#erosion). |
 
 A field takes its heights from an `image` or from a `function`, never both.  `samples` belongs to
 the function form — a picture brings its own size with it — and `clip` to the image form, since a
@@ -2034,6 +2035,142 @@ The map in the picture above was itself rendered by this ray tracer — a plane 
 pattern, seen from straight above — so the example needs nothing from outside.  The complete
 scene is
 [`docs/examples/advanced/height-field.igl`](examples/advanced/height-field.igl).
+
+#### Erosion
+
+Noise makes hills; weather makes a landscape.  Real ground is cut by its rivers into valleys that branch
+as the water that made them does, its crags stand over aprons of the scree they have shed, and its slopes
+are scored with gullies whose grit lies in fans where the slope eases and fills the valley floors flat.  An
+`erosion` block wears a height field's ground in those three ways before it is drawn:
+
+![The same range plain, then worn by its rivers, its scree and its rain, then dressed by the maps the wearing left](images/figures/adv-erosion.png)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/erosionClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/erosionClause.svg">
+  <img alt="Erosion" src="images/advanced/erosionClause.svg">
+</picture>
+
+```
+heightfield {
+    function { ... }
+    samples 512
+    smooth
+    erosion {
+        rivers 0.3
+        scree 0.3
+        rain 1
+    }
+    material blend deposits { [0, Rock, 0.4, Gravel] }
+
+    translate [-0.5, 0, -0.5]
+    scale [10000, 2000, 10000]
+}
+```
+
+| Property | What it does |
+| --- | --- |
+| `rivers t` | Rivers cut their valleys: `t` is how far they have cut back into the land, in shares of its width. |
+| `scree t` | Crags shed scree: `t` is how long they have been shedding. |
+| `repose a` | The steepest angle loose rock rests at, which scree lies at and a river's valley sides fall back to; 35 degrees unless said, read as [`angles are`](context.md#angles) says. |
+| `rain n` | Rain runs down the ground: about `n` drops for each point of a grid 512 points along the land's longer side. |
+| `sea level h` | Below this height, in the field's own heights, the ground is under the sea: it does not wear, and rivers and rain end there.  Unsaid, water leaves only by the field's edges. |
+| `with seed s` | The seed the rain falls by; the field's own unless said. |
+
+Each happens only when it is named, and they happen in that order, the largest first, each wearing the
+ground the one before left.  An erosion must name at least one of them, and `repose` belongs to `rivers`
+and `scree`, being nothing to the rain.
+
+**Rivers** cut by the stream power law: the ground at a place wears down at a rate that is the slope water
+leaves it by times the square root of how much land drains through it.  A gully, draining only itself, barely
+cuts; a river draining half the land cuts deep; so the valleys come out branching, a tree of them reaching up
+into every corner of the land.  At `rivers 1`, a river draining all the land would have cut its way back
+the whole width of it; `0.2` to `0.5` is a land well cut, more a land cut down to its bones.  A river cuts only
+its bed, and the sides of the valley it cuts stand until they are steeper than the angle of repose, then fall
+back to it — so a river makes a valley and not a slot.  Ground that was steeper than that before any river
+cut, a crag in the function, keeps its own steepness as the river undercuts it, falling back as a cliff does,
+and is never made steeper.  Water runs on across a hollow as across a lake,
+and a lake's bed lies under still water and is left alone, so a basin written into the function is kept for
+the water that will lie in it.
+
+**Scree** weathers from any bare rock standing steeper than loose rock can rest, and slides down until it
+rests, piling at the foot of every crag in an apron at its angle of repose.  The apron buries the crag's
+foot and keeps the weather from it there, so the crag stands on above it, falling back.  At `scree 1`, a
+sheer crag a fifth as tall as the land is wide falls back about a sixteenth of the land's width, and its
+scree runs out about a tenth of it from where its foot was; it falls back more slowly the more it has
+buried.
+
+**Rain** falls a drop at a time, each from a place of its own, as Beyer (2015) has it: a drop runs down the
+ground, keeping a little of the way it was going, speeding up as it falls, and able to carry more grit the
+faster it goes and the steeper it falls.  Carrying less than it could, it wears the ground about it; more,
+or climbing, it lays some down; and it dries as it goes.  So gullies cut, grit fans out where a slope
+eases, and valley floors fill flat.  A drop running off the field's edge takes its grit with it; one
+reaching the sea lays all it carries there; and one reaching a river — a place draining a hundredth of the land —
+is carried off down it, grit and all, so the rain fills a valley's floor beside its river but never buries it.
+`rain 1` scores a land plainly; `0.2` roughens it.  The steeper the land, the more each drop carries: on walls
+steeper than 60 degrees a little rain goes a long way.
+
+**The ground is worn at its size in the world.**  The field's X, Y and Z are measured through its transforms
+and its groups', so a scree slope at 35 degrees is at 35 degrees in the picture however the field is
+stretched — seventy meters by a hundred and fifty, as one in the gallery is.  An instance the field is seen
+through is not measured, since it may stand in many places at many sizes and the ground is worn once.  Rivers
+and rain wear a land twice as tall to the same shape twice as tall; only scree, and the sides of valleys,
+which fall at a true angle, tell the two apart.
+
+**It wears the same land the same way however finely the field is sampled**, so a scene can be tried out at
+`samples 256` and drawn at 1024.  The rivers' rates come from areas and lengths in the world rather than
+from points of the grid; scree weathers in rounds counted by the grid's points across, so a finer grid,
+crossed in more rounds, falls back as far; and rain falls on a grid of its own, 512 points along the land's
+longer side whatever the field's, and what it wore is laid back on the field's grid.  Rain wears gullies a few
+points of its grid wide: on the field's own grid, a finer one wore them as much narrower and as much deeper,
+and the land came out another land at every sampling.  A field finer than the rain's grid keeps all its own
+detail; only the rain's gullies are no finer.
+
+**A ground once worn is kept**: the same heights worn the same way are handed back as they were, so an
+animation wears its land for its first frame only, and so does each later `render` in the same file.
+
+**What it costs**, measured on the land of the gallery's [alpine valley](../gallery/Local/terrain/an-alpine-valley.igl):
+
+| Grid | `rivers 0.2` | `scree 0.15` | `rain 1` |
+| --- | --- | --- | --- |
+| 1024 points | 10.3 s | 5.5 s | 1.0 s |
+| 1536 points | 24.5 s | 16.5 s | 1.2 s |
+
+The rivers and the scree grow with the grid; the rain, falling on a grid of its own, hardly does.  Scree grows
+with its time as well.  The cost is paid once, before the first ray, and the triangles it leaves cost what any
+height field's do.  Say `-l chatty` to be told how long a field took to wear.
+
+##### What the weather left
+
+Erosion keeps three maps of what it did, which a material reads as [patterns](pigments-and-patterns.md#continuous-patterns)
+— in a pigment, or in a [blend of materials](materials.md#blending-materials), which is where they are usually
+wanted, since gravel is not rock:
+
+| Pattern | Its value |
+| --- | --- |
+| `flow` | How much water runs over a place: nought on a ridge, rising along a gully toward one in the river leaving the land.  The share of all the land's water that runs there, to its fourth root, so a gully draining a ten-thousandth of the land reads a tenth, and one draining a hundredth about a third. |
+| `deposits` | How much grit was laid down at a place: nought where none was, a half where about as much was as anywhere that any was, rising toward one where the most was. |
+| `wear` | How much ground was carried away from a place, by the same measure. |
+
+```
+material blend deposits {
+    [0, Rock, 0.35, Rock, 0.6, Gravel]
+}
+```
+
+Water running across a lake is the lake's: every place under one holds the flow that leaves it, so a lake
+reads as one water rather than as lines fanning across it.  Ground that is only flat — as an image's often is
+— runs its water on as across a slope.  A field with no erosion has had nothing laid down or carried away,
+but water still runs over it: its `flow` is worked out the first time a material asks for it, and `deposits`
+and `wear` read nought.  The maps are read on the height field the material is worn by, at the place in the
+field's own square, as the field lays its heights; worn by anything else, they read nought.  For where the
+ground faces up — where snow lies — they go with [`facing`](pigments-and-patterns.md#where-weather-gathers).
+
+An erosion is not a sculpting tool.  The ground still has one height at every place, so a river cannot cut
+under a cliff, and nothing is carried in from beyond the field: a field cut from a larger land drains off its
+edges as if they were the sea.  And it is weather, not time: it wears what the function wrote and builds no
+mountains of its own, so a land wants its ranges written into it — ridged noise, falling to where its rivers
+are meant to leave — before the weather comes.
 
 ### Object Files
 

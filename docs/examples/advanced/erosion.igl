@@ -1,0 +1,73 @@
+// One range three times over: as the function wrote it; worn by its rivers, its scree and its rain; and worn, then
+// dressed by the maps the wearing left -- gravel where grit was laid down, grass where the ground lies gentle, bare
+// rock on the slopes.
+context { angles are degrees  parallel pixel scanner }
+
+camera {
+    location [0, 11, -9.5]
+    look at [0, 0, 0.5]
+    field of view 66
+}
+
+background [0.66, 0.74, 0.84]
+
+point light { location [-60, 30, 15]  color [1.15, 1.12, 1.05] }
+point light { location [30, 20, -30]  color [0.18, 0.19, 0.23] }
+
+// Ridged noise: sharp crests over a broad rise, the kind of land rivers are worth running through.
+function Ridge(x, z, f, o) -> number {
+    return 1 - abs(2 * noise(f * x, o, f * z) - 1)
+}
+
+function Range(x, z) -> number {
+    return 0.55 * pow(Ridge(x, z, 2, 0), 2) + 0.25 * pow(Ridge(x, z, 4, 0.3), 2) + 0.12 * Ridge(x, z, 8, 0.6)
+           + 0.06 * Ridge(x, z, 16, 0.9) + 0.03 * Ridge(x, z, 32, 1.2)
+}
+
+Plain = material { pigment color [0.62, 0.60, 0.57]  specular 0 }
+
+Rock = pigment granite { [0, [0.40, 0.37, 0.34], 1, [0.30, 0.28, 0.26]]  scale 0.02 }
+Grass = pigment bozo { [0, [0.22, 0.30, 0.13], 1, [0.30, 0.36, 0.17]]  scale 0.03 }
+Gravel = pigment granite { [0, [0.66, 0.61, 0.52], 1, [0.55, 0.50, 0.42]]  scale 0.01 }
+
+// Grass where the ground lies gentler than the scree, rock where it is steeper, gravel over both where grit lies.
+Ground = pigment facing { [0, Rock, 0.88, Rock, 0.93, Grass] }
+
+Dressed = material {
+    pigment deposits { [0, Ground, 0.35, Ground, 0.6, Gravel] }
+    specular 0
+}
+
+heightfield {
+    function { Range(x, z) }
+    samples 384
+    smooth
+    open
+    material Plain
+    translate [-0.5, 0, -0.5]
+    scale [5, 1.25, 5]
+    translate X -5.3
+}
+
+heightfield {
+    function { Range(x, z) }
+    samples 384
+    smooth
+    open
+    erosion { rivers 0.3  scree 0.3  rain 1 }
+    material Plain
+    translate [-0.5, 0, -0.5]
+    scale [5, 1.25, 5]
+}
+
+heightfield {
+    function { Range(x, z) }
+    samples 384
+    smooth
+    open
+    erosion { rivers 0.3  scree 0.3  rain 1 }
+    material Dressed
+    translate [-0.5, 0, -0.5]
+    scale [5, 1.25, 5]
+    translate X 5.3
+}

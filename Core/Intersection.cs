@@ -281,6 +281,16 @@ public class Intersection : IComparable<Intersection>
         Normal = Surface.NormalAt(Point, this);
         Inside = Normal.Dot(Eye) < 0;
 
+        // **A surface shaded as rounder than it is, met on the side its flat face faces, is met from outside.**
+        // Where its shading normal faces away from the eye -- a smooth triangle on a crest seen at a graze -- the
+        // normal is bent to lie just on the eye's side, keeping as much of its lean as it can: laid square to the eye,
+        // a hundredth of the eye's way added, and made a unit again.
+        if (Inside && Surface.FacetAt(this) is { } facet && facet.Dot(Eye) > 0)
+        {
+            Inside = false;
+            Normal = (Normal - Eye * Normal.Dot(Eye) + Eye * 0.01).Unit;
+        }
+
         if (ShouldFlipInsideForOut)
         {
             Normal = -Normal;

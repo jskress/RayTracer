@@ -324,6 +324,34 @@ worked out IN THE WORLD (corner offsets by `DirectionToWorld`, normals by `Norma
 steep in its own space (the dunes 54x), a crest's normal lay nearly flat there, a place risen along it slid under the
 slope beside it, and the crests were edged with black.  The rounding is Phong tessellation's: on a ball it lies about
 as far outside as the flat facet lies inside.
+A smooth triangle is met from the side its FLAT face is met from (`Surface.FacetAt`, the facet facing the way its
+corners do together, compared IN THE WORLD -- in a 9 km by 1 m field's own space every facet and normal lies on its
+side and the facet said no side; none when they lie near its plane, as the book's example's do): where its shading normal faces
+away from the eye on a facet facing it -- an eroded crest seen at a graze -- the normal is laid square to the eye, a
+hundredth of the eye's way added (`Intersection.PrepareUsing`).  Taken as met from inside, the normal turned into
+the ground and the place was lit as the hill's underside: ambient-only speckles along every smooth crest.
+A height field's `erosion { rivers t  scree t  repose a  rain n  sea level h  with seed s }` (`Geometry/Erosion.cs`,
+the settings and a cache of the last four grounds worn, keyed by a hash of the heights and every setting, so an
+animation wears once; the work in `Geometry/ErodingGround*.cs`) wears the sampled grid in the field's WORLD size (its
+X, Y, Z through its transforms and groups, `HeightField.SizeInTheWorld`; not an instance's) before any triangle,
+in that order: rivers -- stream power, Braun-Willett implicit, mouths first in Barnes' priority-flood order (a hollow
+filled a trillionth of the relief a step, `Rise`), water shared among lower neighbours by slope squared, rates from
+areas and lengths in the world (reach x sqrt(A share) x width / run), a lake's bed (under its filled level) left
+alone, outlets the edge and the sea; then valley sides fall (`LetValleySidesFall`, a heap from the lowest) to no
+steeper than the angle of repose or what the slope was before any river cut (exempting crags from falling at all
+raised walls one point wide); scree -- two layers, bare rock steeper than repose weathers a twentieth of its excess
+a round into loose rock (covered by a step's worth, no weathering), loose slides by Jacobi rounds (0.45 of the most
+excess), time x points-across rounds, settling until a hundredth of a repose step or as many rounds again (it creeps
+like heat along a bar, and never reached a millionth of the relief); rain -- Beyer/Lague drops (gravity's sign
+fixed), on its OWN grid 512 along the longer side whatever the field's (on the field's grid a finer one wore deeper,
+narrower gullies), heights normalized to the relief, scaled from Lague's 256 by fineness, NOTHING worn below
+where the drop goes next (unfloored, holes deepened themselves to 50000x the relief), and a drop reaching a river (a
+place draining a hundredth of the land) carried off with its grit (laid down, three drops a point buried an alpine
+valley hundreds of meters deep); what it wore laid back averaged or interpolated.  Maps kept (`ErodedGround`): `flow` (MFD Holmgren p=4 over the filled level, a lake's every point the
+water leaving it, (share of the land)^(1/4)), `deposits` and `wear` (1 - 2^(-depth / mean of those nonzero)),
+read by `ErosionPattern` on the field found up from `Pigment.Wearer` (`HeightField.MapAt`, bilinear in its square);
+an uneroded field's flow is worked out when first asked.  Rivers, scree and rain each wear a 129-point grid within
+a quarter of a 65-point one (`TestErosion`).
 A CSG of many things written as one (`union { a b c ... }`) is a chain of links (`CsgSurface.IsChainLink`), each
 holding all before it on its left; the top link lists the whole chain ONCE (`ListTheChain`: which thing written each
 surface stands in, shared by every link, a link's left being the things before its place), where per-link side
@@ -654,6 +682,12 @@ by default, as it always was): a tumbler of water looked through is eight deep, 
 Asking for a depth also turns on adaptive bailout (`Scene.Bailout` = `RenderContext.Bailout`, 1/1024): a way a
 ray goes is followed only while what it is worth of its pixel (`_fallenShort`, thread-static, worked out by
 `SharesOf` as `GetHitColor` will weigh it) is at least that.  Without a depth, nothing changes, bit for bit.
+
+A group's tree of boxes (`BoundingVolumeHierarchy`) is cut along the axis its children's middles spread most along IN
+THE WORLD: each axis weighed by how long it comes out through the group's transforms and parents
+(`Group.StretchOfItsSpace`, null when even).  A height field said in meters up over its unit square, stretched 9 km
+each way, spread 3000 of its units up and one across, every box was a slab as wide as the land, and dropping 34
+thousand firs onto it took four minutes (3.7 s after; rendering ~20x faster).
 
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via

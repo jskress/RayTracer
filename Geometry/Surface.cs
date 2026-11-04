@@ -566,6 +566,15 @@ public abstract class Surface : NamedThing
     internal virtual Vector RiseAt(Intersection intersection) => null;
 
     /// <summary>
+    /// This method returns, for a surface shaded as something rounder than it is, the normal in the world of the
+    /// flat face a ray met it on, which side it is met from is decided by (see <see cref="SmoothTriangle.FacetAt"/>);
+    /// nothing for any other surface, whose shading normal decides.
+    /// </summary>
+    /// <param name="intersection">Where the ray met it.</param>
+    /// <returns>The flat face's normal, or <c>null</c>.</returns>
+    internal virtual Vector FacetAt(Intersection intersection) => null;
+
+    /// <summary>
     /// This method returns how much this surface's own space is stretched in the world, at its most: the longest
     /// of its three axes carried out to the world, through its parents and the instances it was found through.
     /// </summary>

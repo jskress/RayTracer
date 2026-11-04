@@ -297,4 +297,58 @@ public class TestSmoothTriangles
         Assert.AreEqual(0, dark.Count,
             $"{dark.Count} of {facing} places facing the light were in shadow, among them {string.Join(", ", dark.Take(5))}");
     }
+
+    /// <summary>
+    /// This tests that a smooth triangle met on the side its flat face faces is met from outside, whichever way its
+    /// shading normal faces.  Its corners lean so far over that, seen at a graze, the normal blended from them faces
+    /// away from the eye: taken at its word, the triangle was met from inside, its normal turned into the ground, and
+    /// a lamp straight above it lit nothing -- the black speckle along every crest of a smooth, eroded height field.
+    /// The normal is bent onto the eye's side instead, keeping as much of its lean as it can, so the lamp lights it.
+    /// <para>
+    /// And the same triangle stretched as a height field is, nine thousand across for one up, its corners and normals
+    /// said in that space: there every facet and normal lies nearly flat on its side, the two were compared there,
+    /// and the facet was found to say no side at all -- so the speckles were left on the very fields they were on.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    [DataRow(1.0)]
+    [DataRow(9000.0)]
+    public void TestASmoothTriangleSeenAtAGrazeIsMetFromOutside(double stretch)
+    {
+        Vector lean = new Vector(0, 0.2, 1).Unit;
+        Vector leanInItsSpace = new Vector(0, 0.2, stretch).Unit;
+        SmoothTriangle triangle = new ()
+        {
+            Point1 = new Point(-1 / stretch, 0, -1 / stretch),
+            Point2 = new Point(0, 0, 1 / stretch),
+            Point3 = new Point(1 / stretch, 0, -1 / stretch),
+            Normal1 = leanInItsSpace, Normal2 = leanInItsSpace, Normal3 = leanInItsSpace,
+            Transform = Transforms.Scale(stretch, 1, stretch)
+        };
+        Scene scene = new ();
+        Point lamp = new (0, 50, 0);
+        Ray ray = new (new Point(0, 1, -10.2), new Vector(0, -0.1, 1).Unit);
+
+        scene.Lights.Add(new PointLight { Location = lamp });
+        scene.Surfaces.Add(triangle);
+
+        List<Intersection> intersections = scene.Intersect(ray);
+        Intersection hit = intersections.Hit();
+
+        Assert.IsNotNull(hit, "the ray missed the triangle");
+        Assert.IsTrue(lean.Dot(-ray.Direction) < 0, "the triangle's own normal should face away from the eye");
+
+        hit.PrepareUsing(ray, intersections);
+
+        Vector toward = (lamp - hit.LitPoint).Unit;
+        Vector eye = -ray.Direction;
+        Vector bent = (lean - eye * lean.Dot(eye) + eye * 0.01).Unit;
+
+        Assert.IsFalse(hit.Inside, "a triangle met on the side its flat face faces was met from inside");
+        Assert.IsTrue(bent.Matches(hit.Normal), "the normal was not its own laid square to the eye, a hair toward it");
+        Assert.IsTrue(hit.Normal.Dot(eye) is > 0 and < 0.05, "the normal was not bent just onto the eye's side");
+        Assert.IsTrue(hit.Normal.Dot(toward) > 0, "the lamp straight above does not light the place");
+        Assert.IsFalse(Colors.Black.Matches(scene.GetLightReaching(hit.LitPoint, toward, (lamp - hit.LitPoint).Magnitude)),
+            "the lamp straight above is hidden from the place");
+    }
 }

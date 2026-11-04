@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.General;
@@ -60,6 +61,11 @@ public class HeightField : Group
     /// </summary>
     public bool Smooth { get; set; }
 
+    /// <summary>
+    /// This property holds how the ground has been worn before it is drawn, if it has been.
+    /// </summary>
+    public Erosion Erosion { get; set; }
+
     // The heights of every grid point, worked out once up front.  Each one is read by up to four of
     // the triangles around it, and having both sources land here is what lets everything below this
     // point be written once rather than twice.
@@ -76,6 +82,13 @@ public class HeightField : Group
     // The level a closed field's walls come down to and its underside lies at.
     private double _base;
 
+    // How big the field is in the world, along its X, Y and Z, measured when it is readied; the ground as its
+    // erosion left it, with the maps of what was done to it; and the flow of a field not eroded, worked out the
+    // first time a material asks for it.
+    private (double Width, double Height, double Depth) _size;
+    private ErodedGround _worn;
+    private float[] _flow;
+
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
     /// perform any expensive precomputing that will help ray/intersection tests go faster.
@@ -90,6 +103,19 @@ public class HeightField : Group
 
         if (_columns < 2 || _rows < 2)
             throw new Exception("Height field needs to be at least 2 points in both dimensions.");
+
+        _size = SizeInTheWorld();
+
+        // Then wear the ground, if it has been out in the weather.
+        if (Erosion is not null)
+        {
+            Stopwatch clock = Stopwatch.StartNew();
+
+            _worn = Erosion.Erode(_heights, _size.Width, _size.Height, _size.Depth, Seed ?? 0);
+            _heights = _worn.Heights;
+
+            Terminal.Out($"Height field worn in {clock.Elapsed.TotalSeconds:F1} s.", OutputLevel.Chatty);
+        }
 
         // Next, we need to create all our triangles.
         CreateTriangles();
@@ -154,6 +180,57 @@ public class HeightField : Group
             for (int x = 0; x < _columns; x++)
                 _heights[x, y] = function.Evaluate(x * step, 0, y * step);
         }
+    }
+
+    /// <summary>
+    /// This method measures how big the field is in the world: how long its own X, Y and Z come out, carried through
+    /// its transforms and its groups'.  An instance it may be seen through is not counted: it may stand in many
+    /// places at many sizes, and the ground is worn once.
+    /// </summary>
+    /// <returns>The field's width, the height of one of its own units of height, and its depth.</returns>
+    private (double Width, double Height, double Depth) SizeInTheWorld()
+    {
+        double width = DirectionToWorld(new Vector(1, 0, 0)).Magnitude;
+        double height = DirectionToWorld(new Vector(0, 1, 0)).Magnitude;
+        double depth = DirectionToWorld(new Vector(0, 0, 1)).Magnitude;
+
+        if (Erosion is not null && (width <= 0 || height <= 0 || depth <= 0))
+            throw new Exception("A height field worn by erosion must stand some size in the world every way.");
+
+        return (width, height, depth);
+    }
+
+    /// <summary>
+    /// This method returns what a map of the field's erosion holds at a place in the field's own space, read between
+    /// the points of its grid.  A field not eroded has had nothing laid down or carried away, but water still runs
+    /// over it, and its flow is worked out the first time it is asked for.
+    /// </summary>
+    /// <param name="map">The map to read.</param>
+    /// <param name="point">The place, in the field's own space.</param>
+    /// <returns>What the map holds there, from nought to under one.</returns>
+    internal double MapAt(ErosionMap map, Point point)
+    {
+        if (_heights is null)
+            return 0;
+
+        float[] values = _worn?.MapOf(map) ?? (map == ErosionMap.Flow
+            ? LazyInitializer.EnsureInitialized(ref _flow, () =>
+                new ErodingGround(_heights, _size.Width, _size.Height, _size.Depth, null).FlowMap())
+            : null);
+
+        if (values is null)
+            return 0;
+
+        double x = Math.Clamp(point.X, 0, 1) * (_columns - 1);
+        double z = Math.Clamp(point.Z, 0, 1) * (_rows - 1);
+        int column = Math.Min((int) x, _columns - 2);
+        int row = Math.Min((int) z, _rows - 2);
+        double u = x - column;
+        double v = z - row;
+        int corner = row * _columns + column;
+
+        return values[corner] * (1 - u) * (1 - v) + values[corner + 1] * u * (1 - v) +
+               values[corner + _columns] * (1 - u) * v + values[corner + _columns + 1] * u * v;
     }
 
     /// <summary>

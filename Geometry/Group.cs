@@ -125,10 +125,32 @@ public class Group : Surface
     /// </summary>
     private void ArrangeChildren()
     {
-        _arranged.Arrange(Surfaces);
+        _arranged.Arrange(Surfaces, StretchOfItsSpace());
+    }
+
+    /// <summary>
+    /// This method returns how long each of the group's own axes comes out in the world, through its transforms and
+    /// its parents', for the tree of its children to be cut by where they spread in the world; nothing, for a
+    /// space that is not stretched or cannot say.
+    /// </summary>
+    /// <returns>The length of each axis in the world, or <c>null</c>.</returns>
+    private (double X, double Y, double Z)? StretchOfItsSpace()
+    {
+        double x = DirectionToWorld(new Vector(1, 0, 0)).Magnitude;
+        double y = DirectionToWorld(new Vector(0, 1, 0)).Magnitude;
+        double z = DirectionToWorld(new Vector(0, 0, 1)).Magnitude;
+
+        return x > 0 && y > 0 && z > 0 && double.IsFinite(x + y + z) && (x != y || y != z) ? (x, y, z) : null;
     }
 
     private readonly ArrangedSurfaces _arranged = new ();
+
+    /// <summary>
+    /// This method counts the children a ray in the group's own space would be handed once they are arranged.
+    /// </summary>
+    /// <param name="ray">The ray, in the group's own space.</param>
+    /// <returns>How many children the ray would be handed.</returns>
+    internal int ChildrenHandedTo(Ray ray) => _arranged.CountHandedTo(ray);
 
     /// <summary>
     /// This method is used to produce a default bounding box for this shape.

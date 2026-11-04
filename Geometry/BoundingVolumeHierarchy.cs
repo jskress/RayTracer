@@ -66,11 +66,14 @@ internal class BoundingVolumeHierarchy
     /// </summary>
     /// <param name="entries">The surfaces to arrange, and where each one sits.</param>
     /// <returns>The hierarchy, or null when there is nothing worth arranging.</returns>
-    internal static BoundingVolumeHierarchy Build(List<(Surface Surface, BoundingBox Box)> entries)
+    /// <param name="stretch">How long each of the space's own axes comes out in the world, which the spread
+    /// along each is weighed by; one each way, for a space that is not stretched.</param>
+    internal static BoundingVolumeHierarchy Build(
+        List<(Surface Surface, BoundingBox Box)> entries, (double X, double Y, double Z)? stretch = null)
     {
         return entries.Count < WorthBuilding
             ? null
-            : new BoundingVolumeHierarchy(Split(entries, 0, entries.Count));
+            : new BoundingVolumeHierarchy(Split(entries, 0, entries.Count, stretch ?? (1, 1, 1)));
     }
 
     private BoundingVolumeHierarchy(Node root)
@@ -89,8 +92,16 @@ internal class BoundingVolumeHierarchy
     /// that leaves one side empty -- everything piled at one coordinate -- falls back to halving the
     /// run by count, which always makes progress.
     /// </para>
+    /// <para>
+    /// **Spread is measured in the world**: each axis's by how long that axis of the space comes out once the
+    /// group is stretched into place.  A height field written in meters up and its own unit square across, then
+    /// stretched nine kilometers each way, has its triangles spread three thousand of its units up and one across,
+    /// and cut by height alone every box was a slab as wide as the land: every ray went through them all, and
+    /// dropping a forest onto it took four minutes.  A space stretched alike every way chooses as it always did.
+    /// </para>
     /// </summary>
-    private static Node Split(List<(Surface Surface, BoundingBox Box)> entries, int from, int to)
+    private static Node Split(
+        List<(Surface Surface, BoundingBox Box)> entries, int from, int to, (double X, double Y, double Z) stretch)
     {
         BoundingBox box = new ();
 
@@ -107,13 +118,13 @@ internal class BoundingVolumeHierarchy
             return new Leaf { Box = box, Surfaces = surfaces };
         }
 
-        int middle = Divide(entries, from, to);
+        int middle = Divide(entries, from, to, stretch);
 
         return new Branch
         {
             Box = box,
-            Left = Split(entries, from, middle),
-            Right = Split(entries, middle, to)
+            Left = Split(entries, from, middle, stretch),
+            Right = Split(entries, middle, to, stretch)
         };
     }
 
@@ -121,7 +132,8 @@ internal class BoundingVolumeHierarchy
     /// This method rearranges a run of the entry list so that everything on the near side of the cut
     /// comes first, and reports where the cut fell.
     /// </summary>
-    private static int Divide(List<(Surface Surface, BoundingBox Box)> entries, int from, int to)
+    private static int Divide(
+        List<(Surface Surface, BoundingBox Box)> entries, int from, int to, (double X, double Y, double Z) stretch)
     {
         // The axis chosen is the one the *centers* are most spread along, not the one the boxes cover
         // most.  A row of long thin boxes lying side by side covers most ground along its length, and
@@ -133,9 +145,9 @@ internal class BoundingVolumeHierarchy
 
         Point low = centers.Minimum;
         Point high = centers.Maximum;
-        double spreadX = high.X - low.X;
-        double spreadY = high.Y - low.Y;
-        double spreadZ = high.Z - low.Z;
+        double spreadX = (high.X - low.X) * stretch.X;
+        double spreadY = (high.Y - low.Y) * stretch.Y;
+        double spreadZ = (high.Z - low.Z) * stretch.Z;
         int axis = spreadX >= spreadY && spreadX >= spreadZ ? 0 : spreadY >= spreadZ ? 1 : 2;
         double at = (Coordinate(low, axis) + Coordinate(high, axis)) / 2;
         int middle = from;
@@ -202,6 +214,20 @@ internal class BoundingVolumeHierarchy
             Visit(branch.Right, ray, intersections);
         }
     }
+
+    /// <summary>
+    /// This method counts the surfaces a ray would be handed: those in every leaf whose box it crosses.  It is how
+    /// a test sees how well the tree divides what it holds.
+    /// </summary>
+    /// <param name="ray">The ray, in the space of the group the tree is of.</param>
+    /// <returns>How many surfaces the ray would be handed.</returns>
+    internal int CountHandedTo(Ray ray) => Counted(_root, ray);
+
+    private static int Counted(Node node, Ray ray) => !node.Box.IsHitBy(ray)
+        ? 0
+        : node is Leaf leaf
+            ? leaf.Surfaces.Length
+            : Counted(((Branch) node).Left, ray) + Counted(((Branch) node).Right, ray);
 
     /// <summary>
     /// This method hands the ray to the surfaces in the boxes it crosses, over a stretch of the ray

@@ -130,6 +130,7 @@ map*: pairs of a position and the color at that position, in square brackets.
 | `planar`, `spherical`, `cylindrical`, `boxed` | Distance from a plane, point, axis or box. |
 | `flop` | Not a place at all: the angle the surface is seen at; see [A color that shifts with the angle](#a-color-that-shifts-with-the-angle). |
 | `image` | A picture: its gray, or one of its channels; see [A picture as a pattern](#a-picture-as-a-pattern). |
+| `flow`, `deposits`, `wear` | What a height field's erosion did: where water runs, where grit was laid down, where ground was carried away; see [What the weather left](advanced-surfaces.md#what-the-weather-left). |
 
 ```
 pigment marble {
