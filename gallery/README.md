@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 177 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 178 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -912,7 +912,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Lights</b> &mdash; 16 images &middot; where the light comes from</summary>
+<summary><b>Lights</b> &mdash; 17 images &middot; where the light comes from</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -977,6 +977,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/lights/sky-light.igl">A Sky Light</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/lights/a-street-changing-its-lamps.png">
+      <img alt="A Street Changing Its Lamps" height="120" src="Local/lights/a-street-changing-its-lamps.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/lights/a-street-changing-its-lamps.igl">A Street Changing Its Lamps</a>
     </td>
   </tr>
   <tr style="border: none;">

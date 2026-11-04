@@ -118,14 +118,12 @@ public partial class LanguageParser
                 updater.SpectralResolver = new LiteralResolver<bool> { Value = true };
                 break;
             // `white balance <term>`, which arrives as plain "white" for the same reason `scale ambient
-            // by` arrives as "scale".
+            // by` arrives as "scale": a temperature, or a lamp's name.
             case "white":
-                updater.WhiteBalanceResolver = new TermResolver<double>
+                updater.WhiteBalanceResolver = new WhiteBalanceResolver
                 {
                     Term = term,
-                    Validator = kelvin => kelvin > 0
-                        ? null
-                        : "A white balance is a temperature in kelvin, and must be above nothing."
+                    Validator = WhiteBalanceResolver.Refusal
                 };
                 break;
             // `scale ambient by <term>`.  `ToCmd` joins a second word only after `apply`, `no`, `bounded`,

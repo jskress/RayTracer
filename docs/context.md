@@ -701,9 +701,18 @@ candle's flame comes out white.
 | 3400 | A room lit by household bulbs, warm but not orange. |
 | 5500 | Daylight — nearly the same as leaving it out. |
 
+A balance may name a [lamp](lights.md#named-lamps) instead, whose light then comes out white — a camera
+balanced for an office's fluorescent tubes, or for a street's new LEDs:
+
+```
+context {
+    white balance 'neutral white LED'
+}
+```
+
 The balance is applied to the finished picture, in red, green and blue and in a
 [spectral](#spectral-light) render alike, so it costs nothing to render.  `--white-balance` on the
-command line overrules what a scene asks for.
+command line, a temperature, overrules what a scene asks for, a lamp included.
 
 ### Image Size
 

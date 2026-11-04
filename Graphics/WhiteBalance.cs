@@ -24,9 +24,16 @@ namespace RayTracer.Graphics;
 public class WhiteBalance
 {
     /// <summary>
-    /// This property holds the temperature, in kelvin, of the glow that comes out white.
+    /// This property holds the temperature, in kelvin, of the glow that comes out white, or <c>null</c> for a balance
+    /// for a named lamp.
     /// </summary>
-    public double Temperature { get; }
+    public double? Temperature { get; }
+
+    /// <summary>
+    /// This property holds the name of the lamp whose light comes out white, or <c>null</c> for a balance for a
+    /// temperature.
+    /// </summary>
+    public string Lamp { get; }
 
     // Linear sRGB to XYZ, and the Bradford matrix from XYZ to cone answers.
     private static readonly double[,] RgbToXyz =
@@ -49,14 +56,45 @@ public class WhiteBalance
     /// This constructor balances for a glow at the given temperature.
     /// </summary>
     /// <param name="temperature">The temperature, in kelvin, of the glow that should come out white.</param>
-    public WhiteBalance(double temperature)
+    public WhiteBalance(double temperature) : this(GlowFor(temperature))
+    {
+        Temperature = temperature;
+    }
+
+    /// <summary>
+    /// This constructor balances for the light a named lamp gives (see <see cref="Core.Lamps"/>): a camera balanced for
+    /// fluorescent tubes, or for the street's LEDs.
+    /// </summary>
+    /// <param name="lamp">The name of the lamp whose light should come out white.</param>
+    public WhiteBalance(string lamp) : this(AsBrightAsWhite(Core.Lamps.Named(lamp).Color))
+    {
+        Lamp = lamp;
+    }
+
+    /// <summary>
+    /// This method returns a color made as bright as white, so that balancing for it moves colors and not exposure.
+    /// </summary>
+    private static Color AsBrightAsWhite(Color color)
+    {
+        return color / (0.2126 * color.Red + 0.7152 * color.Green + 0.0722 * color.Blue);
+    }
+
+    /// <summary>
+    /// This method returns the color of a glow at the given temperature, refusing one at or below absolute zero.
+    /// </summary>
+    private static Color GlowFor(double temperature)
     {
         if (temperature <= 0)
             throw new ArgumentException("A temperature is in kelvin, and nothing glows at absolute zero or below.");
 
-        Temperature = temperature;
+        return SpectralColor.ToColor(SpectralColor.Blackbody(temperature));
+    }
 
-        Color glow = SpectralColor.ToColor(SpectralColor.Blackbody(temperature));
+    /// <summary>
+    /// This constructor balances so that light of the given color comes out white.
+    /// </summary>
+    private WhiteBalance(Color glow)
+    {
         double[] from = Multiply(Bradford, Multiply(RgbToXyz, [glow.Red, glow.Green, glow.Blue]));
         double[] to = Multiply(Bradford, Multiply(RgbToXyz, [1, 1, 1]));
         double[,] scale = new double[3, 3];

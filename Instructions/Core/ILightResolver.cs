@@ -25,6 +25,11 @@ public interface ILightResolver : IObjectResolver, ICloneable
     Resolver<double> TemperatureResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the name of the lamp whose light the light gives.
+    /// </summary>
+    Resolver<string> LampResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how bright the light is.
     /// </summary>
     Resolver<double> BrightnessResolver { get; set; }

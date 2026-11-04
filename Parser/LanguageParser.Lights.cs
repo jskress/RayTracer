@@ -109,7 +109,7 @@ public partial class LanguageParser
             case "named":
                 resolver.NameResolver = new TermResolver<string> { Term = clause.Term() };
                 break;
-            case "color" or "temperature" or "brightness":
+            case "color" or "temperature" or "lamp" or "brightness":
                 HandleLightColorClause(clause.Text(), clause.Term(), resolver);
                 break;
             case "pigment":
@@ -131,9 +131,9 @@ public partial class LanguageParser
 
     /// <summary>
     /// This method handles what light a light gives, which every sort of light says the same way: a
-    /// color, or the temperature of something glowing, and how bright.
+    /// color, the temperature of something glowing or a named lamp, and how bright.
     /// </summary>
-    /// <param name="what">Which it is: "color", "temperature" or "brightness".</param>
+    /// <param name="what">Which it is: "color", "temperature", "lamp" or "brightness".</param>
     /// <param name="term">The term giving its value.</param>
     /// <param name="resolver">The resolver of the light being described.</param>
     private static void HandleLightColorClause(string what, Term term, ILightResolver resolver)
@@ -150,6 +150,15 @@ public partial class LanguageParser
                     Validator = kelvin => kelvin > 0
                         ? null
                         : "A temperature is in kelvin, and nothing glows at absolute zero or below."
+                };
+                break;
+            case "lamp":
+                resolver.LampResolver = new TermResolver<string>
+                {
+                    Term = term,
+                    Validator = name => Core.Lamps.Knows(name)
+                        ? null
+                        : $"There is no lamp named \"{name}\"; the lamps known are {Core.Lamps.Listed}."
                 };
                 break;
             default:
@@ -181,7 +190,7 @@ public partial class LanguageParser
             case "location":
                 resolver.LocationResolver = new TermResolver<Point> { Term = term };
                 break;
-            case "color" or "temperature" or "brightness":
+            case "color" or "temperature" or "lamp" or "brightness":
                 HandleLightColorClause(clause.Text(), term, resolver);
                 break;
             case "fade":
@@ -252,7 +261,7 @@ public partial class LanguageParser
             case "direction":
                 resolver.DirectionResolver = new TermResolver<Vector> { Term = term };
                 break;
-            case "color" or "temperature" or "brightness":
+            case "color" or "temperature" or "lamp" or "brightness":
                 HandleLightColorClause(clause.Text(), term, resolver);
                 break;
             default:
@@ -291,7 +300,7 @@ public partial class LanguageParser
             case "tightness":
                 resolver.TightnessResolver = new TermResolver<double> { Term = term };
                 break;
-            case "color" or "temperature" or "brightness":
+            case "color" or "temperature" or "lamp" or "brightness":
                 HandleLightColorClause(clause.Text(), term, resolver);
                 break;
             case "fade":
@@ -370,7 +379,7 @@ public partial class LanguageParser
             case "no.jitter":
                 resolver.Jitter = false;
                 break;
-            case "color" or "temperature" or "brightness":
+            case "color" or "temperature" or "lamp" or "brightness":
                 HandleLightColorClause(clause.Text(), term, resolver);
                 break;
             case "fade":

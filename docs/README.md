@@ -120,6 +120,7 @@ branches, any one of the branches will do.
   - [Spotlights](lights.md#spotlights)
   - [Area Lights](lights.md#area-lights)
   - [Color Temperature](lights.md#color-temperature)
+  - [Named Lamps](lights.md#named-lamps)
   - [Fading With Distance](lights.md#fading-with-distance)
   - [Sky Lights](lights.md#sky-lights)
   - [Lights on Things](lights.md#lights-on-things)

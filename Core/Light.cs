@@ -64,6 +64,20 @@ public abstract class Light : NamedThing
     }
 
     /// <summary>
+    /// This method makes the light give the light a named lamp gives (see <see cref="Lamps"/>): its color, and its
+    /// spectrum for a render carrying light wavelength by wavelength, scaled so that its brightest channel is one, as a
+    /// temperature's glow is.
+    /// </summary>
+    /// <param name="name">The lamp's name.</param>
+    public void SetLamp(string name)
+    {
+        (Color color, double[] perBand) = Lamps.Named(name);
+
+        Color = color;
+        Spectrum = perBand;
+    }
+
+    /// <summary>
     /// This method makes the light brighter or dimmer by the given factor, leaving its color alone --
     /// its spectrum too, where it has one.
     /// </summary>

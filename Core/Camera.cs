@@ -208,7 +208,7 @@ public class Camera : NamedThing
         if (context.Spectral)
             SpectralBasis.Shared.Prepare();
 
-        WhiteBalance balance = context.WhiteBalance is { } kelvin ? new WhiteBalance(kelvin) : null;
+        WhiteBalance balance = context.Balance;
         bool vignetted = Vignetting > 0 && ProjectionType == CameraProjectionType.Perspective;
         double gain = Math.Pow(2, context.Exposure ?? Exposure);
 

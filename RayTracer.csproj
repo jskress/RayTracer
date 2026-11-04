@@ -72,6 +72,12 @@
       <EmbeddedResource Include="Libraries\**\*.igl" />
     </ItemGroup>
 
+    <!-- The CIE's measured lamp spectra, read by the named lamps (Core/Lamps.cs); see Data/CIE/README.md for
+         where they are from and the license they carry. -->
+    <ItemGroup>
+      <EmbeddedResource Include="Data\CIE\*.csv" LogicalName="Lamps.%(Filename)%(Extension)" />
+    </ItemGroup>
+
 
 
 

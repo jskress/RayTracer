@@ -420,9 +420,18 @@ or a named `glass` from `Core/Glasses.cs`) splits a spectral ray crossing it int
 per band (`Scene.SplitThrough`), which never split again; RGB renders ignore dispersion. A light
 given a `temperature` (`Light.SetColorTemperature`) carries a Planck spectrum as well as its color,
 scaled so its brightest channel is one; `brightness` multiplies either, and `kelvin(T)` is the same glow
-as a color for emissions and pigments. `context { white balance T }` (`Graphics/WhiteBalance.cs`, a
-Bradford adaptation applied to each finished pixel in `Camera.Render`) makes a glow at T come out white;
-lamp-lit scenes use it so real bulb temperatures read warm rather than orange. A material may say `fresnel`
+as a color for emissions and pigments. A light's `lamp 'name'` (`Light.SetLamp`, `Core/Lamps.cs`) carries a named
+lamp's spectrum the same way: the CIE 015:2018 tables of fluorescents, high pressure sodium and metal halide, and LEDs,
+embedded unchanged from `Data/CIE` (CC BY-SA 4.0, see its README; `LogicalName` `Lamps.<file>`), each 5 nm table
+joined by straight lines and averaged per band; low pressure sodium and low pressure mercury from NIST's strong-line
+tables, each line's intensity spread over its band (NIST's mercury is a low pressure discharge, blue-violet: a mercury
+street lamp is not offered).  Everyday names and the CIE's codes (F1-F12 aliases), case-blind; `temperature` beside
+`lamp` is refused; `lamp('name')` is the color.  Their CCTs by McCamy land within 2% of the CIE's (`TestLamps`).
+`context { white balance T }` (`Graphics/WhiteBalance.cs`, a Bradford adaptation applied to each finished pixel in
+`Camera.Render`) makes a glow at T come out white, or a named lamp's light (`white balance 'neutral white LED'`,
+`RenderContext.WhiteBalanceLamp`, its color made as bright as white so exposure stays put; `--white-balance` T
+replaces it); lamp-lit scenes use it so real bulb temperatures read warm rather than orange.  Every lamp lends ambient
+through walls, so bays lit apart need `scale ambient by 0`. A material may say `fresnel`
 (its `reflective` is then the square-on share, rising toward a graze) or `roughness` (0-1, GGX facets in
 `Core/Microfacets.cs`): a rough surface takes its highlight and its blurred reflection from the same facets,
 with Fresnel implied, looking in `reflection samples` directions at the first rough hit of a path
