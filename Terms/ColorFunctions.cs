@@ -33,4 +33,21 @@ public static class ColorFunctions
 
         return SpectralColor.GlowAt(temperature).Color;
     }
+
+    /// <summary>
+    /// This function returns the color of the light a named lamp gives (see <see cref="Core.Lamps"/>): a sodium street
+    /// lamp's orange, a fluorescent tube's white.  Its brightest channel is one, as a light given a <c>lamp</c> is.
+    /// <para>
+    /// It is for what glows of a lamp without being its light: the tube itself, the globe of a street lamp.  A light
+    /// given a <c>lamp</c> carries the lamp's own spectrum to a spectral render; a color made here is turned into a
+    /// spectrum the way any color is, smooth, which for a lamp of sharp lines is not what it really gives.
+    /// </para>
+    /// </summary>
+    /// <param name="name">The lamp's name.</param>
+    /// <returns>The color of its light.</returns>
+    [Function("lamp")]
+    public static Color Lamp(string name)
+    {
+        return Core.Lamps.Named(name).Color;
+    }
 }

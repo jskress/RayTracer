@@ -1,0 +1,3 @@
+# The CIE's lamp tables are kept byte for byte as the CIE publishes them, CRLF line endings and all, so that
+# their md5 checksums still match the ones on the CIE's dataset pages; see Data/CIE/README.md.
+Data/CIE/*.csv -text

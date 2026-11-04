@@ -1,0 +1,99 @@
+// A street halfway through being relit, seen after rain from an upstairs window across a square from it: to the right the old
+// high pressure sodium lamps, to the left the new white LEDs that replace them a few at a time, and under each the
+// same three cars, a red, a white and a blue.
+//
+// **Which lamp lights a paint decides what color it is, and not only its own color does.**  A sodium lamp gives its
+// light in a hump around sodium's yellow, with almost none of it blue and less deep red than its orange suggests;
+// an LED gives a blue spike and a broad yellow hump between them covering everything.  So under the LEDs the red
+// car is red and the white one white, and under sodium the white car is orange, the red one brown, and the blue
+// one all but black, as anyone who has looked for their car in a sodium-lit car park knows.  The lamps are the
+// CIE's measurements of them (`lamp 'high pressure sodium'`, `lamp 'neutral white LED'`), and the render carries
+// light wavelength by wavelength (`spectral`), which is what lets a lamp's spectrum, not only its color, light the
+// paint: in red, green and blue the red shop front under sodium stays a pure red that no sodium street shows.
+//
+// **The camera is balanced for the new lamps** (`white balance 'neutral white LED'`), as a photographer would
+// balance for a street being relit to them, so that they come out white and the sodium the deep orange it looks
+// beside them.  Every material's ambient is off: at night the lamps are the light.
+//
+// **The heads are lit here, not by the library.**  The street lamp library's burning head is a glowing medium whose
+// color is a pigment, so it cannot carry a lamp's spectrum; the columns stand unlit, and under each hood hangs a
+// glowing lens with a point light at its middle, a fading one, given the lamp.
+
+import 'outdoor-lights' { StreetLamp }
+import 'buildings'      { Terrace }
+import 'roads'          { Road, Curb, Pavement }
+import 'vehicles'       { Car }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    spectral
+    white balance 'neutral white LED'
+    scale ambient by 0
+    info {
+        title 'A Street Changing Its Lamps'
+        author 'J. Stephen Kress'
+        description 'A wet street at night half relit: high pressure sodium lamps on one side of the change, white LEDs on the other, and the same cars under each.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [2, 4.8, -17.2]
+    look at [2, 2.5, 3]
+    field of view 80
+}
+
+background [0.004, 0.006, 0.014]
+
+// -- The street ------------------------------------------------------------------------------------
+
+object Road(90, 7, 'wet', 1)
+object Curb(90, 'wet', 1)                { translate Z 3.5 }
+object Curb(90, 'wet', 1) { rotate Y 180  translate Z -3.5 }
+object Pavement(90, 3.2, 'wet', 1)       { translate Z 5.3 }
+object Pavement(90, 3.2, 'wet', 1)       { translate Z -5.3 }
+
+// And on this side a broad paved square, where the window the picture is taken from looks down.
+object Pavement(90, 19, 'wet', 2)        { translate Z -16.4 }
+
+object Terrace(7, 'summer', 3) { translate [21, 0, 12.4] }
+object Terrace(7, 'summer', 5) { translate [-21, 0, 12.4] }
+object Terrace(7, 'summer', 2) { rotate Y 180  translate [21, 0, -26] }
+object Terrace(7, 'summer', 4) { rotate Y 180  translate [-21, 0, -26] }
+
+// -- The lamps -------------------------------------------------------------------------------------
+
+// A head's glowing lens and its light, which stands inside the lens and so is not shadowed by it.  A sodium lamp's
+// color, held to a brightest channel of one, is about half as bright as the LED's, so it is given twice the
+// strength: the two kinds light the street about as brightly, as a relit street is meant to be.
+primitive Head(kind, strength) -> group {
+    return group {
+        sphere {
+            scale [0.17, 0.03, 0.08]
+            material { pigment lamp(kind)  emission 30  ambient 0  diffuse 0  specular 0 }
+        }
+        point light { location [0, 0, 0]  lamp kind  brightness strength  fade distance 3 }
+    }
+}
+
+// Sodium from the middle of the street to the right, the LEDs from there to the left, the heads reaching out over
+// the road from the far pavement.
+for post in [0, 3] {
+    object StreetLamp(6, 'summer', 1, 0) { rotate Y 90  translate [post * 8 + 8, 0, 4.6] }
+    object Head('high pressure sodium', 8.8) { translate [post * 8 + 8, 5.73, 2.86] }
+    object StreetLamp(6, 'summer', 1, 0) { rotate Y 90  translate [-post * 8 - 4, 0, 4.6] }
+    object Head('neutral white LED', 4.4) { translate [-post * 8 - 4, 5.73, 2.86] }
+}
+
+// -- The cars, the same three under each -----------------------------------------------------------
+
+object Car(4.4, 'summer', 0) { rotate Y 180  translate [7.2, 0, 2.2] }
+object Car(4.5, 'summer', 2) { rotate Y 180  translate [12.2, 0, 2.2] }
+object Car(4.5, 'summer', 1) { rotate Y 180  translate [17.2, 0, 2.2] }
+object Car(4.4, 'summer', 0) { rotate Y 180  translate [-3.2, 0, 2.2] }
+object Car(4.5, 'summer', 2) { rotate Y 180  translate [-8.2, 0, 2.2] }
+object Car(4.5, 'summer', 1) { rotate Y 180  translate [-13.2, 0, 2.2] }

@@ -257,6 +257,74 @@ come out close — within a percent or so on most paints — but the glow is wha
 The larger difference is the one any spectral render makes: a warm lamp on a blue paint keeps more of
 the paint's blue than red, green and blue arithmetic allows.
 
+### Named Lamps
+
+Not every lamp is something hot glowing.  A street lamp, a fluorescent tube and an LED make their
+light another way, and give it in shapes no temperature has: a sodium lamp nearly all of it in a hump
+about one yellow, a fluorescent tube mercury's few sharp lines over a phosphor's humps, a white LED a
+blue spike and a broad yellow hump.  A light may name the lamp it is:
+
+```
+point light {
+    location [0, 6, 0]
+    lamp 'high pressure sodium'
+}
+```
+
+![The same eight paints under six lamps](images/figures/light-named-lamps.png)
+
+The same eight paints in six bays, each lit by one lamp, with the picture balanced for none of them:
+from the left a glow at 2700 K, a warm white LED, a triphosphor fluorescent tube, high pressure
+sodium, low pressure sodium and low pressure mercury.  The glow and the LED, of about the same color,
+show the paints alike.  Under high pressure sodium every paint is a shade of orange and the blue is
+gone; under low pressure sodium every paint is the same yellow, only lighter or darker, which is what
+light of one wavelength does; under mercury the greens stand out and the reds are all but black.  The
+scene is [`docs/examples/lights/named-lamps.igl`](examples/lights/named-lamps.igl).
+
+| Lamp | What it is | Its color |
+| --- | --- | --- |
+| `'low pressure sodium'` | The deep yellow lamps of a motorway or an old street, nearly all their light at sodium's yellow. | A pure yellow. |
+| `'high pressure sodium'` | The orange street lamp of the last fifty years. | About 1900 K. |
+| `'enhanced high pressure sodium'` | Sodium made whiter, for shop fronts and town centers. | About 2500 K. |
+| `'low pressure mercury'` | Mercury's own glow, its violet, blue, green and yellow lines and nothing between. | Blue-violet. |
+| `'warm metal halide'` | A warm floodlight or shop light. | About 3200 K. |
+| `'metal halide'` | A sports ground's or a car park's floodlight. | About 4000 K. |
+| `'fluorescent'` | The cool white tube of an office ceiling. | About 4200 K. |
+| `'warm white fluorescent'` | A warm white tube. | About 2900 K. |
+| `'daylight fluorescent'` | A tube made to stand in for daylight, its phosphors broad. | About 6500 K. |
+| `'triphosphor fluorescent'` | A modern tube of three narrow phosphors, red, green and blue. | About 4000 K. |
+| `'warm white LED'` | A household LED bulb. | About 3000 K. |
+| `'neutral white LED'` | The white of a relit street. | About 4100 K. |
+| `'cool white LED'` | A cool LED panel. | About 5100 K. |
+| `'daylight LED'` | A daylight LED. | About 6600 K. |
+| `'RGB LED'` | A lamp of three colored chips, made white between them. | About 2800 K. |
+
+A name is found whatever its case.  The CIE's own names work as well, for every lamp it
+tabulates: fluorescent tubes `'FL1'` to `'FL12'` (or by their old names, `'F1'` to `'F12'`) and
+`'FL3.1'` to `'FL3.15'`, high pressure lamps `'HP1'` to `'HP5'`, and LEDs `'LED-B1'` to `'LED-B5'`,
+`'LED-BH1'`, `'LED-RGB1'`, `'LED-V1'` and `'LED-V2'`.
+
+**Only a [spectral](context.md#spectral-light) render shows the difference.**  In red, green and blue
+a lamp is its color: a sodium lamp is an orange like any other, and a red shop front under it stays a
+red no sodium street shows.  Carried wavelength by wavelength, the light is the lamp's own, and the
+paints come out as they would under it.  A lamp is held at a brightest channel of one, as a
+temperature is, and `brightness` turns it up; a light is given a temperature or a lamp, not both,
+and written beside a color, the lamp wins, as a temperature does.
+
+**`lamp('name')` is the color of a lamp's light**, as `kelvin` is a glow's, for what glows of a lamp
+without being its light: a fluorescent tube, the lens of a street lamp.  A spectral render turns it
+into a smooth spectrum as it does any color, so it is the light that carries the lamp's own.  A picture
+may be [balanced](context.md#white-balance) for a lamp, too: `white balance 'neutral white LED'`.
+
+The fluorescent tubes, the high pressure lamps and the LEDs are the CIE's measurements, from CIE
+015:2018, which the CIE publishes under the Creative Commons Attribution-ShareAlike 4.0 license; they
+are kept unchanged, under that license, in [`Data/CIE`](../Data/CIE/README.md).  Low pressure sodium
+and mercury are built from the strong lines of sodium and of mercury in NIST's *Handbook of Basic
+Atomic Spectroscopic Data*.  A mercury street lamp runs at high pressure, which makes it bluish white,
+and no measured table of one is published openly, so it is not among them.  The gallery's
+[A Street Changing Its Lamps](../gallery/Local/lights/a-street-changing-its-lamps.igl) is a street
+halfway from sodium to LEDs.
+
 ### Fading With Distance
 
 Light spreads.  A lamp throwing out a certain amount of it scatters that over a sphere which grows as

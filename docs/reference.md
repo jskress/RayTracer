@@ -69,7 +69,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `azimuth` | `physical sky`: which way round the sun lies, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `back` | With `align`, names the `+Z` edge. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `background` | Sets the sky, a pigment, seen where no ray hits a surface. | [Scene Files](scene-files.md#background) |
-| `balance` | Context: `white balance`, the temperature that comes out white. | [Context](context.md#white-balance) |
+| `balance` | Context: `white balance`, the temperature, or the lamp, whose light comes out white. | [Context](context.md#white-balance) |
 | `banded` | Pigment map qualifier: step between entries rather than blend. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `banked` | `along`: leaning into a bend as a rider would feel to be up, by the speed and the curvature. | [Along a Spline](animation.md#along-a-spline) |
 | `baseline` | Text layout: sit the block on the first line's baseline. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
@@ -264,6 +264,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `kerning` | Text: a block of kerning pairs. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `keys` | A value given at moments, called with the time: `Lift = keys { 0: 0  2: 3 ease out }`. | [Keys](animation.md#keys) |
 | `kill` | Grown tree: how near a twig comes before a point is used up. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
+| `lamp` | Light: the named lamp whose light it gives, a sodium street lamp's, a fluorescent tube's.  Also the function `lamp('name')`, the color of a lamp's light. | [Named Lamps](lights.md#named-lamps) |
 | `lathe` | Surface: a profile spun about the Y axis. | [Advanced Surfaces](advanced-surfaces.md#lathe) |
 | `lay` | Rope: how far along it a strand goes in one turn about it; negative, the strands turn the other way. | [Rope](advanced-surfaces.md#rope) |
 | `layer` | Pigment: stack pigments, the front ones showing through where clear. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering) |
@@ -531,7 +532,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `weathering` | Context: `weathering samples`, how many directions `crevices` and `edges` look about in. | [Context](context.md#weathering-samples) |
 | `weight` | Field: how often one of the things it is filled with is picked against the others. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `wheelbase` | `along`: ride on two places that far apart, both on the spline, as a rigid vehicle does. | [Along a Spline](animation.md#along-a-spline) |
-| `white` | Context: `white balance`, the temperature that comes out white. | [Context](context.md#white-balance) |
+| `white` | Context: `white balance`, the temperature, or the lamp, whose light comes out white. | [Context](context.md#white-balance) |
 | `whole` | Fracture: its pieces are whole cells, kept where their seeds lie inside the solid, never cut by it. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `width` | Context: image width in pixels.  Also a ribbon's or strand's width at a point, and a strand's all along a spline.  A chain's links: how wide each is outside.  Saddle or swells: how far it reaches along X.  In a shape grammar's rules, the scope's width. | [Context](context.md#image-size), [Ribbon](advanced-surfaces.md#ribbon), [Strand](advanced-surfaces.md#strand), [Chain](advanced-surfaces.md#chain), [Saddle](surfaces.md#saddle), [Swells](surfaces.md#swells), [Shape Grammar](advanced-surfaces.md#shape-grammar) |
 | `wind` | Context: how the air moves, dragging bodies and swarms with it; still unless said. | [Bodies](animation.md#bodies) |
@@ -1002,16 +1003,16 @@ or vectors; ask for a form that does not exist and the error names the ones that
 | | | | |
 | --- | --- | --- | --- |
 | `abs` | `cross` | `log` | `round` |
-| `acos` | `distance` | `log10` | `sign` |
-| `asin` | `dot` | `magnitude` | `sin` |
-| `atan` | `exp` | `max` | `sinh` |
-| `atan2` | `floor` | `min` | `smoothstep` |
-| `cbrt` | `headingAlong` | `mod` | `sqrt` |
-| `ceil` | `item` | `noise` | `tan` |
-| `clamp` | `kelvin` | `normalize` | `tanh` |
-| `cos` | `length` | `pointAlong` | `toDegrees` |
-| `cosh` | `lerp` | `pow` | `trunc` |
-| `count` | `list` | `random` |  |
+| `acos` | `distance` | `list` | `random` |
+| `asin` | `dot` | `log10` | `sign` |
+| `atan` | `exp` | `magnitude` | `sin` |
+| `atan2` | `floor` | `max` | `sinh` |
+| `cbrt` | `headingAlong` | `min` | `smoothstep` |
+| `ceil` | `item` | `mod` | `sqrt` |
+| `clamp` | `kelvin` | `noise` | `tan` |
+| `cos` | `lamp` | `normalize` | `tanh` |
+| `cosh` | `length` | `pointAlong` | `toDegrees` |
+| `count` | `lerp` | `pow` | `trunc` |
 
 `pointAlong` and `headingAlong` take a spline and a share of its length — where along it that lies, and which way
 it runs there — and `length` takes a spline as well as a vector; see [Along a Spline](animation.md#along-a-spline).

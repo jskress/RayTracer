@@ -2,6 +2,6 @@ railroad-ebnf-beta
 title "Point light properties"
 
 property = "named" name | "location" point
-         | "color" color | "temperature" number | "brightness" number
+         | "color" color | "temperature" number | "lamp" string | "brightness" number
          | "fade" ( "distance" | "power" ) number
          | "profile" filename [ "turned" angle ] | "point" "at" point ;

@@ -86,7 +86,7 @@ public partial class LanguageParser
             'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'glare', 'gradient', 'granite', 'grime',
             'grain', 'grayscale', 'group', 'hair', 'hanging', 'height', 'heightfield', 'hexagon', 'hole', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'intel', 'interior', 'intersection',
-            'in', 'ior', 'isosurface', 'italic', 'jitter', 'joining', 'kern', 'kerning', 'kill', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
+            'in', 'ior', 'isosurface', 'italic', 'jitter', 'joining', 'kern', 'kerning', 'kill', 'lamp', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'loose', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metal', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'neutral', 'no', 'noise', 'none', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
@@ -401,7 +401,7 @@ public partial class LanguageParser
         {
             color > depth ?? 'Expecting "depth" to follow "color" here.' > _expression
         }
-        // What the camera is balanced for: the temperature of the glow that should come out white.
+        // What the camera is balanced for: the temperature of the glow that should come out white, or a lamp's name.
         whiteBalanceClause:
         {
             white > balance ?? 'Expecting "balance" to follow "white" here.' > _expression
@@ -481,7 +481,7 @@ public partial class LanguageParser
         }
         // What light a light gives: a color, or the temperature of something glowing, and either way
         // how bright.
-        lightColorClause: { [ color | temperature | brightness ] > _expression }
+        lightColorClause: { [ color | temperature | lamp | brightness ] > _expression }
         directionClause: { direction > _expression }
         pointAtClause:
         {

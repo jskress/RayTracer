@@ -199,9 +199,10 @@ public class ContextUpdater : Instruction
     public Resolver<bool> SpectralResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the temperature the picture is balanced to show as white.
+    /// This property holds the resolver for what the picture is balanced to show as white: a temperature, or a lamp's
+    /// name.
     /// </summary>
-    public Resolver<double> WhiteBalanceResolver { get; set; }
+    public Resolver<object> WhiteBalanceResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for how deeply the sampler looks into a pixel.
@@ -267,7 +268,12 @@ public class ContextUpdater : Instruction
         WindResolver.AssignTo(context, target => target.Wind, context, variables);
 
         if (WhiteBalanceResolver is not null)
-            context.WhiteBalance = WhiteBalanceResolver.Resolve(context, variables);
+        {
+            object balance = WhiteBalanceResolver.Resolve(context, variables);
+
+            context.WhiteBalanceLamp = balance as string;
+            context.WhiteBalance = balance is string ? null : Convert.ToDouble(balance);
+        }
 
         // These land on the context's own aliasing option rather than on the context, since asking
         // for either of them is what asks for the sampler at all.

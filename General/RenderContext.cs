@@ -200,6 +200,19 @@ public class RenderContext
     public double? WhiteBalance { get; set; }
 
     /// <summary>
+    /// This property holds the name of the lamp whose light the picture is balanced to show as white, or <c>null</c>
+    /// to balance for a temperature or for nothing.  See <see cref="RayTracer.Graphics.WhiteBalance"/>.
+    /// </summary>
+    public string WhiteBalanceLamp { get; set; }
+
+    /// <summary>
+    /// This property holds the balance the picture is developed by, if it has one: for a temperature or a lamp.
+    /// </summary>
+    internal WhiteBalance Balance => WhiteBalance is { } kelvin ? new WhiteBalance(kelvin)
+        : WhiteBalanceLamp is { } lamp ? new WhiteBalance(lamp)
+        : null;
+
+    /// <summary>
     /// This property holds the antialiasing option for the ray tracer.
     /// </summary>
     public AliasingOption AntiAliasing { get; set; } = new();
@@ -422,7 +435,12 @@ public class RenderContext
         if (options.Spectral)
             Spectral = true;
 
-        WhiteBalance = options.WhiteBalance ?? WhiteBalance;
+        // A temperature given on the command line takes the place of any balance the scene said, a lamp's included.
+        if (options.WhiteBalance is { } kelvin)
+        {
+            WhiteBalance = kelvin;
+            WhiteBalanceLamp = null;
+        }
         Exposure = options.Exposure ?? Exposure;
 
         if (options.FilmCurve is { } curve)

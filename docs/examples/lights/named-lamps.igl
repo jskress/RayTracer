@@ -1,0 +1,65 @@
+// The same eight paints in six bays, each bay lit by one lamp, carried wavelength by wavelength: from the left,
+// a glow at 2700 K, a household bulb's; a warm white LED; a triphosphor fluorescent tube; high pressure sodium;
+// low pressure sodium; and low pressure mercury.  The picture is balanced for none of them, so each casts its own
+// color as well as showing the paints its own way.
+context {
+    parallel pixel scanner
+    spectral
+    // Every lamp lends every surface ambient light whatever stands between them, which would put the mercury
+    // lamp's blue into the sodium's bay.
+    scale ambient by 0
+}
+
+orthographic camera {
+    location [0, 1.4, -15]
+    look at [0, 0.75, 0.5]
+    field of view 31
+}
+
+background [0.02, 0.02, 0.025]
+
+Wall = material { pigment [0.55, 0.55, 0.53]  specular 0 }
+
+// One paint, at its place on a bay's back wall.
+primitive Patch(paint, column, row) -> group {
+    return group {
+        cube {
+            scale [0.11, 0.11, 0.01]
+            translate [(column - 1.5) * 0.25, 1.18 - row * 0.3, 1.07]
+            material { pigment paint  specular 0 }
+        }
+    }
+}
+
+// One bay: a floor, a back wall with the eight paints on it in two rows, and a gray ball.
+primitive Bay() -> group {
+    return group {
+        cube { scale [0.62, 0.02, 1.1]  translate [0, -0.02, 0]  material Wall }
+        cube { scale [0.62, 0.8, 0.02]  translate [0, 0.8, 1.1]  material Wall }
+        object Patch([0.70, 0.08, 0.08], 0, 0)
+        object Patch([0.85, 0.45, 0.10], 1, 0)
+        object Patch([0.85, 0.80, 0.15], 2, 0)
+        object Patch([0.15, 0.55, 0.20], 3, 0)
+        object Patch([0.10, 0.60, 0.70], 0, 1)
+        object Patch([0.10, 0.20, 0.75], 1, 1)
+        object Patch([0.50, 0.15, 0.60], 2, 1)
+        object Patch([0.85, 0.85, 0.85], 3, 1)
+        sphere { scale 0.2  translate [0, 0.2, 0.1]  material { pigment [0.8, 0.8, 0.8]  specular 0 } }
+    }
+}
+
+for bay in [0, 5] {
+    object Bay() { translate [(bay - 2.5) * 1.3, 0, 0] }
+
+    // A wall between this bay and the next, so that each is lit by its own lamp alone.
+    cube { scale [0.02, 0.82, 1.12]  translate [(bay - 2) * 1.3, 0.82, 0]  material Wall }
+}
+
+cube { scale [0.02, 0.82, 1.12]  translate [-3.9, 0.82, 0]  material Wall }
+
+point light { location [-3.25, 1.5, -0.9]  temperature 2700 }
+point light { location [-1.95, 1.5, -0.9]  lamp 'warm white LED' }
+point light { location [-0.65, 1.5, -0.9]  lamp 'triphosphor fluorescent' }
+point light { location [0.65, 1.5, -0.9]  lamp 'high pressure sodium' }
+point light { location [1.95, 1.5, -0.9]  lamp 'low pressure sodium' }
+point light { location [3.25, 1.5, -0.9]  lamp 'low pressure mercury' }
