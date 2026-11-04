@@ -91,7 +91,7 @@ public partial class LanguageParser
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metal', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'neutral', 'no', 'noise', 'none', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
-            'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
+            'sdf', 'julia', 'iterations', 'c', 'mandelbulb', 'mandelbox', 'menger', 'outer', 'fold', 'detail', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'portal', 'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reach', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -1100,6 +1100,44 @@ public partial class LanguageParser
         [
             { c > _expression } | { iterations > _expression } |
             { accuracy > _expression } | surfaceEntryClause
+        ]
+        startMandelbulbClause:
+        {
+            mandelbulb > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "mandelbulb" here.'
+        }
+        mandelbulbEntryClause:
+        [
+            { power > _expression } | { iterations > _expression } | { detail > _expression } |
+            { accuracy > _expression } | surfaceEntryClause
+        ]
+        startMandelboxClause:
+        {
+            mandelbox > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "mandelbox" here.'
+        }
+        mandelboxEntryClause:
+        [
+            { factor > _expression } |
+            { inner > radius ?? 'Expecting "radius" to follow "inner" here.' > _expression } |
+            { outer > radius ?? 'Expecting "radius" to follow "outer" here.' > _expression } |
+            { fold > _expression } | { iterations > _expression } | { detail > _expression } |
+            { accuracy > _expression } | surfaceEntryClause
+        ]
+        startMengerClause:
+        {
+            menger > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "menger" here.'
+        }
+        mengerEntryClause:
+        [
+            { iterations > _expression } | { accuracy > _expression } | surfaceEntryClause
         ]
         startSuperellipsoidClause:
         {
@@ -2110,6 +2148,9 @@ public partial class LanguageParser
             startParaboloidClause     => 'paraboloid' |
             startSdfClause            => 'sdf' |
             startJuliaClause          => 'julia' |
+            startMandelbulbClause     => 'mandelbulb' |
+            startMandelboxClause      => 'mandelbox' |
+            startMengerClause         => 'menger' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -2204,6 +2245,9 @@ public partial class LanguageParser
             startParaboloidClause     => 'paraboloid' |
             startSdfClause            => 'sdf' |
             startJuliaClause          => 'julia' |
+            startMandelbulbClause     => 'mandelbulb' |
+            startMandelboxClause      => 'mandelbox' |
+            startMengerClause         => 'menger' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -2273,6 +2317,9 @@ public partial class LanguageParser
             startParaboloidClause     => 'paraboloid' |
             startSdfClause            => 'sdf' |
             startJuliaClause          => 'julia' |
+            startMandelbulbClause     => 'mandelbulb' |
+            startMandelboxClause      => 'mandelbox' |
+            startMengerClause         => 'menger' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -2405,6 +2452,7 @@ public partial class LanguageParser
                 startParametricClause |
                 startParaboloidClause | startHyperboloidClause | startSaddleClause |
                 startQuadricClause | startSdfClause | startJuliaClause |
+                startMandelbulbClause | startMandelboxClause | startMengerClause |
                 startObjectFileClause | startObjectClause |
                 startCsgClause | startGroupClause
             ]
@@ -2434,7 +2482,7 @@ public partial class LanguageParser
             [
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
-                isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
+                isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia | mandelbulb | mandelbox | menger |
                 patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | loft | rope | chain | grown | fracture | shapes | swarm | joint | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
@@ -2540,6 +2588,9 @@ public partial class LanguageParser
             startParaboloidClause     => 'HandleStartParaboloidClause' |
             startSdfClause            => 'HandleStartSdfClause' |
             startJuliaClause          => 'HandleStartJuliaClause' |
+            startMandelbulbClause     => 'HandleStartMandelbulbClause' |
+            startMandelboxClause      => 'HandleStartMandelboxClause' |
+            startMengerClause         => 'HandleStartMengerClause' |
             startHyperboloidClause    => 'HandleStartHyperboloidClause' |
             startSaddleClause         => 'HandleStartSaddleClause' |
             startQuadricClause        => 'HandleStartQuadricClause' |

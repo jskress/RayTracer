@@ -1564,6 +1564,114 @@ a function can now say for itself — `noise(p) + noise(2p) / 2 + noise(4p) / 4`
 The complete scene is
 [`docs/examples/advanced/isosurface.igl`](examples/advanced/isosurface.igl).
 
+### Mandelbulb
+
+What the Mandelbrot set becomes when the plane is made space: the points that stay bounded when
+`z → zⁿ + p` is applied over and over, `p` being the point itself and the power taken in White and
+Nylander's way — the length to the nth power, both angles of the point's direction multiplied by n.
+
+```
+mandelbulb {
+    power 8
+    iterations 10
+}
+```
+
+![A Mandelbulb, a Mandelbox and a Menger sponge](images/figures/adv-fractals.png)
+
+From the left, a Mandelbulb of the eighth power, a [Mandelbox](#mandelbox) of factor two, and a
+[Menger sponge](#menger-sponge) cut four times.  The scene is
+[`docs/examples/advanced/fractals.igl`](examples/advanced/fractals.igl).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/mandelbulbClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/mandelbulbClause.svg">
+  <img alt="A Mandelbulb" src="images/advanced/mandelbulbClause.svg">
+</picture>
+
+| Property | What it does |
+| --- | --- |
+| `power` | The power the point is raised to each round, at least two.  Eight is the bulb everyone knows; two a blob with a seam; higher, more lobes and finer. |
+| `iterations` | How many rounds before a point that has not run away belongs.  Twelve by default. |
+| `detail` | How near the set the surface stands, the finest detail it shows: two thousandths by default. |
+| `accuracy` | How closely a crossing is pinned down. |
+
+Like the [Julia set](#julia) it is found by marching, its distance estimated rather than solved for.
+It stands up the Y axis, its pole pointing up and its ring of lobes lying flat, and lies within a ball
+of radius two, so it needs no `bounded by`.
+
+**The surface stands a little off the set itself**, where the estimate of the distance to it falls to
+`detail`.  The set's own edge is crinkled at every scale, and drawn exactly, every pixel's facing and
+shadow fell at random among crinkles far finer than the pixel: a speckled dust.  Standing off, the
+crinkles finer than the detail are smoothed away, and the surface's facing is looked at over half the
+detail.  For a close look, make the detail smaller and the iterations more; for a bulb seen across a
+room, larger.
+
+### Mandelbox
+
+Tom Lowe's fractal of folds: each round folds the point back into a box, folds it back through a
+sphere, magnifies it and adds the point as it started.
+
+```
+mandelbox {
+    factor 2
+    iterations 12
+}
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/mandelboxClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/mandelboxClause.svg">
+  <img alt="A Mandelbox" src="images/advanced/mandelboxClause.svg">
+</picture>
+
+| Property | What it does |
+| --- | --- |
+| `factor` | How much each round magnifies — the Mandelbox's "scale", named so here because `scale` is the transform.  More than one or less than minus one; two by default.  Two is a box of boxes with windows in every face; -1.5, the best known, a lacework of towers and arches. |
+| `fold` | How far a coordinate may go before the box fold reflects it back.  One by default. |
+| `inner radius` | Inside this the sphere fold magnifies by its greatest.  A half by default. |
+| `outer radius` | Inside this the sphere fold turns a point inside out.  One by default, and more than the inner radius. |
+| `iterations` | How many rounds.  Twelve by default. |
+| `detail` | How near the set the surface stands: a hundredth by default. |
+| `accuracy` | How closely a crossing is pinned down. |
+
+**The box fold** reflects a coordinate that has passed the fold back inside — past one, 1.3 becomes
+0.7 — and **the sphere fold** turns a point between the two radii inside out about the outer one, and
+magnifies one inside the inner radius as much as one at the inner radius would be, which is what puts a
+finer copy of the whole in every hollow.  It knows how far it reaches: for a factor above one, a cube
+of half-width `2 fold (factor + 1) / (factor - 1)` — six, for the defaults — and for one below minus
+one, `2 fold`.  Its surface stands off the set as a [Mandelbulb's](#mandelbulb) does, and for the same
+reason; the factor two box above is drawn at a detail of 0.03, so that its lace shows at that size.
+
+### Menger Sponge
+
+A cube cut into twenty-seven, the middle one and the middle of each face taken out, and the same done
+to each of the twenty left, and to theirs:
+
+```
+menger {
+    iterations 4
+}
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/mengerClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/mengerClause.svg">
+  <img alt="A Menger sponge" src="images/advanced/mengerClause.svg">
+</picture>
+
+| Property | What it does |
+| --- | --- |
+| `iterations` | How many times the cube is cut.  Four by default; none is the plain cube. |
+| `accuracy` | How closely a crossing is pinned down. |
+
+The sponge is the cube from -1 to 1 on every axis.  Each cut keeps twenty of every twenty-seven, so
+four cuts leave 30% of the cube, and divides the smallest holes by three: four make them an
+eighty-first of the cube across.  **Its distance is worked out from its shape**, not estimated from an
+iteration — the distance to the cube, and to each cut's cross of square tunnels, the greatest of them —
+so the march takes long strides through the holes, and the surface is the sponge's own, with no detail
+to choose.
+
 ### Parametric
 
 The other way of writing a shape down as arithmetic.  An [isosurface](#isosurface) says where a

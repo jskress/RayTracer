@@ -136,6 +136,15 @@ public partial class LanguageParser
                 case "julia":
                     resolver.SurfaceResolvers.Add(ParseJuliaClause(clause));
                     break;
+                case "mandelbulb":
+                    resolver.SurfaceResolvers.Add(ParseMandelbulbClause(clause));
+                    break;
+                case "mandelbox":
+                    resolver.SurfaceResolvers.Add(ParseMandelboxClause(clause));
+                    break;
+                case "menger":
+                    resolver.SurfaceResolvers.Add(ParseMengerClause(clause));
+                    break;
 
                 case "hyperboloid":
                     resolver.SurfaceResolvers.Add(ParseHyperboloidClause(clause));

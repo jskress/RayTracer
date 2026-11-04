@@ -21,13 +21,11 @@ background [0.02, 0.02, 0.025]
 Wall = material { pigment [0.55, 0.55, 0.53]  specular 0 }
 
 // One paint, at its place on a bay's back wall.
-primitive Patch(paint, column, row) -> group {
-    return group {
-        cube {
-            scale [0.11, 0.11, 0.01]
-            translate [(column - 1.5) * 0.25, 1.18 - row * 0.3, 1.07]
-            material { pigment paint  specular 0 }
-        }
+primitive Patch(paint, column, row) -> cube {
+    return cube {
+        scale [0.11, 0.11, 0.01]
+        translate [(column - 1.5) * 0.25, 1.18 - row * 0.3, 1.07]
+        material { pigment paint  specular 0 }
     }
 }
 

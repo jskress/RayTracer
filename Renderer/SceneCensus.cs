@@ -83,6 +83,9 @@ public class SceneCensus
     {
         [typeof(BicubicPatch)] = "patch",
         [typeof(JuliaFractal)] = "julia",
+        [typeof(Mandelbulb)] = "mandelbulb",
+        [typeof(Mandelbox)] = "mandelbox",
+        [typeof(MengerSponge)] = "menger",
         [typeof(LSystem)] = "L-system",
         [typeof(TextSolid)] = "text"
     };

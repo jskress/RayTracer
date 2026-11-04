@@ -113,6 +113,12 @@ public partial class LanguageParser
                 return ParseSdfClause(clause);
             case JuliaFractalResolver:
                 return ParseJuliaClause(clause);
+            case MandelbulbResolver:
+                return ParseMandelbulbClause(clause);
+            case MandelboxResolver:
+                return ParseMandelboxClause(clause);
+            case MengerSpongeResolver:
+                return ParseMengerClause(clause);
             case HyperboloidResolver:
                 return ParseHyperboloidClause(clause);
             case SaddleResolver:
