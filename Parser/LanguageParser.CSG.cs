@@ -119,6 +119,9 @@ public partial class LanguageParser
                 case "menger":
                     resolver.SurfaceResolvers.Add(ParseMengerClause(clause));
                     break;
+                case "tiles":
+                    resolver.SurfaceResolvers.Add(ParseTilesClause(clause));
+                    break;
 
                 case "hyperboloid":
                     resolver.SurfaceResolvers.Add(ParseHyperboloidClause(clause));

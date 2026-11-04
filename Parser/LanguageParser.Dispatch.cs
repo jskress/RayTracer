@@ -33,6 +33,7 @@ public partial class LanguageParser
             .On(nameof(HandleStartMandelbulbClause), HandleStartMandelbulbClause)
             .On(nameof(HandleStartMandelboxClause), HandleStartMandelboxClause)
             .On(nameof(HandleStartMengerClause), HandleStartMengerClause)
+            .On(nameof(HandleStartTilesClause), HandleStartTilesClause)
             .On(nameof(HandleStartHyperboloidClause), HandleStartHyperboloidClause)
             .On(nameof(HandleStartSaddleClause), HandleStartSaddleClause)
             .On(nameof(HandleStartQuadricClause), HandleStartQuadricClause)

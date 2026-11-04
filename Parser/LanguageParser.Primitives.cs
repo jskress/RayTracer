@@ -171,7 +171,16 @@ public partial class LanguageParser
     /// <returns>The resolver for this call.</returns>
     private ISurfaceResolver ParseCall(Clause clause)
     {
-        Token nameToken = clause.Tokens[1];
+        return ParseCallOf(clause.Tokens[1]);
+    }
+
+    /// <summary>
+    /// This method reads a call of one of the scene's primitives, its name already read and its arguments to come.
+    /// </summary>
+    /// <param name="nameToken">The primitive's name.</param>
+    /// <returns>The resolver for the call.</returns>
+    private ISurfaceResolver ParseCallOf(Token nameToken)
+    {
         string name = nameToken.Text;
 
         if (!_primitives.TryGetValue(name, out UserPrimitive primitive))
@@ -247,6 +256,7 @@ public partial class LanguageParser
             "mandelbulb" => ParseMandelbulbClause(clause),
             "mandelbox" => ParseMandelboxClause(clause),
             "menger" => ParseMengerClause(clause),
+            "tiles" => ParseTilesClause(clause),
             "hyperboloid" => ParseHyperboloidClause(clause),
             "saddle" => ParseSaddleClause(clause),
             "quadric" => ParseQuadricClause(clause),
@@ -374,6 +384,8 @@ public partial class LanguageParser
                 "mandelboxEntryClause", HandleMandelboxEntryClause, validate: false),
             "menger" => ParseObjectResolver<MengerSpongeResolver>(
                 "mengerEntryClause", HandleMengerEntryClause, validate: false),
+            "tiles" => ParseObjectResolver<TileGridResolver>(
+                "tilesEntryClause", HandleTilesEntryClause, validate: false),
             "hyperboloid" => ParseObjectResolver<HyperboloidResolver>(
                 "extrudedSurfaceEntryClause", HandleHyperboloidEntryClause, validate: false),
             "saddle" => ParseObjectResolver<SaddleResolver>(
@@ -473,6 +485,7 @@ public partial class LanguageParser
             "mandelbulb" => "startMandelbulbClause",
             "mandelbox" => "startMandelboxClause",
             "menger" => "startMengerClause",
+            "tiles" => "startTilesClause",
             "hyperboloid" => "startHyperboloidClause",
             "saddle" => "startSaddleClause",
             "quadric" => "startQuadricClause",

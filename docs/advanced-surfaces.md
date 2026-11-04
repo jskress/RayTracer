@@ -2952,3 +2952,84 @@ wherever it stands — and renders as fast as any group of boxes does.  A rule t
 hundred deep is taken to be going round in a circle, and refused.
 
 The complete scene is [`docs/examples/advanced/shapes.igl`](examples/advanced/shapes.igl).
+
+### Tiles
+
+A grid filled with tiles that fit together, by **wave function collapse** (Maxim Gumin's, 2016, in its
+"simple tiled" form).  Each tile says what stands in its cell and what lies on each of its sides, and two
+tiles stand side by side only where the sides they turn to each other fit.  Nothing says where any tile
+goes: every cell starts able to hold any of them, and the grid is laid by settling, again and again, the
+cell with the fewest choices left — drawing one by weight — and ruling out whatever that leaves unable to
+fit next door, and next door to that.  What comes out agrees everywhere: a road runs on into a road, a pipe
+into a pipe, a wall into a wall.
+
+![One set of tiles laid three times, with three seeds: roads, houses fronting them, and yards](images/figures/adv-tiles.png)
+
+```
+tiles {
+    size [7, 1, 7]
+    cell 2
+    edge 'yard'
+    fit 'curb' to 'frontage'
+
+    tile { Street(1, 0, 1, 0)  right 'road'  left 'road'  back 'curb'  front 'curb'  turns  weight 4 }
+    tile { Street(1, 1, 0, 0)  right 'road'  back 'road'  left 'curb'  front 'curb'  turns  weight 2 }
+    tile { House()  front 'frontage'  back 'yard'  left 'yard'  right 'yard'  turns  weight 4 }
+    tile { Yard()  sides 'yard'  weight 1.5 }
+    ...
+    with seed 2
+}
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/tilesClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/tilesClause.svg">
+  <img alt="Tiles" src="images/advanced/tilesClause.svg">
+</picture>
+
+**`size`** is how many cells the grid has across X, up Y and along Z — `[11, 1, 11]` is one layer, a plan;
+more than one up stacks layers.  **`cell`** is how big a cell is, a number for a cube or a vector (one
+unless you say).  The grid stands with its middle over the origin and its first layer on the ground, and
+each tile stands with its own origin at the middle of its cell's floor — so a tile is drawn about its
+origin, a cell wide, as a primitive draws a thing.
+
+**A tile** holds what stands in its cell: a surface's name, a call of a primitive, or **`nothing`**, for a
+cell left empty — the air over a building's roof in a grid of several layers.  Each tile is built once and
+stood in every cell it is laid in, shared where it can be, so a grid costs what its tiles cost and not what
+its cells would.  It also means a tile laid in fifty cells is fifty of one thing: for variety, write
+several tiles with the same sides — five rows of houses in place of one.
+
+**What lies on a tile's sides** is a word apiece: **`front`** (its `-Z` side), **`back`** (`+Z`), **`left`**
+(`-X`), **`right`** (`+X`), **`top`** and **`bottom`**, and **`sides`** for all four upright ones at once.  A
+side left unsaid fits anything.  **`turns`** lets the tile be laid in any of four quarter turns about Y, its
+sides turning with it, as `rotate Y 90` turns a thing — its right side coming around to face front — so a
+road is written once, along X, and laid along Z as well.  **`weight`** is how often the tile is drawn
+against the others (one unless you say); a tile that turns shares its weight among its four turns, so
+turning a tile does not make it commoner.
+
+**How sides fit.**  Two sides fit when they say the same thing, or when either says nothing.  That is
+symmetric, and sometimes too much so: a house's front said as `curb`, to meet a road's `curb`, as gladly
+meets another house's front, and two rows of houses stand face to face with no road between.  **`fit 'a' to
+'b'`** pairs two words to fit each other: a word in a pair fits only what it is paired with — itself only if
+it is paired with itself — so a road's `curb` meets a house's `frontage`, and a frontage never a frontage.
+Any number of pairs may be said; words in none fit themselves as before.
+
+**What lies outside.**  **`edge`** is what the outside of the grid presents to the tiles along its four
+sides, and **`above`** and **`below`** what it presents over the top layer and under the bottom one.  Unsaid,
+the outside fits anything.  An edge of `'yard'` keeps every road inside the grid, since a road's side
+cannot face it.
+
+**When it cannot be laid.**  A grid can be laid into a corner, a cell left with no tile that fits whatever
+its neighbors hold; it then starts again with fresh draws, up to **`tries`** times (100 unless you say).  A
+grid that runs out of tries is refused, as is one that no draw could lay at all — an outside no tile can
+face, or a cell ruled out before anything is drawn.  A tile set that leaves no tile for some arrangement of
+sides, such as a cell closed in by roads with no plot fronting four of them, will paint itself into
+corners often.  **`with seed s`** sets the draws: the same seed lays the same grid, and another seed another.
+
+**What it costs.**  Laying is done once, as the scene is read: a town of eleven by eleven cells, from
+seventeen tiles in fifty-three turns, is laid in a few thousandths of a second, and one of sixty-four by
+sixty-four in under a tenth.  What it laid is then a group of instances, which renders as any group does.
+
+The complete scene is [`docs/examples/advanced/tiles.igl`](examples/advanced/tiles.igl), and the gallery's
+`gallery/Local/towns/a-town-that-laid-itself-out.igl` lays a town of row houses, yards and greens with
+the roads and buildings libraries.

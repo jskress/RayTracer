@@ -70,6 +70,7 @@ public partial class LanguageParser
             "mandelbulb" => ParseMandelbulbClause(clause),
             "mandelbox" => ParseMandelboxClause(clause),
             "menger" => ParseMengerClause(clause),
+            "tiles" => ParseTilesClause(clause),
             "hyperboloid" => ParseHyperboloidClause(clause),
             "saddle" => ParseSaddleClause(clause),
             "quadric" => ParseQuadricClause(clause),

@@ -52,6 +52,7 @@ adv-grown.png|docs/examples/advanced/grown.igl|640|300
 adv-climbing.png|docs/examples/advanced/climbing.igl|640|300
 adv-fracture.png|docs/examples/advanced/fracture.igl|640|300
 adv-shapes.png|docs/examples/advanced/shapes.igl|640|300
+adv-tiles.png|docs/examples/advanced/tiles.igl|640|300
 anim-along.png|docs/examples/animation/along.igl|640|300
 anim-forces.png|docs/examples/animation/forces.igl|640|300
 anim-joints.png|docs/examples/animation/joints.igl|640|300

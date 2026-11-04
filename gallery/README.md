@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 179 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 180 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -1808,7 +1808,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Towns</b> &mdash; 11 images &middot; streets, buildings, and what runs through them</summary>
+<summary><b>Towns</b> &mdash; 12 images &middot; streets, buildings, and what runs through them</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1857,6 +1857,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/towns/a-street-at-the-edge-of-town.igl">A Street at the Edge of Town</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/towns/a-town-that-laid-itself-out.png">
+      <img alt="A Town That Laid Itself Out" height="120" src="Local/towns/a-town-that-laid-itself-out.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/towns/a-town-that-laid-itself-out.igl">A Town That Laid Itself Out</a>
     </td>
   </tr>
   <tr style="border: none;">

@@ -1,0 +1,80 @@
+// Tiles laid by wave function collapse: one set of tiles -- a road, a bend, a junction, a crossing, a house
+// and a yard -- laid three times with three seeds.  Every road runs on into a road, every house fronts one,
+// and nothing runs off the edge.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 36, -21]
+    look at [0, 0, 0.6]
+    field of view 61
+}
+
+background [0.66, 0.74, 0.84]
+
+point light { location [-30, 50, -40]  color [1, 0.97, 0.93] }
+point light { location [30, 15, -30]   color [0.30, 0.31, 0.35] }
+
+grass = material { pigment color [0.36, 0.50, 0.25]  specular 0 }
+asphalt = material { pigment color [0.16, 0.16, 0.18]  specular 0.1 }
+walls = material { pigment color [0.80, 0.74, 0.62]  specular 0.05 }
+roofs = material { pigment color [0.55, 0.25, 0.18]  specular 0.1 }
+leaves = material { pigment color [0.20, 0.38, 0.15]  specular 0 }
+
+// A cell is two across.  A road cell's road leaves by the sides flagged: right, back, left, front.
+primitive Street(r, b, l, f) -> group {
+    return group {
+        cube { material grass  scale [1, 0.05, 1] }
+        cube { material asphalt  scale [0.35, 0.06, 0.35] }
+        if (r == 1) { cube { material asphalt  scale [0.35, 0.06, 0.35]  translate X 0.65 } }
+        if (l == 1) { cube { material asphalt  scale [0.35, 0.06, 0.35]  translate X -0.65 } }
+        if (b == 1) { cube { material asphalt  scale [0.35, 0.06, 0.35]  translate Z 0.65 } }
+        if (f == 1) { cube { material asphalt  scale [0.35, 0.06, 0.35]  translate Z -0.65 } }
+    }
+}
+
+// A house fronting the road at -Z.
+primitive House() -> group {
+    return group {
+        cube { material grass  scale [1, 0.05, 1] }
+        cube { material walls  scale [0.55, 0.35, 0.4]  translate [0, 0.4, -0.3] }
+        intersection {
+            cube { material roofs  rotate X 45  scale [0.6, 0.33, 0.33] }
+            cube { material roofs  scale [0.6, 0.35, 0.45]  translate Y 0.35 }
+            translate [0, 0.75, -0.3]
+        }
+    }
+}
+
+primitive Yard() -> group {
+    return group {
+        cube { material grass  scale [1, 0.05, 1] }
+        sphere { material leaves  scale 0.45  translate [0.2, 0.55, 0.1] }
+    }
+}
+
+// The tiles, once, as a primitive; laid three times, a seed apiece.
+primitive Town(variant) -> tiles {
+    return tiles {
+        size [7, 1, 7]
+        cell 2
+        edge 'yard'
+        fit 'curb' to 'frontage'
+
+        tile { Street(1, 0, 1, 0)  right 'road'  left 'road'  back 'curb'  front 'curb'  turns  weight 4 }
+        tile { Street(1, 1, 0, 0)  right 'road'  back 'road'  left 'curb'  front 'curb'  turns  weight 2 }
+        tile { Street(1, 1, 1, 0)  right 'road'  back 'road'  left 'road'  front 'curb'  turns }
+        tile { Street(1, 1, 1, 1)  sides 'road'  weight 0.3 }
+        tile { House()  front 'frontage'  back 'yard'  left 'yard'  right 'yard'  turns  weight 4 }
+        tile { Yard()  sides 'yard'  weight 1.5 }
+        tile { Yard()  front 'frontage'  back 'yard'  left 'frontage'  right 'yard'  turns }
+        tile { Yard()  front 'frontage'  back 'frontage'  left 'yard'  right 'yard'  turns  weight 0.5 }
+        tile { Yard()  front 'frontage'  left 'frontage'  right 'frontage'  back 'yard'  turns  weight 0.5 }
+        tile { Yard()  sides 'frontage'  weight 0.2 }
+
+        with seed variant
+    }
+}
+
+object Town(1) { translate X -15.5 }
+object Town(2)
+object Town(3) { translate X 15.5 }
