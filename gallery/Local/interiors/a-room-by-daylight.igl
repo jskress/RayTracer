@@ -20,7 +20,13 @@
 //
 // **And the light goes on from there.**  The patches of sun on the boards and the rug are bright, and
 // what makes the room read as a room is the light they throw back up -- onto the ceiling over them, into
-// the corner behind the chair -- which is the bounced light, two bounces of it, gathered by the cache.
+// the corner behind the chair -- which is the bounced light, two bounces of it.
+//
+// **The bounced light is looked for in only sixteen directions a place, and the grain smoothed out.**  It was
+// gathered by the cache, in 2048 directions for each place the cache keeps and blended between them, which took
+// five times as long and left the walls faintly mottled, blotches no denoiser can tell from the plaster.  Sixteen
+// directions at every place leave grain instead, which is what a denoiser smooths: the same light over the room,
+// within a level in 255, and the walls even.
 
 context {
     parallel pixel scanner
@@ -28,8 +34,8 @@ context {
     antialiasing depth 1
     antialiasing threshold 0.3
     diffuse bounces 2
-    diffuse samples 2048
-    diffuse cache
+    diffuse samples 16
+    denoise
     info {
         title 'A Room by Daylight'
         author 'J. Stephen Kress'

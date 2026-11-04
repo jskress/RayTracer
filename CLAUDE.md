@@ -351,7 +351,7 @@ the settings and a cache of the last four grounds worn, keyed by a hash of the h
 animation wears once; the work in `Geometry/ErodingGround*.cs`) wears the sampled grid in the field's WORLD size (its
 X, Y, Z through its transforms and groups, `HeightField.SizeInTheWorld`; not an instance's) before any triangle,
 in that order: rivers -- stream power, Braun-Willett implicit, mouths first in Barnes' priority-flood order (a hollow
-filled a trillionth of the relief a step, `Rise`), water shared among lower neighbours by slope squared, rates from
+filled a trillionth of the relief a step, `Rise`), water shared among lower neighbors by slope squared, rates from
 areas and lengths in the world (reach x sqrt(A share) x width / run), a lake's bed (under its filled level) left
 alone, outlets the edge and the sea; then valley sides fall (`LetValleySidesFall`, a heap from the lowest) to no
 steeper than the angle of repose or what the slope was before any river cut (exempting crags from falling at all
@@ -745,6 +745,30 @@ finished pixel (`PixelToRayConverter.FalloffAt`) and, with the aperture open, st
 opening standing off by v x the place / half-diagonal -- the barrel's cat's eye (`Passes`; `PixelRenderer.Trace` skips
 them as no light, coverage averaged over those passed); `chromatic aberration c` resamples the finished canvas's red at
 1/(1 + c/2) and blue at 1/(1 - c/2) about the middle (`Core/ChromaticAberration.cs`), before the glare.
+
+Denoising (`context { denoise [intel | filter] }`, `--denoise best|intel|filter|off`, `RenderContext.Denoise`, a
+`DenoiseMethod`; off by default) smooths the finished canvas's light in `Camera.Render` after the scan and BEFORE
+chromatic aberration and glare.  `Denoiser.For` settles it before the first pixel: `best` is Intel's when
+`oidnDenoise` is on the PATH (`IntelDenoiser.ToolOn`, as `MovieFile.FfmpegOn`), else the filter, said once a run;
+`intel` without the tool is refused.  Both are guided by `Core/Denoising/Guides.cs`, gathered after the scan with the
+render's statistics set aside: a pixel's middle without anti-aliasing, a 4x4 grid with, each place taking the lens's
+and shutter's samples in turn (`max(16, lens)` looks), each look `Scene.GuideFor` (`Core/Scene.Guides.cs`): the first
+hit's settled material (`SettledFor`, no regularizing) -- pigment held to [0, 1], bare metal's square-on mirroring
+plus the rest's paint -- normal and place; a SMOOTH surface whose `SharesOf` mirrors + passes reach a half is
+followed (mirrored from `MirrorPoint`, bent by `Bent`, total internal reflection mirrored), each way weighed by its
+share and tinted (metal's hue, the filter tint), 4 deep, ways under 1/32 dropped; fine strands laid by coverage; the
+sky its color held to white, met nowhere.  Nothing in them is drawn by chance, so Intel's is told `--clean_aux`.
+`IntelDenoiser` writes light, albedo and normal as little-endian Portable FloatMaps (`ImageIO/PortableFloatMap.cs`,
+rows bottom up) to a temp folder, runs `oidnDenoise --hdr`, reads it back keeping alpha; a failing tool is refused
+with what it said.  `WaveletFilter` is SVGF's spatial à-trous (5 passes, 5x5 B3 kernel, steps 1-16) on light divided
+by albedo (floored 0.05), each tap weighed by facing (cos^128), place off the pixel's tangent plane against 2 x
+footprint x pixels apart, albedo apart relative (spread 0.25: a slab and its mortar never mix, or what the paving
+mirrors is shared out wrongly), and brightness against 4 sqrt(grain), the grain carried through passes as sum w^2 var /
+(sum w)^2.  Grain is measured from the picture, not SVGF's 7x7 moments (which took a shadow's edge for grain): each
+pixel against the median of the same-surface 3x3, neighbors taken in mirrored pairs (else a ramp at an edge was
+grain), squared, averaged over the same-surface 7x7 with the largest 6% left out / 0.665 (the median kept a
+sprinkling of dark specks one pixel in five; the mean took a wet road's mirrored lamps for grain).  Pixels more than
+half sky are left alone.  A plain sky light's fixed directions make steps, not grain: no denoiser smooths them.
 
 Animation (`docs/animation.md`): `context { animation length L | frames N [rate R] [still S] }` makes a scene an
 animation; `ImageRenderer.Render` reads it first (`InstructionContext.AnimationOf`, ContextUpdaters' animation

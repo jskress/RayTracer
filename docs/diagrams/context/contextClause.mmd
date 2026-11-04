@@ -10,6 +10,7 @@ context = "context" "{" { info | scanner | "angles" "are" ( "degrees" | "radians
         | "caustics" [ "photons" expression ]
         | "light" "tree" [ "samples" expression ] [ "split" expression ]
         | "trace" "depth" expression
+        | "denoise" [ "intel" | "filter" ]
         | "film" "curve" ( "soft" | "neutral" | "agx" | "none" )
         | "reflection" "samples" expression
         | "subsurface" "samples" expression

@@ -1,10 +1,13 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using RayTracer;
 using RayTracer.Basics;
+using RayTracer.Core.Denoising;
 using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Pixels;
+using RayTracer.Renderer;
 
 namespace RayTracer.Core;
 
@@ -191,6 +194,10 @@ public class Camera : NamedThing
         PixelToRayConverter converter = CreateConverter(context);
         PixelRenderer renderer = context.AntiAliasing.GetRenderer(converter);
 
+        // Which denoiser is to smooth the picture is settled first, so that one that cannot be had is refused before
+        // the render's time is spent.
+        Denoiser denoiser = Denoiser.For(context.Denoise);
+
         renderer.Statistics = context.Statistics;
         renderer.Spectral = context.Spectral;
         scene.Statistics = context.Statistics;
@@ -251,6 +258,11 @@ public class Camera : NamedThing
             context.Progress?.Done();
         }
 
+        // The grain is smoothed out of the light the sensor caught, before the lens's glass and its opening spread it:
+        // spread first, a grain would be smeared into a blot a denoiser takes for the picture.
+        if (denoiser is not null)
+            Denoise(context, scene, converter, renderer, canvas, denoiser);
+
         // The lens's glass parts the colors before the opening spreads them, and the opening spreads the light as the
         // picture forms, so the whole picture is spread at once; the film curve that develops it comes after, when it
         // is written.
@@ -260,6 +272,36 @@ public class Camera : NamedThing
         new Diffraction(Glare, Blades, BladeTurn).Spread(canvas);
 
         return canvas;
+    }
+
+    /// <summary>
+    /// This method smooths the grain out of a rendered picture: it gathers what each pixel shows, as the picture's
+    /// light was gathered (see <see cref="Guides"/>), and hands both to the denoiser.  The guides' rays are not
+    /// counted among the render's, which they would only blur.
+    /// </summary>
+    private static void Denoise(
+        RenderContext context, Scene scene, PixelToRayConverter converter, PixelRenderer renderer, Canvas canvas,
+        Denoiser denoiser)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        Statistics statistics = scene.Statistics;
+
+        scene.Statistics = null;
+
+        try
+        {
+            Guides guides = Guides.Gather(
+                scene, converter, renderer is not NoAntiAliasingPixelRenderer, context.Scanner, canvas.Width,
+                canvas.Height);
+
+            denoiser.Denoise(canvas, guides, context.Scanner);
+        }
+        finally
+        {
+            scene.Statistics = statistics;
+        }
+
+        context.Statistics?.AddDenoising(denoiser.Method, stopwatch.Elapsed);
     }
 
     // Light taken so many times brighter, keeping how much of the pixel it covers.

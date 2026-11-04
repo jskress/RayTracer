@@ -100,6 +100,7 @@ this way:
 | --- | --- |
 | `-w`, `-h` | `width`, `height` in the context block |
 | `-a` | `antialiasing depth` and `antialiasing threshold` |
+| `--denoise` | `denoise` |
 | `-c` | `color depth` |
 | `-g` | `gamma` |
 | `--white-balance` | `white balance` |
@@ -164,6 +165,7 @@ for within the chosen scene, so two scenes may each have a camera of the same na
 | `-h`, `--height` | the scene's, or 600 | The image height, in pixels. |
 | `-a`, `--antialias` | the scene's, or off | Anti-aliasing; see below. |
 | `-c`, `--bits-per-channel` | the scene's, or 8 | How many bits each color channel gets in the file; `8` or `16`. |
+| `--denoise` | the scene's, or off | [Smooth the grain](context.md#denoising) out of the picture: `best`, `intel`, `filter` or `off`. |
 
 Antialiasing is written either as `off`, or as `adaptive` with a depth: `adaptive:5`, or
 just `5`, which means the same.  `adaptive` alone means `adaptive:5`.

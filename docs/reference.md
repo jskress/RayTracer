@@ -142,6 +142,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `decal` | A marking painted over a material's pigment, inside an outline. | [Materials](materials.md#decals) |
 | `default` | The last way out of a [selection](scene-files.md#choosing-inside-a-body); required. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `degrees` | Angle unit: `angles are degrees`.  Also the postfix operator, `90 degrees`, turning an angle in degrees into the radians the functions take. | [Context](context.md#angles), [Scene Files](scene-files.md#angles-are-radians) |
+| `denoise` | Context: smooths the grain out of the picture once it is rendered, by Intel's denoiser or the renderer's own `filter`. | [Context](context.md#denoising) |
 | `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern).  What a medium's `emission by density` reads its map at.  Also hair: how many strands grow on each unit of area. | [Scene Files](scene-files.md#giving-a-medium-a-shape), [Hair](advanced-surfaces.md#hair), [Light by Density](scene-files.md#a-medium-whose-light-follows-its-density) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `deposits` | Pattern: where a height field's erosion laid grit down. | [What the weather left](advanced-surfaces.md#what-the-weather-left) |
@@ -189,7 +190,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `file` | The second word of `object file`. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `fill` | Shape grammar: fills a scope with a box, in the grammar's own space. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `film` | Material: a film thinner than light's wavelength — a soap bubble, oil on water — that colors what is mirrored.  Context: `film curve`, how light is developed into a picture. | [Thin films](materials.md#thin-films), [Context](context.md#film-curve) |
-| `filter` | Interior: how much the substance colors light passing through. | [Materials](materials.md#transparency-and-interiors) |
+| `filter` | Interior: how much the substance colors light passing through.  Context: `denoise filter`, the renderer's own denoiser. | [Materials](materials.md#transparency-and-interiors), [Context](context.md#denoising) |
 | `finer` | Turbulence/noise: shrinks each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `fisheye` | Camera projection: a circular, very wide view. | [Cameras](cameras.md#projections) |
 | `flat` | Fracture: broken only across X and Z, every crack running straight down. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
@@ -248,6 +249,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |
 | `inherited` | Material: take the material handed down from the surrounding group; with decals in a block, paint them on top of it. | [Materials](materials.md#markings-that-survive-a-repaint) |
 | `inner` | Disc: `inner radius`, making a washer. | [Surfaces](surfaces.md#disc) |
+| `intel` | Context: `denoise intel`, Intel's Open Image Denoise. | [Context](context.md#denoising) |
 | `interior` | What a surface is made of: its index of refraction and clarity.  Also what fills the space inside it. | [Materials](materials.md#transparency-and-interiors), [Scene Files](scene-files.md#the-space-between-things) |
 | `intersection` | CSG: only where all children overlap. | [Surfaces](surfaces.md#combining-surfaces) |
 | `ior` | Interior, film or coat: index of refraction (short form). | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films), [A clear coat](materials.md#a-clear-coat) |

@@ -289,6 +289,29 @@ public class RenderOptions
         }
     }
 
+    [Option("denoise", Required = false,
+        HelpText = "Smooth the grain out of the picture once it is rendered: best (Intel's Open Image Denoise if its oidnDenoise tool is on the path, else the renderer's own filter), intel, filter (the renderer's own), or off.  Given, it takes the place of what the scene says.")]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    public string DenoiseText
+    {
+        get => Denoise?.ToString().ToLowerInvariant();
+        set => Denoise = value?.ToLowerInvariant() switch
+        {
+            "best" => Core.Denoising.DenoiseMethod.Best,
+            "intel" => Core.Denoising.DenoiseMethod.Intel,
+            "filter" => Core.Denoising.DenoiseMethod.Filter,
+            "off" => Core.Denoising.DenoiseMethod.Off,
+            _ => throw new ArgumentException(
+                $"Denoising may be best, intel, filter or off, not \"{value}\".")
+        };
+    }
+
+    /// <summary>
+    /// This property holds how the grain is to be smoothed out of the picture, or null when the command line did
+    /// not say, so that what the scene says is left alone.
+    /// </summary>
+    public Core.Denoising.DenoiseMethod? Denoise { get; private set; }
+
     [Option('l', "output-level", Required = false, Default = "normal",
         // ReSharper disable once StringLiteralTypo
         HelpText = "Sets the desired level of output.  Must be one of, [q]uiet, [n]ormal, [c]hatty or [v]erbose.  The values are not case-sensitive.")]

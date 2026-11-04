@@ -81,11 +81,11 @@ public partial class LanguageParser
             'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'coat', 'color', 'crevices', 'crown',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
-            'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
+            'decal', 'default', 'degrees', 'denoise', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'dust', 'east', 'edge', 'edges', 'egg', 'else', 'emission', 'environment', 'error', 'exposure', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file', 'flat', 'fracture',
             'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'glare', 'gradient', 'granite', 'grime',
             'grain', 'grayscale', 'group', 'hair', 'hanging', 'height', 'heightfield', 'hexagon', 'hole', 'horizontal',
-            'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
+            'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'intel', 'interior', 'intersection',
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'joining', 'kern', 'kerning', 'kill', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'loose', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metal', 'metallic', 'min', 'mortar',
@@ -324,6 +324,12 @@ public partial class LanguageParser
             light > tree ?? 'Expecting "tree" to follow "light" here.' >
             { samples > _expression }{?} > { split > _expression }{?}
         }
+        // Whether the grain is smoothed out of the picture once it is rendered, and by which denoiser: Intel's, or
+        // the renderer's own filter, or Intel's when it can be had and the filter otherwise.
+        denoiseClause:
+        {
+            denoise > [ intel | filter ]{?}
+        }
         // How the light a render ends with is developed into a picture: eased toward white, by a film's
         // curve, or cut off at white.
         filmCurveClause:
@@ -366,7 +372,7 @@ public partial class LanguageParser
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
             settingOffClause | mediumSamplesClause | diffuseLightClause | causticsClause | lightTreeClause |
-            traceDepthClause |
+            traceDepthClause | denoiseClause |
             filmCurveClause | subsurfaceSamplesClause | weatheringSamplesClause | emissionSamplesClause |
             reflectionSamplesClause | antiAliasingClause |
             scaleAmbientClause |
