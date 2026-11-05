@@ -1,6 +1,6 @@
-// The starship from the original series, built part by part from the plans and the studio model.
+// Star Trek: the starship from the original series, built part by part from the plans and the studio model.
 //
-//     import 'enterprise' { Enterprise }
+//     import 'star-trek' { Enterprise }
 //
 //     object Enterprise(289)
 //

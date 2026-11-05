@@ -8,7 +8,7 @@
 // | `Shuttle` | An orbiter: double-delta wing, a fin, three engines and a black belly. |
 // | `Satellite` | A bus, two solar wings and a dish. |
 //
-// The starship that used to be here has a library of her own now: see [Enterprise](#enterprise).
+// The starship that used to be here has a library of her own now: see [Star Trek](#star-trek).
 //
 // **The first number is a length**, as it is for the [vehicles](#vehicles), the [vessels](#vessels)
 // and the [aircraft](#aircraft).  These are in **meters** and they **face `+X`**.

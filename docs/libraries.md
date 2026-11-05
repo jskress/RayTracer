@@ -907,7 +907,7 @@ object Truck(8.5, 'summer', 3) { translate X -11 }
 **The first number is a length, not a height.**  That is how a vehicle is described — a car is four and a
 half meters long, not one and a half tall — and everything else here that goes somewhere is described the
 same way: the [vessels](#vessels), the [trains](#trains), the [aircraft](#aircraft), the
-[spacecraft](#spacecraft) and the [Enterprise](#enterprise) all take a length first too.  The other two
+[spacecraft](#spacecraft) and the [Enterprise](#star-trek) all take a length first too.  The other two
 numbers mean what they always mean, and only the length is required.
 
 **These face `+X`**, so a vehicle drives to the right in a camera looking the usual way, and a street
@@ -2623,12 +2623,14 @@ outward.  A strut built to reach something above it and leaned stops short of it
 under what it was supposed to be holding up.
 
 The ship that used to be part of this library now has one of her own, built in far more detail:
-see [Enterprise](#enterprise).
+see [Star Trek](#star-trek).
 
-#### Enterprise
+#### Star Trek
+
+Star Trek's ships.  For now that is the starship from the original series, the *Enterprise*.
 
 ```
-import 'enterprise' { Enterprise }
+import 'star-trek' { Enterprise }
 
 object Enterprise(289) { rotate Y 30 }
 ```
@@ -2684,7 +2686,7 @@ reactor's recess, the vents, the grooves, the nacelles' hoods, the pylons' grill
 the wall behind the hangar doors.
 
 ```
-import 'enterprise' { Enterprise }
+import 'star-trek' { Enterprise }
 
 object Enterprise(289) {
     material { pigment [0.80, 0.81, 0.80]  ambient 0.22 }
@@ -2733,10 +2735,12 @@ about, moves her middle to the origin and scales her to meters, so a scene that 
 never sees that frame.  It is there for a scene that wants one part on its own:
 `object EnterpriseNacelle` is a nacelle with its axis on `X` and the pylon's chord at its origin.
 
-#### Droids
+#### Star Wars
+
+Star Wars' machines.  For now that is the astromech droid R2-D2.
 
 ```
-import 'droids' { R2D2 }
+import 'star-wars' { R2D2 }
 
 object R2D2(3, 30) { scale 0.0254 }
 ```
@@ -2808,7 +2812,7 @@ object BassGuitar() { translate X 18  scale 0.0254 }
 | `GuitarStand(yoke)` | A stand: a padded cradle the body rests in and a yoke `yoke` up -- 27 unless you say -- holding the neck.  A guitar in it leans back `GuitarStandLean` degrees and stands `GuitarStandRise` up, as below. |
 
 **They are written in inches, and a scene unit is an inch**, the way the [furniture](#furniture) and the
-[droids](#droids) are, so the numbers in the library can be checked against the published figures
+[droids](#star-wars) are, so the numbers in the library can be checked against the published figures
 directly; a scene in meters scales them by `0.0254`, as the example does.  **A guitar stands on its end pin
 or strap button, on `y = 0`, neck up, with its top facing `-Z`** and its bass side toward `-X` -- the way
 one stands on a stand, facing the room.  The acoustic stands 40.6 tall, the electric 38.3 and the bass 45.

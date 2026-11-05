@@ -1,6 +1,6 @@
-// Droids: R2-D2, built part by part from published measurements and the plans that agree with them.
+// Star Wars: R2-D2, built part by part from published measurements and the plans that agree with them.
 //
-//     import 'droids' { R2D2 }
+//     import 'star-wars' { R2D2 }
 //
 //     object R2D2()             // standing on his two outer legs
 //     object R2D2(3, 40)        // on three, as he rolls, his dome turned 40 degrees to his right

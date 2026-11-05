@@ -22,7 +22,7 @@ context {
     }
 }
 
-import 'droids' { R2D2 }
+import 'star-wars' { R2D2 }
 
 camera {
     location [0, 44, -118]
