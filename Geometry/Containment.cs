@@ -59,6 +59,6 @@ internal static class Containment
     }
 
     // Whether a group is made, anywhere in it, of sheets rather than of closed solids.
-    private static bool HoldsSheets(Surface surface) =>
+    internal static bool HoldsSheets(Surface surface) =>
         surface.IsASheet || (surface is Group group && group.Surfaces.Any(HoldsSheets));
 }

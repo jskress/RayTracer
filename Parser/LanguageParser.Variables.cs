@@ -71,6 +71,7 @@ public partial class LanguageParser
             "mandelbox" => ParseMandelboxClause(clause),
             "menger" => ParseMengerClause(clause),
             "tiles" => ParseTilesClause(clause),
+            "hypertexture" => ParseHypertextureClause(clause),
             "hyperboloid" => ParseHyperboloidClause(clause),
             "saddle" => ParseSaddleClause(clause),
             "quadric" => ParseQuadricClause(clause),

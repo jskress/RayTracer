@@ -1,0 +1,9 @@
+railroad-ebnf-beta
+title "A hypertexture"
+
+hypertexture = "hypertexture" [ name ] "{" { "solid" shape
+             | ( "reach" | "soft" | "resolution" | "accuracy" ) number | "noise" pattern | "eroded"
+             | "drawn" vector | medium | property } "}" ;
+
+shape = "{" { surface } "}"
+      | name [ "(" [ expression { "," expression } ] ")" [ "{" { property } "}" ] ] ;

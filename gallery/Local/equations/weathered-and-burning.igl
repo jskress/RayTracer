@@ -1,0 +1,122 @@
+// One word twice: carved in stone and worn by the weather, and burning.  Both are hypertextures of the same text.
+//
+// **A hypertexture measures from a solid's skin**, whatever the solid is: here a word of text, which has no formula
+// for its distance -- so the hypertexture sends rays along every line of a grid over it, and from where they cross
+// the letters knows how far every place is from the nearest letter, and which side it is on.  Noise then moves the
+// skin.
+//
+// **Weathered, the skin is eaten in**: `eroded` moves it only inward, by up to its `reach`, where a granite's grain
+// says.  Two hundredths of a unit is enough to pit a letter's faces and gnaw its edges and leave it a letter; four
+// hundredths melted the strokes of this face, which are under a tenth across.  The plinths are the same thing done
+// to a box.
+//
+// **Burning, the skin is stuff**: `soft` makes it a medium, whole inside the letters and thinning to nothing across
+// their skin, and `drawn [0, 0.5, 0]` draws the skin out upward wherever it faces up, as far as half a unit where
+// the noise is lowest.  Where the skin is drawn out the stuff thins over as far as it was drawn, so a flame is whole
+// at its root and nothing at its tip, and its light, read by its density, runs from the white of the letters through
+// yellow and orange to red.  The stuff absorbs as well as glows: with nothing to absorb, light only added up along
+// a ray through the flames, and every flame came out white.  The noise reaches only a hundredth and a half, a
+// flicker: reaching further, it ate through the strokes and left holes in the letters.
+//
+// **The fire lights the stone**: `gives light` makes the glow a light, sampled where its stuff is, and the wall, the
+// plinths and the near word's faces take its color.  The moon does the rest.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Weathered and Burning'
+        author 'J. Stephen Kress'
+        description 'A word carved in stone and worn by the weather, and the same word burning: two hypertextures of one text.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-1.2, 2.1, -5.4]
+    look at [0.15, 1.15, 0.5]
+    field of view 50
+}
+
+background [0.015, 0.02, 0.04]
+
+// Moonlight, cool and dim, from high on the left.
+point light { location [-30, 40, -10]  color [0.16, 0.18, 0.24] }
+
+// -- The courtyard ---------------------------------------------------------------------------------
+
+Paving = material {
+    pigment crackle { [0, [0.05, 0.05, 0.05], 0.06, [0.18, 0.17, 0.16], 1, [0.22, 0.21, 0.2]]  scale 0.45 }
+    specular 0.1  shininess 20
+}
+
+Stone = material {
+    pigment granite { [0, [0.52, 0.50, 0.46], 1, [0.66, 0.64, 0.60]]  scale 0.25 }
+    specular 0.06  shininess 12
+}
+
+plane { material Paving }
+
+// A low wall behind, for the firelight to fall on.
+cube { material Stone  scale [9, 1.4, 0.25]  translate [0, 1.4, 3.6] }
+
+// -- The word, and what it stands on ---------------------------------------------------------------
+
+// Built lying flat, its letters a tenth deep along Y, so stood up, three tenths deep.
+Word = text {
+    text 'ASH'
+    font 'Merriweather'
+    layout { horizontal position center }
+    scale [1, 3, 1]
+    rotate X -90
+}
+
+// A block of stone, its faces pitted and its edges worn.
+primitive Plinth() -> hypertexture {
+    return hypertexture {
+        solid { cube { scale [1.1, 0.4, 0.45] } }
+        reach 0.03
+        eroded
+        noise granite { scale 0.7 }
+        material Stone
+        translate Y 0.4
+    }
+}
+
+// -- Weathered -------------------------------------------------------------------------------------
+
+object Plinth() { translate [-1.25, 0, 0] }
+
+hypertexture {
+    solid Word
+    reach 0.018
+    eroded
+    noise granite { scale 0.4 }
+    resolution 200
+    material Stone
+    translate [-1.25, 0.8, 0]
+}
+
+// -- Burning ---------------------------------------------------------------------------------------
+
+object Plinth() { translate [1.35, 0, 1.2] }
+
+hypertexture {
+    solid Word
+    soft 0.03
+    reach 0.015
+    drawn [0, 0.5, 0]
+    noise bozo { turbulence 0.7  scale [0.05, 0.2, 0.05] }
+    resolution 200
+    medium {
+        samples 64
+        density 1.2
+        absorption 3
+        emission by density [0, Black, 0.05, [1.2, 0.12, 0.02], 0.3, [3, 0.9, 0.15], 0.7, [4.5, 2.2, 0.5],
+                             1, [6, 5, 3.6]]
+    }
+    no shadow
+    gives light samples 32
+    translate [1.35, 0.8, 1.2]
+}

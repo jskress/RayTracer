@@ -89,6 +89,13 @@ public class MediumResolver : ObjectResolver<Medium>, ICloneable
     public Func<Medium, string> Validator { get; set; }
 
     /// <summary>
+    /// This field notes, on this thread, that the medium being resolved will be given its shape by what holds it --
+    /// a soft hypertexture -- however it is written: in place, named, or made by a primitive.
+    /// </summary>
+    [ThreadStatic]
+    internal static bool ShapedByItsHolder;
+
+    /// <summary>
     /// This method is used to execute the resolver to produce a medium, and to hold it to whatever
     /// the place it was written asks of it.
     /// </summary>
@@ -100,8 +107,9 @@ public class MediumResolver : ObjectResolver<Medium>, ICloneable
         Medium medium = base.Resolve(context, variables);
 
         // A medium of one density everywhere has one value of its shape everywhere, so its light read by its density
-        // could only ever be one color: say that color, or give the medium a shape.
-        string message = medium.EmissionByDensity is not null && !medium.DensityVaries
+        // could only ever be one color: say that color, or give the medium a shape -- unless what holds it gives it
+        // one, as a soft hypertexture does.
+        string message = medium.EmissionByDensity is not null && !medium.DensityVaries && !ShapedByItsHolder
             ? "A medium's light read by its density needs a density that varies, by a function or a pattern."
             : Validator?.Invoke(medium);
 

@@ -121,6 +121,8 @@ public partial class LanguageParser
                 return ParseMengerClause(clause);
             case TileGridResolver:
                 return ParseTilesClause(clause);
+            case HypertextureResolver:
+                return ParseHypertextureClause(clause);
             case HyperboloidResolver:
                 return ParseHyperboloidClause(clause);
             case SaddleResolver:

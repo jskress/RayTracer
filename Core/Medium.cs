@@ -297,6 +297,13 @@ public class Medium
     }
 
     /// <summary>
+    /// This method returns a copy of this medium, to be given a shape of its own without changing whoever else holds
+    /// this one: a soft hypertexture's stuff takes the hypertexture's shape.
+    /// </summary>
+    /// <returns>The copy.</returns>
+    internal Medium Copy() => (Medium) MemberwiseClone();
+
+    /// <summary>
     /// This method returns how much of the stuff there is at the given place.  A shape that would go
     /// negative is taken as empty: a density below nothing has no meaning, and left alone it would
     /// have a ray gaining light for crossing the stuff rather than losing it.

@@ -91,7 +91,7 @@ public partial class LanguageParser
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metal', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'neutral', 'no', 'noise', 'none', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
-            'sdf', 'julia', 'iterations', 'c', 'mandelbulb', 'mandelbox', 'menger', 'outer', 'fold', 'detail', 'tiles', 'tile', 'cell', 'turns', 'tries', 'fit', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
+            'sdf', 'julia', 'iterations', 'c', 'mandelbulb', 'mandelbox', 'menger', 'outer', 'fold', 'detail', 'tiles', 'tile', 'cell', 'turns', 'tries', 'fit', 'hypertexture', 'eroded', 'drawn', 'resolution', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'portal', 'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reach', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -1127,6 +1127,27 @@ public partial class LanguageParser
             { outer > radius ?? 'Expecting "radius" to follow "outer" here.' > _expression } |
             { fold > _expression } | { iterations > _expression } | { detail > _expression } |
             { accuracy > _expression } | surfaceEntryClause
+        ]
+        // A solid's skin broken up by noise: moved in and out by it and drawn as a surface, or, soft, turned into stuff
+        // that thins out across it, held in a medium.
+        startHypertextureClause:
+        {
+            hypertexture > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "hypertexture" here.'
+        }
+        hypertextureEntryClause:
+        [
+            {
+                solid > [ openBrace | { [ _identifier | _keyword ] > leftParen{?} } ]
+                    ?? 'Expecting surfaces in braces, a surface name or a call of a primitive here.'
+            } |
+            { reach > _expression } |
+            { noise > patternClause > openBrace ?? 'Expecting an open brace to follow the pattern here.' } |
+            eroded | { drawn > _expression } | { soft > _expression } | startMediumClause |
+            { resolution > _expression } | { accuracy > _expression } |
+            surfaceEntryClause
         ]
         // A grid laid with tiles by wave function collapse: how many cells, how big, the tiles -- each what stands in
         // its cell, what lies on its sides, whether it turns and how often it is drawn -- and what lies outside.
@@ -2176,6 +2197,7 @@ public partial class LanguageParser
             startMandelboxClause      => 'mandelbox' |
             startMengerClause         => 'menger' |
             startTilesClause          => 'tiles' |
+            startHypertextureClause   => 'hypertexture' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -2274,6 +2296,7 @@ public partial class LanguageParser
             startMandelboxClause      => 'mandelbox' |
             startMengerClause         => 'menger' |
             startTilesClause          => 'tiles' |
+            startHypertextureClause   => 'hypertexture' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -2347,6 +2370,7 @@ public partial class LanguageParser
             startMandelboxClause      => 'mandelbox' |
             startMengerClause         => 'menger' |
             startTilesClause          => 'tiles' |
+            startHypertextureClause   => 'hypertexture' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -2479,7 +2503,7 @@ public partial class LanguageParser
                 startParametricClause |
                 startParaboloidClause | startHyperboloidClause | startSaddleClause |
                 startQuadricClause | startSdfClause | startJuliaClause |
-                startMandelbulbClause | startMandelboxClause | startMengerClause | startTilesClause |
+                startMandelbulbClause | startMandelboxClause | startMengerClause | startTilesClause | startHypertextureClause |
                 startObjectFileClause | startObjectClause |
                 startCsgClause | startGroupClause
             ]
@@ -2509,7 +2533,7 @@ public partial class LanguageParser
             [
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
-                isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia | mandelbulb | mandelbox | menger | tiles |
+                isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia | mandelbulb | mandelbox | menger | tiles | hypertexture |
                 patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | loft | rope | chain | grown | fracture | shapes | swarm | joint | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
@@ -2623,6 +2647,7 @@ public partial class LanguageParser
             startMandelboxClause      => 'HandleStartMandelboxClause' |
             startMengerClause         => 'HandleStartMengerClause' |
             startTilesClause          => 'HandleStartTilesClause' |
+            startHypertextureClause   => 'HandleStartHypertextureClause' |
             startHyperboloidClause    => 'HandleStartHyperboloidClause' |
             startSaddleClause         => 'HandleStartSaddleClause' |
             startQuadricClause        => 'HandleStartQuadricClause' |

@@ -87,6 +87,7 @@ public class SceneCensus
         [typeof(Mandelbox)] = "mandelbox",
         [typeof(MengerSponge)] = "menger",
         [typeof(TileGrid)] = "tiles",
+        [typeof(Hypertexture)] = "hypertexture",
         [typeof(LSystem)] = "L-system",
         [typeof(TextSolid)] = "text"
     };

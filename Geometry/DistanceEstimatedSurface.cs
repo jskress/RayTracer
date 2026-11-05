@@ -73,6 +73,13 @@ public abstract class DistanceEstimatedSurface : Surface
     protected virtual double NormalStep => Accuracy * 8;
 
     /// <summary>
+    /// This property notes that the shape's answer inside is as good a bound as outside, so the march need not stride
+    /// through the inside faster than it says (see <see cref="March"/>): true of a field built from a real distance,
+    /// as a <see cref="Hypertexture"/>'s is, and not of an escape-time estimate, which collapses inside.
+    /// </summary>
+    protected virtual bool TrustedInside => false;
+
+    /// <summary>
     /// This method must be provided by subclasses to say how far the nearest surface is from a point.
     /// It is negative inside the shape, nought on it, and positive outside.
     /// </summary>
@@ -160,7 +167,7 @@ public abstract class DistanceEstimatedSurface : Surface
         // crossed in strides that cannot take more than a fraction of the budget.  A true distance
         // function never notices, its own answer being the larger of the two nearly always; it is the
         // estimate that has collapsed which this rescues.
-        double insideStride = (to - from) / (MaximumSteps * 0.25);
+        double insideStride = TrustedInside ? (to - from) / MaximumSteps : (to - from) / (MaximumSteps * 0.25);
 
         // **And a floor on the outside step too, for the opposite reason.**  The estimate is a lower
         // bound, so approaching a surface it shrinks towards nothing and the march creeps in ever

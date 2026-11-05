@@ -257,6 +257,7 @@ public partial class LanguageParser
             "mandelbox" => ParseMandelboxClause(clause),
             "menger" => ParseMengerClause(clause),
             "tiles" => ParseTilesClause(clause),
+            "hypertexture" => ParseHypertextureClause(clause),
             "hyperboloid" => ParseHyperboloidClause(clause),
             "saddle" => ParseSaddleClause(clause),
             "quadric" => ParseQuadricClause(clause),
@@ -386,6 +387,8 @@ public partial class LanguageParser
                 "mengerEntryClause", HandleMengerEntryClause, validate: false),
             "tiles" => ParseObjectResolver<TileGridResolver>(
                 "tilesEntryClause", HandleTilesEntryClause, validate: false),
+            "hypertexture" => ParseObjectResolver<HypertextureResolver>(
+                "hypertextureEntryClause", HandleHypertextureEntryClause, validate: false),
             "hyperboloid" => ParseObjectResolver<HyperboloidResolver>(
                 "extrudedSurfaceEntryClause", HandleHyperboloidEntryClause, validate: false),
             "saddle" => ParseObjectResolver<SaddleResolver>(
@@ -486,6 +489,7 @@ public partial class LanguageParser
             "mandelbox" => "startMandelboxClause",
             "menger" => "startMengerClause",
             "tiles" => "startTilesClause",
+            "hypertexture" => "startHypertextureClause",
             "hyperboloid" => "startHyperboloidClause",
             "saddle" => "startSaddleClause",
             "quadric" => "startQuadricClause",

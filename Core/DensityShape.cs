@@ -59,7 +59,7 @@ public class DensityShape
     /// </summary>
     /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
     /// <returns>How much of the medium is there, from nothing up to all of it.</returns>
-    public double ValueAt(Point point)
+    public virtual double ValueAt(Point point)
     {
         double value = Pattern.ValueFor(_inverseTransform.Value * point);
         int bands = Pattern.DiscretePigmentsNeeded;
@@ -72,7 +72,7 @@ public class DensityShape
     /// </summary>
     /// <param name="other">The shaping to compare to.</param>
     /// <returns><c>true</c>, if the two are the same, or <c>false</c>, if not.</returns>
-    public bool Matches(DensityShape other)
+    public virtual bool Matches(DensityShape other)
     {
         if (other is null || !Transform.Matches(other.Transform))
             return false;

@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 180 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 181 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -592,7 +592,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Equations</b> &mdash; 6 images &middot; surfaces written down rather than assembled</summary>
+<summary><b>Equations</b> &mdash; 7 images &middot; surfaces written down rather than assembled</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -641,6 +641,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/equations/isosurface-noise.igl">Isosurfaces Made Rough With Noise</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/equations/weathered-and-burning.png">
+      <img alt="Weathered and Burning" height="120" src="Local/equations/weathered-and-burning.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/equations/weathered-and-burning.igl">Weathered and Burning</a>
     </td>
   </tr>
 </table>
