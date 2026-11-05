@@ -1016,6 +1016,108 @@ public class TestMediumClauses
     }
 
     [TestMethod]
+    public void TestWhatALookUpwardMeetsIsSeenThroughTheMediumItStandsIn()
+    {
+        // A glowing panel up and along from an eye standing over the ground, the whole inside a box of haze, and seen
+        // with the ground under the eye and without it.  A look up toward the panel, followed back past the eye, goes
+        // down into the ground behind it, and the panel must be seen through the haze either way.  Until 2026-11-05 a
+        // height field's triangles were each counted as a thing of their own, so a look that crossed the field behind
+        // the eye -- through its top and its underside, or through one of its walls and its top -- was taken to have
+        // gone into one triangle and never left it, met the panel "inside" it, and the panel came through the haze
+        // undimmed: the far mountains over Hogwarts stood out crisp, and upside down, below the hazed peaks behind them.
+        const string haze = """
+            background Black
+            cube {
+                material { transparency 1  interior { ior 1.0  medium { absorption [0.1, 0.1, 0.1] } } }
+                no shadow
+                scale 30
+            }
+            cube { material { pigment White  emission 1  ambient 0  diffuse 0  specular 0 }  scale [3, 3, 0.1]  translate [0, 4, 12] }
+            """;
+        // Standing one over the ground's middle, the look back goes down through the field's top and its underside;
+        // standing five centimeters over a raised field two from its edge, through its top a meter back and the wall
+        // at its edge, two back.
+        const string middle = "camera { location [0, 1, 0]  look at [0, 4, 12]  field of view 6 }\n";
+        const string edge = "camera { location [0, 2.5, -18]  look at [0, 4, 12]  field of view 6 }\n";
+        const string field = """
+            heightfield { function { 0 }  samples 8  translate [-0.5, 0, -0.5]  scale [40, 1, 40] }
+            """;
+        const string raised = """
+            heightfield { function { 2.45 }  samples 8  translate [-0.5, 0, -0.5]  scale [40, 1, 40] }
+            """;
+        const string open = """
+            heightfield { function { 0 }  samples 8  open  translate [-0.5, 0, -0.5]  scale [40, 1, 40] }
+            """;
+        const string water = """
+            swells { width 40  depth 40  wave { steepness 0.1  wavelength 4  direction [1, 0, 0] } }
+            """;
+
+        double Seen(string scene)
+        {
+            (Canvas image, string error) = Render(scene);
+
+            Assert.IsNull(error, error);
+
+            return image.GetPixel(20, 20).Red;
+        }
+
+        // The panel's middle is 12.27 from the eye over the middle, so the haze lets 0.293 of its light through.
+        double fromTheMiddle = Seen(middle + haze);
+        double fromTheEdge = Seen(edge + haze);
+
+        Assert.AreEqual(Math.Exp(-0.1 * Math.Sqrt(3 * 3 + 11.9 * 11.9)), fromTheMiddle, 0.02, "the panel alone");
+        Assert.AreEqual(Math.Exp(-0.1 * Math.Sqrt(1.5 * 1.5 + 29.9 * 29.9)), fromTheEdge, 0.02, "the panel alone, from the edge");
+        Assert.AreEqual(fromTheMiddle, Seen(middle + haze + field), 1e-6, "over a height field");
+        Assert.AreEqual(fromTheMiddle, Seen(middle + haze + open), 1e-6, "over an open height field");
+        Assert.AreEqual(fromTheMiddle, Seen(middle + haze + water), 1e-6, "over water");
+        Assert.AreEqual(fromTheEdge, Seen(edge + haze + raised), 1e-6, "by a height field's edge");
+    }
+
+    [TestMethod]
+    public void TestASheetIsSeenThroughTheMediumWhicheverWayItFaces()
+    {
+        // A glowing disc twelve off, inside a box of haze and then in hazy surroundings, facing the eye and facing away
+        // from it.  A sheet has no insides, so either way the eye sees it through the haze between.  Until 2026-11-05 a
+        // sheet met from behind was taken as a ray leaving it, its own insides charged -- nothing -- and the haze it
+        // stood in not at all: half the leaves of a wood came through a haze undimmed.
+        const string eye = """
+            camera { location [0, 0, 0]  look at [0, 0, 12]  field of view 6 }
+            background Black
+            """;
+        const string box = """
+            cube {
+                material { transparency 1  interior { ior 1.0  medium { absorption [0.1, 0.1, 0.1] } } }
+                no shadow
+                scale 30
+            }
+            """;
+        const string surroundings = "environment { medium { absorption [0.1, 0.1, 0.1] } }\n";
+        const string facing = """
+            disc { center [0, 0, 12]  normal [0, 0, -1]  radius 3  material { pigment White  emission 1  ambient 0  diffuse 0  specular 0 } }
+            """;
+        const string away = """
+            disc { center [0, 0, 12]  normal [0, 0, 1]  radius 3  material { pigment White  emission 1  ambient 0  diffuse 0  specular 0 } }
+            """;
+
+        double Seen(string scene)
+        {
+            (Canvas image, string error) = Render(eye + "\n" + scene);
+
+            Assert.IsNull(error, error);
+
+            return image.GetPixel(20, 20).Red;
+        }
+
+        double inABox = Seen(box + "\n" + facing);
+        double inTheSurroundings = Seen(surroundings + facing);
+
+        Assert.AreEqual(Math.Exp(-0.1 * 12), inABox, 0.01, "facing the eye, in a box of haze");
+        Assert.AreEqual(inABox, inTheSurroundings, 1e-6, "facing the eye, in hazy surroundings");
+        Assert.AreEqual(inABox, Seen(box + "\n" + away), 1e-6, "facing away, in a box of haze");
+        Assert.AreEqual(inABox, Seen(surroundings + away), 1e-6, "facing away, in hazy surroundings");
+    }
+
+    [TestMethod]
     public void TestALightReadByDensityNeedsADensityThatVaries()
     {
         // A medium of one density has one value of its shape everywhere, so its light read by its density could only

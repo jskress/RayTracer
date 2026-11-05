@@ -2793,6 +2793,82 @@ His white is a gloss paint, so from the front with the light behind him it shows
 photographer would: the suns' light given again a little stronger, and a spotlight behind him narrowed
 to his dome and shoulders with a steep `fade` so that its cone dies before reaching the sand beyond him.
 
+#### Hogwarts
+
+The castle of the films, on its crag over the lake, with the grounds round it and the mountains beyond.
+
+```
+import 'hogwarts' { Hogwarts, HogwartsGrounds }
+
+object HogwartsGrounds('summer', 256)
+object Hogwarts(0.6)
+```
+
+| | |
+| --- | --- |
+| `Hogwarts` | The castle: every building of it standing where it stands on the crag, the boathouse and its stair at the water, and out on the hills the Owlery, Hagrid's hut with smoke going up from its chimney, the standing stones and the gatehouse. |
+| `HogwartsGrounds` | The crag, the ravine the bridge crosses and the hills round them: a height field fourteen hundred meters square, named `'grounds'`. |
+| `HogwartsHighlands` | The mountains round the lake, a height field twelve kilometers square, named `'highlands'`. |
+| `HogwartsPaths` | The road in from the gatehouse and the path down to the hut, flat stones dropped onto the grounds. |
+| `HogwartsLakeWater` | The lake's water, dark with peat, for the [water](#water) library's `Water`. |
+| `HogwartsLand(x, z)` | How high the grounds stand at a place, for standing something on them. |
+
+`Hogwarts(lit, season)`: **`lit` is the share of the windows with a light behind them**, nought by day and
+two thirds or so at dusk, each lit window one of three warm lights a little different from one another -- but
+the Great Hall is one room, so its windows are all lit alike whenever any are, and all dark when none are;
+**`season`** is `'summer'` or `'winter'`, and winter lays snow on whatever faces up, on the grounds and the
+mountains as well as the castle.  `HogwartsGrounds(season, samples)` and `HogwartsHighlands(season,
+samples)` take how fine to sample, 2048 and 1536 unless said: the grounds' crag wants a cell under a meter
+for its fissures to read from across the lake, and the mountains, seen from kilometers off, one of fifteen.
+
+**It is in meters, the lake's rest level is `y = 0`, and the castle faces the lake at `-Z`.**  The courtyards
+stand fifty meters up on the crag, `HogwartsCourtyard`; the Great Hall is the left end of the front seen from
+the lake and the greenhouses the right, and the clock tower and the covered bridge are behind on the left.
+Lay the lake with `object Water(12000, 12000, 'calm') { material HogwartsLakeWater }`.  `HogwartsPaths` is a
+[field dropped onto](advanced-surfaces.md#dropping-a-field-onto-the-ground) the grounds, so it must stand
+beside them, at the top of the scene, as the grounds do.  Out on the hills Hagrid's hut stands at
+`(-330, 90)`, the standing stones at `(-305, 205)` and the Owlery at `(-360, 300)`: a forest planted over the
+grounds wants drawing back from them, or trees twenty meters tall hide a hut seven high from anywhere but
+overhead.  The hut's chimney smokes, a wisp carried off to the north-east.
+
+##### Built from the studio's model
+
+The castle in the films is a model, built at 1:24 for the first of them and added to for six more: about
+fifteen meters across, which makes a castle of about three hundred and sixty.  It stands now at the studio
+tour at Leavesden, where it can be walked round, and that is the source here -- photographs taken all the way
+round it, its parts placed by where they stand against one another in them and sized by the 1:24.  None of
+the photographs is reproduced here.  Maps of the castle drawn from the books are not followed, since the
+model is not the books' castle.
+
+Along the front from the left: the **Great Hall**, a long block under a steep roof with buttresses between
+pairs of tall windows, its far gable a great window between two turrets; the **great round tower** at its
+end under the tallest cone, a small turret at its foot; an **arcade** of tall pointed arches standing in a
+cleft of the crag, with the **boathouse** at the water below it and a stair up the cleft; then a **square
+tower** with a spire, a **high hall** with a round window in its gable, and behind them the **Astronomy
+Tower**, the tallest, a hundred and sixty-eight meters over the lake, among a crowd of spired turrets; the
+**east wing** and its great square tower with a turret at each corner; and the **greenhouses** on a terrace
+below the east end beside an octagonal house under a dome.  Behind: ranges round courtyards, the **clock
+tower**, and the **covered bridge**, a hundred and fifty-five meters of roofed timber gallery on trestles that
+reach down to the ravine's floor, each worked out from the ground under it.
+
+**The cliff breaks off at the walls' foot, and the walls go on down into it.**  The first crag stood back
+from the buildings and fell away in a smooth slope, and the castle sat on it like a cake on a plate.  On the
+model the rock comes right up to the buildings and they rise straight out of it, so the crag's top is drawn to
+the castle's own front and every building's walls run down thirty-six meters below the courtyards, to show
+wherever the rock falls away beneath them.  The fall itself breaks off steeply and spreads at its foot, in
+three bands with ledges between, standing out in buttresses and falling back in bays -- and on a face that
+steep the grain that reads is **vertical**: ribs and gullies are the face standing out and falling back by a
+few meters along the edge, which a height field can only say by moving where the face is, not how high.
+
+##### The mountains, and the air in front of them
+
+Mountains rising right behind the grounds made a wall of the whole upper picture, from the lake and from the
+air; they rise now from two and a half kilometers out, to six or seven hundred meters, with lower hills
+between, so that from the water the castle's spires stand against the sky over them.  What makes them read as
+far off is the haze between, and both pictures in the gallery wrap the scene in a box of thin air that
+absorbs and glows -- see `gallery/Local/showcase/hogwarts-from-the-air.igl`.  The box casts no shadow, or the
+sun would be dimmed for crossing it too.
+
 #### Instruments
 
 ```

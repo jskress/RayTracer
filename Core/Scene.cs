@@ -165,7 +165,11 @@ public partial class Scene : NamedThing, IDisposable
             // unless it met something standing inside a thing that fades light or is filled with a
             // medium, when it crossed that thing's insides on the way -- a log inside a flame is seen
             // through the flame in front of it, and a flower set in tinted glass through the glass.
-            color = hit.Inside ? color
+            //
+            // **A sheet met from behind is not being left**: it has no insides (see Surface.IsASheet), so the ray
+            // crossed whatever it stands in, as it would to meet the sheet's front.  Taken as leaving it, half the
+            // leaves of a wood in fog, or in a box of haze, came through undimmed (until 2026-11-05).
+            color = LeavesItsInsides(hit) ? color
                 : HasInsides(hit.InteriorBefore) ? ThroughTheInsideOf(hit.ContainerBefore, color, hit)
                 : ThroughTheSurroundings(color, ray, hit.Distance);
 
@@ -199,6 +203,15 @@ public partial class Scene : NamedThing, IDisposable
         sky = ThroughTheSurroundings(sky, ray, double.PositiveInfinity);
 
         return left == 1 ? sky : (seen + sky * left).WithAlpha(1 - left * (1 - sky.Alpha));
+    }
+
+    /// <summary>
+    /// This method reports whether a hit is a ray leaving the insides of what it met, which it crossed to get
+    /// there: met from inside, and not a sheet, which has no insides however it is met.
+    /// </summary>
+    private static bool LeavesItsInsides(Intersection hit)
+    {
+        return hit.Inside && !hit.Surface.IsASheet;
     }
 
     /// <summary>
@@ -1320,7 +1333,7 @@ public partial class Scene : NamedThing, IDisposable
         // wall itself reflected -- so the fade is applied to all of it at once.  The distance is
         // the ray's own, which is exactly the path through the substance because the ray began
         // where the light entered it.
-        if (intersection.Inside)
+        if (LeavesItsInsides(intersection))
         {
             color *= material.Interior.GetFadeOver(intersection.Distance);
 

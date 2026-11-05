@@ -96,7 +96,31 @@ public static class IntersectionExtensions
                 break;
             }
 
-            (Surface, Portals) inside = (intersection.Surface, intersection.Portals);
+            // **A height field's triangles are its skin, not things of their own.**  A closed field is gone into and
+            // out of as the one solid it is, whichever of its triangles, walls or underside a ray crosses, and an
+            // open one is a sheet, never gone into.  Taken triangle by triangle, a field the ray had crossed behind
+            // where it set off -- a look up from over the ground, followed back past the eye -- was gone into and
+            // never left, and everything the look met after it was taken to stand inside that one triangle rather
+            // than in the haze round both: until 2026-11-05 mountains over a valley came through a haze undimmed.
+            Surface surface = intersection.Surface;
+
+            // Its walls are a group of triangles each, a step further down.
+            if ((surface.Parent as HeightField ?? surface.Parent?.Parent as HeightField) is { } field)
+            {
+                if (!field.Closed)
+                {
+                    if (intersection != hit)
+                        continue;
+
+                    (after, afterThrough) = (before, beforeThrough);
+
+                    break;
+                }
+
+                surface = field;
+            }
+
+            (Surface, Portals) inside = (surface, intersection.Portals);
 
             if (containers.Contains(inside))
                 containers.Remove(inside);

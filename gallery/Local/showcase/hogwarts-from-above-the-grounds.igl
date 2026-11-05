@@ -1,0 +1,153 @@
+// Hogwarts from above its grounds on a summer morning: the castle close, seen from behind over the road in from the
+// gatehouse -- its back ranges and their gate tower, the clock tower with the covered bridge going out from it
+// across the ravine on its trestles, the Astronomy Tower and the great round tower rising out of the middle -- and
+// the lake beyond it.
+//
+// The other side of `hogwarts-from-the-air`, and nearer: there the castle is a building in a landscape, here the
+// landscape is what it stands in.  The castle, its crag, the grounds and the mountains come from the `hogwarts`
+// library, the forest from `trees`; the sky, the water, the air and the woods are here, the same as there, but
+// for the sun, which is behind the camera's left shoulder now, so that the faces toward it are lit and the
+// shadows fall away across the courtyards.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.25
+    angles are degrees
+    info {
+        title 'Hogwarts from above the Grounds'
+        author 'J. Stephen Kress'
+        description 'The castle close, from above the grounds behind it, the covered bridge going out across the ravine and the lake beyond.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'hogwarts' { Hogwarts, HogwartsGrounds, HogwartsHighlands, HogwartsLakeWater, HogwartsPaths }
+import 'water' { Water }
+import 'trees' { Fir, Pine, Oak }
+
+// Two hundred and forty meters up over the grounds behind the castle, west of the road in, looking across it to the
+// lake.
+camera {
+    location [-110, 240, 450]
+    look at [-40, 70, 70]
+    field of view 60
+    exposure 0.3
+}
+
+// Fair-weather cloud, in heaps low over the hills and thinning to nothing overhead: noise stretched flat,
+// white where it is thick and gray beneath, laid over the sky.
+background layer {
+    linear Y gradient {
+        [0, color [1, 1, 1, 0],
+         0.02, color [1, 1, 1, 0],
+         0.06, bozo {
+             turbulence { amplitude 0.55  octaves 5 }
+             [0, color [1, 1, 1, 0], 0.52, color [1, 1, 1, 0], 0.6, color [0.86, 0.87, 0.9, 0.7],
+              0.7, color [0.95, 0.95, 0.97, 0.95], 1, color [0.98, 0.98, 1, 1]]
+             scale [0.22, 0.05, 0.22]
+         },
+         0.3, bozo {
+             turbulence { amplitude 0.55  octaves 5 }
+             [0, color [1, 1, 1, 0], 0.6, color [1, 1, 1, 0], 0.7, color [0.9, 0.9, 0.93, 0.6], 1, color [0.97, 0.97, 1, 0.9]]
+             scale [0.22, 0.05, 0.22]
+         },
+         0.45, color [1, 1, 1, 0],
+         1, color [1, 1, 1, 0]]
+    },
+    physical sky { sun elevation 38  sun azimuth 135  turbidity 2.6  brightness 3 }
+}
+sky light { samples 32 }
+
+// The air: a haze, a third of the light gone over three kilometers and its own pale blue in its place, so the
+// highlands stand back.  It casts no shadow, so the sun lights the ground whole.
+cube {
+    material {
+        transparency 1
+        interior { medium { absorption 0.00015  emission [0.000032, 0.000042, 0.000063] } }
+    }
+    no shadow
+    scale [7000, 2700, 7000]
+    translate Y 2600
+}
+
+// -- The land and the water ------------------------------------------------------------------------------------
+
+object HogwartsGrounds()
+object HogwartsHighlands()
+object HogwartsPaths()
+object Water(12000, 12000, 'calm') { material HogwartsLakeWater }
+
+// -- The Forbidden Forest ---------------------------------------------------------------------------------------
+
+// The hills west of the ravine, its far bank running back inland as the ravine does.  Its edge draws back into a bay
+// of open hillside round Hagrid's hut and the standing stones, fifty meters clear of the hut every way but the one it
+// opens on, and a clearing round the Owlery's pinnacle is cut out of it.  The bay is the edge drawn back, not a hole:
+// a hole is told from the forest by counting crossings, so a hole reaching past the edge plants trees there.
+ForestWest = path {
+    move to -268, -40
+    line to -272, 40
+    line to -302, 42  line to -334, 44  line to -360, 54  line to -376, 74  line to -380, 100  line to -372, 124
+    line to -362, 150  line to -362, 180  line to -364, 208  line to -356, 232  line to -334, 246  line to -306, 250
+    line to -289, 250
+    line to -290, 260
+    line to -300, 420
+    line to -330, 600
+    line to -700, 600
+    line to -700, -40
+    close
+    move to -360, 262  line to -326, 280  line to -326, 320  line to -360, 338  line to -394, 320  line to -394, 280  close
+}
+
+// Behind the grounds, beyond the gatehouse's wall.
+ForestSouth = path {
+    move to -300, 480  line to 260, 480  line to 330, 600  line to -330, 600  close
+}
+
+field {
+    of Fir(22, 'summer', 1), Fir(18, 'summer', 2), Pine(20, 'summer', 1), Pine(24, 'summer', 2),
+       Oak(15, 'summer', 1), Oak(13, 'summer', 2)
+    within ForestWest
+    spacing 9  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 160 } from 0.3 to 0.42
+    over 'grounds'
+    steepest 38
+    sink 1
+}
+
+field {
+    of Fir(22, 'summer', 1), Fir(18, 'summer', 2), Pine(20, 'summer', 1), Oak(15, 'summer', 1)
+    within ForestSouth
+    spacing 9  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 160 } from 0.35 to 0.45
+    over 'grounds'
+    steepest 38
+    sink 1
+}
+
+// And on the hills beyond the grounds, in stands with moor between them, below where trees give out.
+Hills = path {
+    move to -2600, -300  line to -700, -300  line to -700, 900  line to 2600, 900  line to 2600, 3200
+    line to -2600, 3200  close
+}
+
+field {
+    of Fir(22, 'summer', 1), Fir(18, 'summer', 2), Pine(20, 'summer', 1), Pine(24, 'summer', 2)
+    within Hills
+    spacing 13  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 420 } from 0.42 to 0.5
+    over 'highlands'
+    above 2  below 420
+    steepest 32
+    sink 1
+}
+
+// -- The castle ----------------------------------------------------------------------------------------------
+
+object Hogwarts()
