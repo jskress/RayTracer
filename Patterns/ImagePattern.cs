@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
 using RayTracer.Pigments;
@@ -94,10 +95,20 @@ public class ImagePattern : Pattern
     public Shuffle Shuffle { get; set; }
 
     /// <summary>
+    /// This property holds how a model's texture coordinates are moved and stretched before the picture is read at
+    /// them, if they are.
+    /// </summary>
+    public TextureCoordinates Coordinates { get; set; }
+
+    /// <summary>
     /// This property reports whether the picture is read more than once at a place -- laid triplanar, or shuffled --
     /// rather than at one place in it; see <see cref="ImageTaps"/>.
     /// </summary>
-    internal bool IsSpread => MapType == ImageMapType.Triplanar || Shuffle is not null;
+    internal bool IsSpread => MapType == ImageMapType.Triplanar || Shuffle is not null || IsLaidByItsCoordinates;
+
+    // Whether the surface being read is a model's triangle carrying texture coordinates, and the picture is laid by
+    // them.
+    private bool IsLaidByItsCoordinates => MapType is null && Pigment.Wearer is Triangle { TextureCoordinates: not null };
 
     /// <summary>
     /// A triplanar picture is laid by which way its surface faces.
@@ -277,7 +288,7 @@ public class ImagePattern : Pattern
 
         return ImageTaps.Gather(
             taps, point, MapType == ImageMapType.Triplanar, Blend, Shuffle, Pigment.WearersSeed ?? 0, texture.Width,
-            texture.Height);
+            texture.Height, IsLaidByItsCoordinates, Coordinates);
     }
 
     /// <summary>
@@ -348,6 +359,6 @@ public class ImagePattern : Pattern
 
         return base.DetailsMatch(pattern) && ImageReference.Matches(other.ImageReference) && MapType == other.MapType &&
                Once == other.Once && Channel == other.Channel && Blend == other.Blend &&
-               Equals(Shuffle, other.Shuffle);
+               Equals(Shuffle, other.Shuffle) && Equals(Coordinates, other.Coordinates);
     }
 }

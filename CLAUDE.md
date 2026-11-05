@@ -968,7 +968,17 @@ after it (parsed by hand in `ParseImagePigmentClause`).  Two layings read a pict
 (`Pigments/ImageTaps.cs`: up to nine `ImageTap`s, each an affine map from the point to texels -- place, rates across
 and down, so footprints, bump slopes and normal-map frames all come from it -- with a projection share and a tile
 share), for image pigments, `image` patterns and normal maps alike; every other map keeps its one-place path, so
-scenes not saying them are bit-identical.  `triplanar [blend b]` (`ImageMapType.Triplanar`) lays the picture square to
+scenes not saying them are bit-identical.  A third is a model's texture coordinates (no map type: a picture told no
+map, worn by a `Triangle` with `TextureCoordinates` from an OBJ's `vt`, `IsLaidByItsCoordinates`): ONE tap a triangle, its affine map
+from the place (`Triangle.TextureAt`: the dual of the edges, t = 1 - v so rows run down) moved and stretched by a
+library's `-s`/`-o` (`TextureCoordinates`), read with the wearer (`Pigment.Wearer`) as the triangle, so footprints,
+normal-map frames, bump slopes, `shuffled` and roughness/metalness maps all follow the model.  `ObjectFileParser`
+reads `vt`, negative indices, `g`/`o` names, `mtllib`/`usemtl` (`MaterialLibrary`: Kd, map_Kd with alpha cutouts,
+Ks/Ns, Ke, d/Tr, Ni/Tf, illum, bump/map_Bump -- a bluish picture taken for normals -- norm, Pr/Pm and their maps,
+Pc/Pcr, Ps, aniso; the rest warned once), and MIRRORS Z (a right-handed model read as it stood was its own mirror
+image), no longer reversing winding; a face with no or an unknown `usemtl` wears the model's `material`, and
+`replace 'Name' with M` swaps one.  The gallery's models are written by `gallery/Local/interiors/models/make-models.py`
+and committed past `.gitignore`'s deliberate `*.obj` by an exception for that folder.  `triplanar [blend b]` (`ImageMapType.Triplanar`) lays the picture square to
 each axis, weights |n|^(1/b) normalized (b 0.25), upright on the sides, unmirrored on the far ones, at the WORLD'S size
 along the surface's own axes (the user's call): a `Bearing` (`Pigments/Bearing.cs`, thread-static) holds the surface's
 own axes as they stand in the space being read, their lengths in the world and its normal in its own axes -- set by

@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
+using RayTracer.Graphics;
 
 namespace RayTracer.Geometry;
 
@@ -69,6 +70,25 @@ public class Triangle : Surface
     /// How nearly a ray must run along a triangle before it is treated as missing it: the cosine of
     /// the angle between them.
     /// </summary>
+    /// <summary>
+    /// This property holds where in a picture each corner lies, as a model file's texture coordinates say -- across
+    /// from nought on the left, up from nought at the bottom -- or <c>null</c> for a triangle that has none.  A
+    /// picture laid on a triangle that has them is laid by them (see <see cref="TextureAt"/>).
+    /// </summary>
+    public (TwoDPoint First, TwoDPoint Second, TwoDPoint Third)? TextureCoordinates
+    {
+        get => field;
+        set
+        {
+            field = value;
+            _texture = null;
+        }
+    }
+
+    // The map from a place to where it lies in the picture, worked out once: across and down, as shares of the
+    // picture, at the first corner, and how each changes with the place.
+    private (double S, double T, Vector Across, Vector Down)? _texture;
+
     private const double ParallelTolerance = 1e-12;
 
     private Vector _e1;
@@ -89,8 +109,48 @@ public class Triangle : Surface
     /// <param name="point1">Point 1 of the triangle</param>
     /// <param name="point2">Point 2 of the triangle</param>
     /// <param name="point3">Point 3 of the triangle</param>
+    /// <summary>
+    /// This method returns where a place in the triangle's plane lies in a picture laid by its texture coordinates:
+    /// across and down, as shares of the picture (down, since a picture's rows run down where a model's coordinates
+    /// run up), and how each changes along X, Y and Z.  Within a triangle that is one affine map, the same for every
+    /// place, which is what lets a footprint be carried into the picture, and a normal map be laid in its frame.
+    /// </summary>
+    /// <param name="point">The place, in the triangle's own space.</param>
+    /// <returns>The place in the picture and its rates, or <c>null</c> for a triangle with no texture
+    /// coordinates.</returns>
+    internal (double S, double T, Vector Across, Vector Down)? TextureAt(Point point)
+    {
+        if (TextureCoordinates is not var ((u1, v1), (u2, v2), (u3, v3)))
+            return null;
+
+        if (_texture is null)
+        {
+            // The dual of the two edges in the triangle's plane: a place p - Point1 = b e1 + c e2 + (off the plane) has
+            // b = d1 . (p - Point1) and c = d2 . (p - Point1).
+            double e11 = _e1.Dot(_e1), e12 = _e1.Dot(_e2), e22 = _e2.Dot(_e2);
+            double determinant = e11 * e22 - e12 * e12;
+
+            if (Math.Abs(determinant) < 1e-300)
+                return null;
+
+            Vector d1 = (_e1 * e22 - _e2 * e12) / determinant;
+            Vector d2 = (_e2 * e11 - _e1 * e12) / determinant;
+            Vector across = d1 * (u2 - u1) + d2 * (u3 - u1);
+            Vector up = d1 * (v2 - v1) + d2 * (v3 - v1);
+
+            _texture = (u1, 1 - v1, across, -up);
+        }
+
+        (double s, double t, Vector rateAcross, Vector rateDown) = _texture.Value;
+        Vector offset = point - Point1;
+
+        return (s + rateAcross.Dot(offset), t + rateDown.Dot(offset), rateAcross, rateDown);
+    }
+
     private void PointChanged(Point point1, Point point2, Point point3)
     {
+        _texture = null;
+
         if (point1 is not null && point2 is not null && point3 is not null)
         {
             _e1 = point2 - point1;

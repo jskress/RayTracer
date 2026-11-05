@@ -115,12 +115,12 @@ public class TestObjectFileParser
         Triangle t1 = (Triangle) group.Surfaces[0];
         Triangle t2 = (Triangle) group.Surfaces[1];
 
-        Assert.AreSame(parser.Vertices[2], t1.Point1);
+        Assert.AreSame(parser.Vertices[0], t1.Point1);
         Assert.AreSame(parser.Vertices[1], t1.Point2);
-        Assert.AreSame(parser.Vertices[0], t1.Point3);
-        Assert.AreSame(parser.Vertices[3], t2.Point1);
+        Assert.AreSame(parser.Vertices[2], t1.Point3);
+        Assert.AreSame(parser.Vertices[0], t2.Point1);
         Assert.AreSame(parser.Vertices[2], t2.Point2);
-        Assert.AreSame(parser.Vertices[0], t2.Point3);
+        Assert.AreSame(parser.Vertices[3], t2.Point3);
     }
 
     [TestMethod]
@@ -140,15 +140,15 @@ public class TestObjectFileParser
         Triangle t2 = (Triangle) group.Surfaces[1];
         Triangle t3 = (Triangle) group.Surfaces[2];
 
-        Assert.AreSame(parser.Vertices[4], t1.Point1);
-        Assert.AreSame(parser.Vertices[3], t1.Point2);
+        Assert.AreSame(parser.Vertices[0], t1.Point1);
+        Assert.AreSame(parser.Vertices[1], t1.Point2);
         Assert.AreSame(parser.Vertices[2], t1.Point3);
-        Assert.AreSame(parser.Vertices[4], t2.Point1);
+        Assert.AreSame(parser.Vertices[0], t2.Point1);
         Assert.AreSame(parser.Vertices[2], t2.Point2);
-        Assert.AreSame(parser.Vertices[1], t2.Point3);
-        Assert.AreSame(parser.Vertices[4], t3.Point1);
-        Assert.AreSame(parser.Vertices[1], t3.Point2);
-        Assert.AreSame(parser.Vertices[0], t3.Point3);
+        Assert.AreSame(parser.Vertices[3], t2.Point3);
+        Assert.AreSame(parser.Vertices[0], t3.Point1);
+        Assert.AreSame(parser.Vertices[3], t3.Point2);
+        Assert.AreSame(parser.Vertices[4], t3.Point3);
     }
 
     [TestMethod]
@@ -174,12 +174,14 @@ public class TestObjectFileParser
         Triangle t1 = (Triangle) g1.Surfaces[0];
         Triangle t2 = (Triangle) g2.Surfaces[0];
 
-        Assert.AreSame(parser.Vertices[2], t1.Point1);
+        Assert.AreSame(parser.Vertices[0], t1.Point1);
         Assert.AreSame(parser.Vertices[1], t1.Point2);
-        Assert.AreSame(parser.Vertices[0], t1.Point3);
-        Assert.AreSame(parser.Vertices[3], t2.Point1);
+        Assert.AreSame(parser.Vertices[2], t1.Point3);
+        Assert.AreSame(parser.Vertices[0], t2.Point1);
         Assert.AreSame(parser.Vertices[2], t2.Point2);
-        Assert.AreSame(parser.Vertices[0], t2.Point3);
+        Assert.AreSame(parser.Vertices[3], t2.Point3);
+        Assert.AreEqual("FirstGroup", g1.Name);
+        Assert.AreEqual("SecondGroup", g2.Name);
     }
 
     [TestMethod]
@@ -190,9 +192,10 @@ public class TestObjectFileParser
         _ = parser.Parse();
 
         Assert.AreEqual(3, parser.Normals.Count);
-        Assert.IsTrue(Directions.In.Matches(parser.Normals[0]));
-        Assert.IsTrue(new Vector(0.707, 0, -0.707).Matches(parser.Normals[1]));
-        Assert.IsTrue(new Vector(1, 2, 3).Matches(parser.Normals[2]));
+        // Mirrored into this engine's space, as the vertices are.
+        Assert.IsTrue(new Vector(0, 0, -1).Matches(parser.Normals[0]));
+        Assert.IsTrue(new Vector(0.707, 0, 0.707).Matches(parser.Normals[1]));
+        Assert.IsTrue(new Vector(1, 2, -3).Matches(parser.Normals[2]));
     }
 
     [TestMethod]
@@ -213,12 +216,12 @@ public class TestObjectFileParser
         SmoothTriangle t1 = (SmoothTriangle) group.Surfaces[0];
         SmoothTriangle t2 = (SmoothTriangle) group.Surfaces[1];
 
-        Assert.AreSame(parser.Vertices[2], t1.Point1);
+        Assert.AreSame(parser.Vertices[0], t1.Point1);
         Assert.AreSame(parser.Vertices[1], t1.Point2);
-        Assert.AreSame(parser.Vertices[0], t1.Point3);
-        Assert.AreSame(parser.Normals[1], t1.Normal1);
+        Assert.AreSame(parser.Vertices[2], t1.Point3);
+        Assert.AreSame(parser.Normals[2], t1.Normal1);
         Assert.AreSame(parser.Normals[0], t1.Normal2);
-        Assert.AreSame(parser.Normals[2], t1.Normal3);
+        Assert.AreSame(parser.Normals[1], t1.Normal3);
         Assert.AreSame(t1.Point1, t2.Point1);
         Assert.AreSame(t1.Point2, t2.Point2);
         Assert.AreSame(t1.Point3, t2.Point3);

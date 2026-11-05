@@ -389,6 +389,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `regular` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `render` | Names which scene and camera to render. | [Scene Files](scene-files.md#the-render-command) |
 | `repeat` | Shape grammar: tiles a scope along an axis with as many parts of about a size as fit. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `replace` | Object file: `replace 'Name' with <material>`, the scene's material in place of the model's library's of that name. | [Object Files](advanced-surfaces.md#object-files) |
 | `repose` | Erosion: the steepest angle loose rock rests at, which scree lies at and a river's valley sides fall back to. | [Erosion](advanced-surfaces.md#erosion) |
 | `resolution` | Hypertexture: how many cells of the grid it measures its solid on span the longest side. | [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `return` | The answer a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
@@ -440,7 +441,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `soft` | Context: `film curve soft`, the default; eases each channel brighter than eight tenths of white toward white.  Hypertexture: how far either side of the skin its stuff thins out over, which makes it soft. | [Context](context.md#film-curve), [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
 | `solid` | Fracture: the thing that is broken.  Hypertexture: the thing whose skin is broken up. | [Advanced Surfaces](advanced-surfaces.md#fracture), [Hypertexture](advanced-surfaces.md#hypertexture) |
-| `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
+| `source` | Object file: the model file to read, its material libraries found beside it; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `spacing` | How far apart a `field` stands its copies.  Grown tree climbing a surface: how far apart its points stand, in place of how many. | [Advanced Surfaces](advanced-surfaces.md#field), [Climbing a surface](advanced-surfaces.md#climbing-a-surface) |
 | `span` | Surface: `span from <name> to <name> [stretched]`, stood between two named places. | [Marks and Spans](animation.md#marks-and-spans) |
 | `spectral` | Context: carry light wavelength by wavelength rather than as red, green and blue. | [Context](context.md#spectral-light) |
@@ -553,7 +554,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `width` | Context: image width in pixels.  Also a ribbon's or strand's width at a point, and a strand's all along a spline.  A chain's links: how wide each is outside.  Saddle or swells: how far it reaches along X.  In a shape grammar's rules, the scope's width. | [Context](context.md#image-size), [Ribbon](advanced-surfaces.md#ribbon), [Strand](advanced-surfaces.md#strand), [Chain](advanced-surfaces.md#chain), [Saddle](surfaces.md#saddle), [Swells](surfaces.md#swells), [Shape Grammar](advanced-surfaces.md#shape-grammar) |
 | `wind` | Context: how the air moves, dragging bodies and swarms with it; still unless said. | [Bodies](animation.md#bodies) |
 | `wire` | Chain: how thick a link's bar is. | [Chain](advanced-surfaces.md#chain) |
-| `with` | Introduces `with seed`, fixing a pattern's random start.  A joint's `reach … with`, naming what reaches.  Placement: `align left with` and the rest.  `render … with camera`. | [Pigments & Patterns](pigments-and-patterns.md#seeding), [Reaching](animation.md#reaching), [Transforms](transforms.md#placing-one-thing-against-another), [Scene Files](scene-files.md#the-render-command) |
+| `with` | Introduces `with seed`, fixing a pattern's random start.  A joint's `reach … with`, naming what reaches.  Placement: `align left with` and the rest.  `render … with camera`.  Object file: `replace … with`, the material put in place. | [Pigments & Patterns](pigments-and-patterns.md#seeding), [Reaching](animation.md#reaching), [Transforms](transforms.md#placing-one-thing-against-another), [Scene Files](scene-files.md#the-render-command), [Object Files](advanced-surfaces.md#object-files) |
 | `within` | The outline a `field` fills.  Swarm: the shape it throws its copies from within. | [Advanced Surfaces](advanced-surfaces.md#field), [Swarms](animation.md#swarms) |
 | `wood` | Pattern: concentric growth rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `wrinkles` | Pattern: crumpled noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |

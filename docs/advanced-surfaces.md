@@ -2380,12 +2380,15 @@ are meant to leave — before the weather comes.
 
 ### Object Files
 
-A mesh loaded from a Wavefront `.obj` file, which is how you bring in geometry modeled
-somewhere else:
+A model loaded from a Wavefront `.obj` file, which is how you bring in geometry modeled somewhere else, with the
+materials and pictures its material library gives it:
+
+![A crate, a die, a barrel and a potted plant, each a model with its own materials and pictures](images/figures/adv-models.png)
 
 ```
 object file {
-    source 'model.obj'
+    source 'models/crate.obj'
+    replace 'CrateLabel' with material { pigment Gray60 }
 }
 ```
 
@@ -2395,8 +2398,59 @@ object file {
   <img alt="An object file" src="images/advanced/objectFileClause.svg">
 </picture>
 
-The triangles become [smooth triangles](surfaces.md#triangle-and-smooth-triangle) where the
-file carries normals, and plain ones where it does not.
+**What the file holds is read**: vertices, texture coordinates (`vt`) and normals (`vn`); faces of any number of
+corners, written `v`, `v/vt`, `v//vn` or `v/vt/vn` and counted from one or, negative, back from the end; groups and
+objects (`g`, `o`), each a group named for what follows it; and the material libraries (`mtllib`) it names, found
+beside it, with the material each face after a `usemtl` wears.  The triangles become
+[smooth triangles](surfaces.md#triangle-and-smooth-triangle) where the file carries normals, and plain ones where it
+does not.  A line ending in a backslash runs on, and what follows a `#` is a remark.
+
+**A model is read the right way round.**  A modeling tool works in right-handed space and this engine in left-handed,
+so a model read as it stands comes out its own mirror image, a word in its texture backward.  So every Z is negated
+as the model is read, a vertex's and a normal's: the model is as it was made, and its front, toward +Z where it was
+made, faces -Z here — toward the usual camera, as this engine's buildings and vehicles do.
+
+**What a material library says** is turned into this engine's materials:
+
+| Statement | What it becomes |
+| --- | --- |
+| `Kd` | The color. |
+| `map_Kd` | A picture laid by the model's texture coordinates, in place of the color.  Where the picture is clear (its alpha), the surface is cut out, which is how a model's leaves are shaped. |
+| `Ks`, `Ns` | The highlight: its strength, the brightest of `Ks`, and its tightness. |
+| `Ke` | Light given off, its [`emission`](materials.md#emission). |
+| `d`, `Tr` | How opaque, or how clear (`Tr`, one less than `d`). |
+| `Ni`, `Tf` | What is seen through: its index of refraction, and how strongly it colors the light. |
+| `illum` | How it is lit: 0 its color alone, unlit; 1 with no highlight; 2 as usual; 3 and 5 mirroring by `Ks` (5 by Fresnel); 4, 6, 7 and 9 glass. |
+| `bump`, `map_Bump` | A picture of heights, `-bm` how deep — or a picture of normals, as Blender writes them there: a picture mostly blue, its red and green about the middle, is taken for one. |
+| `norm` | A normal map, laid in the frame of the model's texture coordinates. |
+| `Pr`, `Pm` | [Roughness](materials.md#roughness) and metalness. |
+| `map_Pr`, `map_Pm` | Pictures of them, `-imfchan r`, `g` or `b` reading one channel. |
+| `Pc`, `Pcr` | A [clear coat](materials.md#a-clear-coat), and how rough. |
+| `Ps` | A [sheen](materials.md#cloth), as bright as it says. |
+| `aniso` | [Brushing](materials.md#brushed-metal), on a rough material. |
+
+A map's `-s` stretches and `-o` moves where the model's coordinates fall in the picture.  `Ka` is not read — a lamp
+lends this engine's [ambient](materials.md#ambient-diffuse-and-specular), which is not a color a surface has — nor are `map_Ks`,
+`map_Ns`, `-clamp`, or a `map_d` picture other than `map_Kd`'s, whose own alpha is the cutout.  What a file says that
+is not read is said once, as a warning, when the scene is.
+
+**What a face wears.**  A face given a material by its `usemtl` wears it; one given none, or one the libraries do not
+hold, wears what the scene gives the model as a whole, its `material`, as every triangle in a model did before.
+**`replace 'Name' with <material>`** puts a material of the scene's in place of the library's material of that name,
+on every face that names it — a name, a primitive's parameter, or `material { ... }` written out.  A name the
+libraries do not hold is refused, naming those they do.
+
+**A picture is laid by the model's own texture coordinates**, wherever it comes from — the library, or an `image`
+pigment the scene gives the model itself.  Within each triangle that is one affine map from a place to the picture,
+so a pixel's footprint is carried into the picture and [filtered](pigments-and-patterns.md#image-pigments) there, a
+normal or bump map is laid in the picture's own frame, and `shuffled` works on a model as on a plane.  Told another
+way — `planar`, `spherical` and the rest — a picture is laid that way instead, and a model without texture
+coordinates lays one flat, as any triangle does.
+
+The gallery's `gallery/Local/interiors/a-corner-of-the-storeroom.igl` stands a crate, a die, a barrel and a plant
+about a room, each a model with its own library and pictures; they are written, in plain Python, by
+`gallery/Local/interiors/models/make-models.py`.  The complete scene for the picture above is
+[`docs/examples/advanced/models.igl`](examples/advanced/models.igl).
 
 ### L-Systems
 

@@ -1,0 +1,6 @@
+# Written by make-models.py.
+newmtl Die
+Kd 1 1 1
+Ks 0.5 0.5 0.5
+Ns 140
+map_Kd die.png
