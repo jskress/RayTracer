@@ -1,5 +1,7 @@
 *.ppm
 *.obj
+# Models written here by make-models.py, not downloaded, are kept; downloaded models are cited, never committed.
+!gallery/Local/interiors/models/*.obj
 bin
 obj
 .idea

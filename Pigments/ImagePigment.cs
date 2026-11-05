@@ -48,6 +48,12 @@ public class ImagePigment : Pigment
     /// </summary>
     public Shuffle Shuffle { get; set; }
 
+    /// <summary>
+    /// This property holds how a model's texture coordinates are moved and stretched before the picture is read at
+    /// them, if they are.
+    /// </summary>
+    public TextureCoordinates Coordinates { get; set; }
+
     private Texture _texture;
 
     // How the image is laid on the surface it was readied for, and the radius of the ring a toroidal map's tube runs
@@ -105,7 +111,11 @@ public class ImagePigment : Pigment
     /// This property reports whether the image is read more than once at a place -- laid triplanar, or shuffled --
     /// rather than at one place in the picture; see <see cref="ImageTaps"/>.
     /// </summary>
-    private bool IsSpread => MapType == ImageMapType.Triplanar || Shuffle is not null;
+    private bool IsSpread => MapType == ImageMapType.Triplanar || Shuffle is not null || IsLaidByItsCoordinates;
+
+    // Whether the surface being read is a model's triangle carrying texture coordinates, and the picture, told no other
+    // way to lie, is laid by them: read through the taps, one a triangle (see ImageTaps.Gather).
+    private bool IsLaidByItsCoordinates => MapType is null && Wearer is Triangle { TextureCoordinates: not null };
 
     /// <summary>
     /// A triplanar image is laid by which way its surface faces.
@@ -190,7 +200,7 @@ public class ImagePigment : Pigment
         Span<ImageTap> taps = stackalloc ImageTap[ImageTaps.Most];
         int count = ImageTaps.Gather(
             taps, point, MapType == ImageMapType.Triplanar, Blend, Shuffle, Seed ?? WearersSeed ?? 0, _texture.Width,
-            _texture.Height);
+            _texture.Height, IsLaidByItsCoordinates, Coordinates);
 
         return Brightened(ImageTaps.Read(_texture, taps[..count], footprint, ImageTaps.Contrast));
     }
@@ -218,6 +228,7 @@ public class ImagePigment : Pigment
                Once == pigmentation.Once &&
                Brightness == pigmentation.Brightness &&
                Blend == pigmentation.Blend &&
-               Equals(Shuffle, pigmentation.Shuffle);
+               Equals(Shuffle, pigmentation.Shuffle) &&
+               Equals(Coordinates, pigmentation.Coordinates);
     }
 }

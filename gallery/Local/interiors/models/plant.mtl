@@ -1,0 +1,16 @@
+# Written by make-models.py.
+newmtl Pot
+Kd 1 1 1
+Ks 0.05 0.05 0.05
+Ns 8
+map_Kd plant-pot.png
+
+newmtl Soil
+Kd 0.13 0.09 0.06
+Ks 0 0 0
+
+newmtl Leaf
+Kd 1 1 1
+Ks 0.25 0.25 0.25
+Ns 30
+map_Kd plant-leaf.png

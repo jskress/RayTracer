@@ -56,6 +56,10 @@ public partial class LanguageParser
                     resolver.Directory = CurrentDirectory;
                     resolver.FileNameResolver = new TermResolver<string> { Term = clause.Term() };
                     break;
+                case "replace":
+                    // The material written after "with": written out, a name, or a primitive's parameter.
+                    resolver.Replacements.Add((new TermResolver<string> { Term = clause.Term() }, ParseBlendedMaterial()));
+                    break;
                 default:
                     HandleSurfaceClause(clause, resolver, "object file");
                     break;

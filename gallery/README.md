@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 181 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 182 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -720,7 +720,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Interiors</b> &mdash; 10 images &middot; rooms, and light indoors</summary>
+<summary><b>Interiors</b> &mdash; 11 images &middot; rooms, and light indoors</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -745,6 +745,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/interiors/candle-by-its-own-light.igl">A Candle by Its Own Light</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/interiors/a-corner-of-the-storeroom.png">
+      <img alt="A Corner of the Storeroom" height="120" src="Local/interiors/a-corner-of-the-storeroom.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/interiors/a-corner-of-the-storeroom.igl">A Corner of the Storeroom</a>
     </td>
   </tr>
   <tr style="border: none;">

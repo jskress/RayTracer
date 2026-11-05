@@ -91,7 +91,7 @@ public partial class LanguageParser
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metal', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'neutral', 'no', 'noise', 'none', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
-            'sdf', 'julia', 'iterations', 'c', 'mandelbulb', 'mandelbox', 'menger', 'outer', 'fold', 'detail', 'tiles', 'tile', 'cell', 'turns', 'tries', 'fit', 'hypertexture', 'eroded', 'drawn', 'resolution', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
+            'sdf', 'julia', 'iterations', 'c', 'mandelbulb', 'mandelbox', 'menger', 'outer', 'fold', 'detail', 'tiles', 'tile', 'cell', 'turns', 'tries', 'fit', 'hypertexture', 'eroded', 'drawn', 'resolution', 'replace', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'portal', 'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reach', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -2154,7 +2154,9 @@ public partial class LanguageParser
         }
         objectFileEntryClause:
         [
-            { source > _expression } | surfaceEntryClause
+            { source > _expression } |
+            { replace > _expression > with ?? 'Expecting "with" and the material to put in its place, here.' } |
+            surfaceEntryClause
         ]
         
         // Object clause.

@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 
 namespace RayTracer.Pigments;
@@ -152,8 +153,18 @@ internal static class ImageTaps
     /// <returns>How many readings there are.</returns>
     internal static int Gather(
         Span<ImageTap> taps, Point point, bool triplanar, double blend, Shuffle shuffle, int seed, int width,
-        int height)
+        int height, bool uv = false, TextureCoordinates coordinates = null)
     {
+        // By a model's texture coordinates: one projection, the triangle's own map from a place into the picture,
+        // moved and stretched as its material says, and tiled and shuffled as a planar picture is if asked.
+        if (uv && Pigment.Wearer is Triangle triangle && triangle.TextureAt(point) is var (s, t, across, down))
+        {
+            if (coordinates is not null)
+                (s, t, across, down) = coordinates.Applied(s, t, across, down);
+
+            return AddTiles(taps, 0, s, t, across, down, 1, 0, shuffle, seed, width, height);
+        }
+
         if (!triplanar)
         {
             // Planar: the picture across X and down Z, a unit square to the whole of it.

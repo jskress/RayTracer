@@ -1,0 +1,94 @@
+// A corner of a storeroom, every thing in it a model read from a Wavefront file and the material library it names.
+//
+// **None of them is described here.**  A crate, a die, a barrel and a potted plant are each a `.obj` with an `.mtl`
+// beside it, written by `models/make-models.py` as a modeling tool would write them, and all this scene does is
+// stand them about.  What they look like is their own:
+//
+// - the crate is two materials, `usemtl` choosing between them face by face -- boards with a bump map of their
+//   joints, and the same boards stenciled FRAGILE on its front;
+// - the die is one picture holding all six faces, each face's texture coordinates taking its own part of it;
+// - the barrel's staves are a picture wrapped once round it, bump-mapped at their seams, its hoops a material that
+//   says it is metal and how rough, its lid a picture of boards;
+// - the plant's leaves are flat strips, their outline the alpha of their picture.
+//
+// **A picture is laid by a model's own texture coordinates** -- one affine map from a place to the picture on each
+// triangle, so a footprint is carried into the picture and filtered there, and a bump or normal map is laid in the
+// picture's own frame.  And **a model is read the right way round**: made right-handed, it is mirrored into this
+// left-handed space as it is read, so the stencil reads FRAGILE and not ELIGARF, and its front faces -Z, the camera.
+//
+// The crates stand square to the camera, all but the one on top, so their stenciled fronts face it; that one is
+// turned a quarter to show a plain side.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    scale ambient by 0.35
+    info {
+        title 'A Corner of the Storeroom'
+        author 'J. Stephen Kress'
+        description 'Crates, dice, barrels and a plant, each a Wavefront model with its own materials and pictures.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0.95, 1.25, -2.6]
+    look at [-0.2, 0.6, 0.9]
+    field of view 60
+}
+
+background [0.05, 0.05, 0.06]
+
+// A lamp hanging high in the room, warm, and a little cool light from the door behind the camera.
+area light { location [-0.3, 2.7, -0.2]  axisU [0.3, 0, 0]  axisV [0, 0, 0.3]  steps 4  color [1.3, 1.12, 0.85] }
+point light { location [3, 1.8, -6]  color [0.14, 0.16, 0.2] }
+
+// -- The room --------------------------------------------------------------------------------------
+
+// Boards along X, each about fourteen centimeters wide.
+Boards = material {
+    pigment brick {
+        brick size [1.8, 0.3, 0.14]  mortar size 0.005
+        [0.05, 0.035, 0.02], [0.21, 0.14, 0.085]
+    }
+    specular 0.08  shininess 14
+}
+Plaster = material {
+    pigment granite { [0, [0.30, 0.28, 0.25], 1, [0.40, 0.37, 0.33]]  scale 0.6 }
+    normal granite { depth 0.2  scale 0.08 }
+    specular 0.02
+}
+
+plane { material Boards }
+plane { rotate X -90  translate Z 1.9  material Plaster }
+plane { rotate Z -90  translate X -1.9  material Plaster }
+
+// -- What is stored in it --------------------------------------------------------------------------
+
+// The models are in meters: the crate and the die a unit cube about their middles, the barrel 1.1 tall and the
+// plant's pot 0.4, each standing on the origin.
+
+// Crates stacked in the corner, the top one turned a quarter to show a plain side.
+object file { source 'models/crate.obj'  scale 0.6  rotate Y 6  translate [-1.4, 0.3, 1.4] }
+object file { source 'models/crate.obj'  scale 0.6  rotate Y -4  translate [-0.75, 0.3, 1.45] }
+object file { source 'models/crate.obj'  scale 0.6  rotate Y 100  translate [-1.1, 0.9, 1.4] }
+
+// Dice thrown on the near crate.
+object file { source 'models/crate.obj'  scale 0.6  rotate Y -18  translate [-0.75, 0.3, 0.35] }
+object file { source 'models/die.obj'  scale 0.06  rotate Y 30  translate [-0.82, 0.63, 0.3] }
+object file { source 'models/die.obj'  scale 0.06  rotate X 90  rotate Y -50  translate [-0.62, 0.63, 0.42] }
+
+// A plant somebody keeps alive, between the crates and the barrels.
+object file { source 'models/plant.obj'  scale 1.1  translate [0.08, 0, 1.55] }
+
+// Barrels: one standing against the wall, one on its side, its middle at its radius off the floor.
+object file { source 'models/barrel.obj'  scale 0.8  rotate Y 20  translate [0.85, 0, 1.45] }
+object file {
+    source 'models/barrel.obj'
+    scale 0.8
+    translate Y -0.44
+    rotate Z 90
+    rotate Y -60
+    translate [1.05, 0.37, 0.45]
+}

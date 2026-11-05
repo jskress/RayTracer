@@ -1,0 +1,14 @@
+# Written by make-models.py.
+newmtl Crate
+Kd 1 1 1
+Ks 0.04 0.04 0.04
+Ns 8
+map_Kd crate-wood.png
+bump -bm 0.5 crate-bump.png
+
+newmtl CrateLabel
+Kd 1 1 1
+Ks 0.04 0.04 0.04
+Ns 8
+map_Kd crate-label.png
+bump -bm 0.5 crate-bump.png

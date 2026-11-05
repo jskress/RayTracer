@@ -1,0 +1,20 @@
+# Written by make-models.py.
+newmtl Staves
+Kd 1 1 1
+Ks 0.05 0.05 0.05
+Ns 10
+map_Kd barrel-staves.png
+bump -bm 0.6 barrel-bump.png
+
+newmtl Iron
+Kd 0.13 0.12 0.11
+Ks 0.35 0.35 0.35
+Ns 40
+Pm 1
+Pr 0.45
+
+newmtl Lid
+Kd 1 1 1
+Ks 0.04 0.04 0.04
+Ns 8
+map_Kd barrel-lid.png
