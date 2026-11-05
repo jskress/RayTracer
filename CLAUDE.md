@@ -509,7 +509,13 @@ charged where a ray leaves it (end of `GetHitColor`) and, for anything met insid
 up to the container's edge (`SurvivingTheMedium` in `ReachingFrom`) -- so a log inside a flame keeps the glow
 in front of it -- unless the container (or an instance it stands in) casts `no shadow`: a shadow ray from OUTSIDE
 never charges a container's medium, so charged inside only, ground under a glow's shell came out darker inside it
-than out, with an edge (until 2026-10-30); so air over a planet's ground must cast shadows.  Every medium helper finds its container's edges and density where it stands, the ray carried into
+than out, with an edge (until 2026-10-30); so air over a planet's ground must cast shadows.  Which container a hit
+stands in is found by toggling every crossing along the WHOLE line, behind the eye too (`FindContainers`), so a
+height field's triangles, walls (a group each, a step down) and underside count as the one field when it is closed and
+never when `open` (a look up from over the ground, followed back past the eye, went into one triangle and never left:
+mountains over a valley came through a box of haze undimmed and upside down, until 2026-11-05); other sheets still
+toggle alone.  A sheet met from behind is not a ray LEAVING it (`Scene.LeavesItsInsides`: Inside and not a sheet),
+or half a wood's leaves came through fog or haze undimmed.  Every medium helper finds its container's edges and density where it stands, the ray carried into
 its parent's space (`IntoTheSpaceOf`) through its portals (`Intersection.Portals` leaving it,
 `Intersection.ContainerPortals` inside it); until 2026-10-19 a medium in a moved group found its edge where the
 shape would be unmoved.  No scene's instance holds a medium even so: `Instance.MayBeShared` refuses one, and a glow
@@ -632,6 +638,20 @@ groups by `Geometry/WeatherSettler.cs`, nearest wins, and at the hit through the
 weathered per instance) makes each part's material a cached layered blend: crevices -> grime, edges -> wear, ground
 height in the OWNER's space (`Weather.Owner`, `Material.PortalTo`) -> splash, facing up -> dust, each with a bozo-noise
 broken edge; an amount of 0 adds nothing (bit-identical).  `R2D2(legs, dome, weathered)` uses it.
+
+The `hogwarts` library (meters, the lake at `y = 0`, the castle facing `-Z`, courtyards at `HogwartsCourtyard` 50) is
+the films' 1:24 studio model, from photographs round it at the Leavesden tour: buildings from a few pieces
+(`HogRoundTower`, `HogSquareTower`, `HogRange` with buttresses and dormers, `HogLancet` windows proud of the wall, a
+`HogStateOf` hash choosing dark or one of three lights by `lit`), the walls of every building running 36 m below the
+courtyards so they show wherever the crag falls away under them.  `HogwartsLand(x, z)` is the grounds, single-return
+functions all the way down (a height field folds them in): a plateau per level (rounded boxes, `HogBoxOut`), a fall that
+breaks off steeply (`1 - (1 - t)^2.2`) in three bands, its reach and the face's ribs varied ALONG the edge
+(`HogFissures` added to the distance, so on a steep face they run vertically), a cleft for the arcade, a ravine, a
+bay round the east end, and mountains (`HogMountains`, from 2.6 km out) that the 12 km `HogwartsHighlands` shares so the
+two fields agree at the grounds' edge (1.5 m under them, -60 well inside).  Erosion on the highlands carved the land
+behind down to the lake's level and was taken off.  `gallery/Local/showcase/hogwarts-at-dusk.igl`,
+`hogwarts-from-the-air.igl` and `hogwarts-from-above-the-grounds.igl` (close, from behind); all wrap the scene in a `no shadow` box of absorbing, glowing haze (an `environment`
+medium dims the sun itself, its light crossing endless haze).
 
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with

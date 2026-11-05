@@ -1,0 +1,928 @@
+// Hogwarts: the castle of the films, on its crag over the lake, in meters.
+//
+//     import 'hogwarts' { Hogwarts, HogwartsGrounds, HogwartsHighlands, HogwartsLakeWater, HogwartsPaths }
+//     import 'water' { Water }
+//
+//     object HogwartsGrounds()
+//     object HogwartsHighlands()
+//     object HogwartsPaths()
+//     object Water(12000, 12000, 'calm') { material HogwartsLakeWater }
+//     object Hogwarts()                 // by day
+//     object Hogwarts(0.7)              // at dusk, seven windows in ten lit
+//
+// | `Hogwarts` | The castle, every building of it standing where it stands on its crag, and the Owlery, Hagrid's hut (its chimney smoking), the standing stones and the gatehouse out on the hills. |
+// | `HogwartsGrounds` | The crag the castle stands on, the ravine the bridge crosses, and the hills round it, named 'grounds'. |
+// | `HogwartsHighlands` | The mountains round the lake, from a kilometer out, named 'highlands'. |
+// | `HogwartsPaths` | The road in from the gatehouse and the path to the hut, dropped onto the grounds: stand it beside them. |
+// | `HogwartsLakeWater` | The lake's water, dark with peat, for the `water` library's `Water`. |
+// | `HogwartsLand(x, z)` | How high the grounds stand at a place, for standing something on them. |
+//
+// `Hogwarts(lit, season)`: `lit` is the share of the windows with a light behind them, nought by day; `season`
+// is `'summer'` or `'winter'`, and winter lays snow on everything that faces up.  `HogwartsGrounds(season,
+// samples)` and `HogwartsHighlands(season, samples)` take the season too, and how finely to sample.
+//
+// **The lake's rest level is `y = 0`, and the castle faces it at `-Z`.**  The courtyards stand fifty meters up
+// on the crag (`HogwartsCourtyard`), the Great Hall at the left end of the front seen from the lake and the
+// greenhouses at the right, the clock tower and the covered bridge behind on the left.  The grounds are a
+// height field fourteen hundred meters square about the castle, its own space the scene's, and the highlands
+// twelve kilometers square round them, both dipping under the water where the lake is.
+//
+// -- Where the shape comes from -----------------------------------------------------------------------------
+//
+// The castle of the films is a model, built at 1:24 for the first of them and added to for six more: about
+// fifteen meters across, so a castle of about three hundred and sixty.  It stands now at the studio tour at
+// Leavesden, where it can be walked round, and that is the source here -- photographs taken all the way round
+// it (the Wikimedia Commons category "Warner Bros. Studio Tour London (model room)", CC BY 2.0 and CC BY-SA
+// 4.0), its parts placed by where they stand against one another in them and their sizes by the 1:24.  None
+// of those photographs is reproduced here.  Fan maps of the castle are not followed: they were drawn from the
+// books, and the model is not the books' castle.
+//
+// What the photographs give, along the front from the left:
+//
+// - **The Great Hall**, a long block with a steep roof, buttresses between pairs of tall windows and small ones
+//   under them, and a gable at its far end with a great window between two turrets.
+// - **A great round tower** at its right end, the broadest of all, under a tall cone, with a small turret at
+//   its foot toward the lake.
+// - **An arcade** of tall arches standing in a cleft of the crag, and the boathouse at the water below it, a
+//   stair climbing the cliff from one to the other.
+// - **The middle**: a tall square tower with a spire, a high gabled hall with a round window in its gable, and
+//   behind them the **Astronomy Tower**, the tallest and slenderest, among a crowd of spired turrets.
+// - **The east wing**, a long range and a great square tower with a turret at each corner, twin square towers
+//   behind, and at the far end **the greenhouses** on a terrace below, beside an octagonal domed house.
+//
+// And behind, round courtyards: the **clock tower** at the back on the left, the long **covered bridge** of
+// timber going out from it on trestles across a ravine, and out on the hills beyond, the **Owlery** on a
+// pinnacle of rock and a circle of standing stones.
+//
+// -- What is here for the library and not for you ----------------------------------------------------------
+//
+// Everything beginning with `Hog` is the machinery; the materials arrive in a scene whether it asked for them
+// or not, as every library's do, so they carry the prefix too.
+
+// -- What it is made of --------------------------------------------------------------------------------------
+
+// The stone, a warm gray, darker than it looks in the photographs (the model is lit for a visitor), and four
+// tints of it so that a building is not quite the one beside it.
+primitive HogStoneOf(key) -> material {
+    shade = 0.92 + random(key, 3) * 0.14
+    warm = random(key, 4) * 0.04
+    return material {
+        pigment bozo {
+            [0, (color [0.44 + warm, 0.41 + warm * 0.6, 0.36]) * shade, 1, (color [0.50 + warm, 0.47 + warm * 0.6, 0.41]) * shade]
+            scale 0.6
+        }
+        specular 0.03  shininess 9
+    }
+}
+
+// Slate, blue-gray, a little sheen on it; and a range's roof, a little lighter or darker than the next, some of
+// them greener with weather.
+HogwartsSlate = material { pigment [0.13, 0.14, 0.16]  specular 0.12  shininess 28 }
+primitive HogSlateOf(key) -> material {
+    shade = 0.8 + random(key, 5) * 0.4
+    green = random(key, 6) * 0.025
+    return material { pigment (color [0.13, 0.14 + green, 0.16 - green]) * shade  specular 0.12  shininess 28 }
+}
+HogwartsLead = material { pigment [0.22, 0.23, 0.25]  specular 0.3  shininess 40 }
+HogwartsTimber = material { pigment [0.20, 0.14, 0.09]  specular 0.03  shininess 8 }
+HogwartsShingle = material { pigment [0.16, 0.13, 0.10]  specular 0.04  shininess 10 }
+
+// The greenhouses' glazing: pale, mostly a mirror of the sky at a glance, in white-painted frames.
+HogwartsGlazing = material { pigment [0.30, 0.36, 0.36]  reflective 0.25  fresnel  specular 0.6  shininess 120 }
+HogwartsPaint = material { pigment [0.80, 0.80, 0.76]  specular 0.08  shininess 20 }
+
+// A window: dark glass by day, and at night one of three warm lights, a little different from one another.
+// `state` is nought for dark and one to three for lit.
+primitive HogGlassOf(state) -> material {
+    switch (state) {
+        case 1 { return material { pigment [1, 0.55, 0.22]  emission 1.9  diffuse 0  specular 0 } }
+        case 2 { return material { pigment [1, 0.62, 0.30]  emission 2.5  diffuse 0  specular 0 } }
+        case 3 { return material { pigment [1, 0.48, 0.17]  emission 1.4  diffuse 0  specular 0 } }
+        default { return material { pigment [0.025, 0.027, 0.032]  specular 0.4  shininess 70 } }
+    }
+}
+
+// Whether window `n` of the thing keyed `key` is lit, and by which light.
+function HogStateOf(lit, key, n) -> number {
+    return random(key, n, 7) < lit ? 1 + floor(random(key, n, 8) * 2.999) : 0
+}
+
+// -- The pieces ----------------------------------------------------------------------------------------------
+
+// A pointed window `wide` across and `tall` to its point, standing on `y = 0` about `x = 0`, its glass four
+// centimeters proud of a wall at `z = 0` and facing `-Z`.  It is a rectangle and a diamond over it, so its head
+// is pointed; at the distances the castle is seen from that is all a lancet is.
+primitive HogLancet(wide, tall, state) -> group {
+    half = wide / 2
+    head = wide * 0.8
+    return group {
+        cube { scale [half, (tall - head) / 2, 0.2]  translate [0, (tall - head) / 2, 0.16] }
+        cube { rotate Z 45  scale [half * 0.7071, head * 0.7071, 0.2]  translate [0, tall - head, 0.16] }
+        material HogGlassOf(state)
+    }
+}
+
+// A run of windows along a flat face `length` long lying in X about `x = 0`, facing `-Z`: `bays` across and
+// `floors` up, `rise` apart, the lowest standing at `bottom`.  `pair` sets two lights side by side in each bay.
+// Each window is lit or not by its own draw, as the rooms behind a range's are; a `state` of nought or more lights
+// every one of them alike, for windows that are all one room's.
+function HogWindowState(state, lit, key, n) -> number { return state >= 0 ? state : HogStateOf(lit, key, n) }
+
+primitive HogWindows(length, bays, floors, wide, tall, bottom, rise, lit, key, pair = 0, state = -1) -> group {
+    step = length / bays
+    return group {
+        for f in [0, floors - 1] {
+            for b in [0, bays - 1] {
+                if (pair > 0) {
+                    object HogLancet(wide, tall, HogWindowState(state, lit, key, f * 97 + b)) {
+                        translate [(b + 0.5) * step - length / 2 - wide * 0.62, bottom + f * rise, 0]
+                    }
+                    object HogLancet(wide, tall, HogWindowState(state, lit, key, f * 97 + b)) {
+                        translate [(b + 0.5) * step - length / 2 + wide * 0.62, bottom + f * rise, 0]
+                    }
+                }
+                else {
+                    object HogLancet(wide, tall, HogWindowState(state, lit, key, f * 97 + b)) {
+                        translate [(b + 0.5) * step - length / 2, bottom + f * rise, 0]
+                    }
+                }
+            }
+        }
+    }
+}
+
+// A cone of slate over a ring `radius` round, `tall` high, standing on `y = 0`, with a finial of lead.
+primitive HogCone(radius, tall) -> group {
+    return group {
+        conic { min Y -1  max Y 0  scale [radius, tall, radius]  translate Y tall  material HogwartsSlate }
+        cylinder { min Y 0  max Y tall * 0.09 + 0.8  scale [0.1 + radius * 0.01, 1, 0.1 + radius * 0.01]
+                   translate Y tall - 0.3  material HogwartsLead }
+        sphere { scale 0.18 + radius * 0.012  translate Y tall + tall * 0.05 + 0.3  material HogwartsLead }
+    }
+}
+
+// A four-sided spire `wide` across its foot and `tall`, standing on `y = 0`.
+primitive HogSpire(wide, tall) -> group {
+    half = wide / 2
+    return group {
+        tapered extrusion {
+            taper 0
+            path { move to -half, -half  line to half, -half  line to half, half  line to -half, half  close }
+            min Y 0  max Y tall
+            material HogwartsSlate
+        }
+        cylinder { min Y 0  max Y tall * 0.08 + 0.8  scale [0.1 + wide * 0.006, 1, 0.1 + wide * 0.006]
+                   translate Y tall - 0.3  material HogwartsLead }
+    }
+}
+
+// A roof `wide` across and `long` along X, its eaves on `y = 0` and its ridge `tall` above them, reaching `over`
+// past the walls all round.
+primitive HogRoof(wide, long, tall, over = 0.6) -> extrusion {
+    half = wide / 2 + over
+    return extrusion {
+        path { move to -half, -over * tall / (wide / 2)  line to half, -over * tall / (wide / 2)  line to 0, tall  close }
+        min Y -long / 2 - over  max Y long / 2 + over
+        rotate X -90
+        rotate Y 90
+        material HogwartsSlate
+    }
+}
+
+// A round tower: walls `radius` round from deep in the rock to `walls` up, string courses between its floors, a
+// parapet standing out on corbels at its head, and a cone `cone` tall over that; `floors` rows of `per` windows.
+primitive HogRoundTower(radius, walls, cone, floors, per, lit, key, base = -36) -> group {
+    low = max(base, 0)
+    rise = (walls - 8 - low) / floors
+    wide = clamp(radius * 0.22, 0.8, 1.6)
+    return group {
+        cylinder { min Y base  max Y walls - 3  scale [radius, 1, radius] }
+        cylinder { min Y walls - 3  max Y walls  scale [radius + 0.5, 1, radius + 0.5] }
+        cylinder { min Y walls - 4  max Y walls - 3  scale [radius + 0.25, 1, radius + 0.25] }
+        for f in [1, floors] {
+            cylinder { min Y -0.25  max Y 0.25  scale [radius + 0.12, 1, radius + 0.12]  translate Y low + 1.5 + f * rise }
+        }
+        object HogCone(radius + 1.1, cone) { translate Y walls }
+        for f in [0, floors - 1] {
+            for w in [0, per - 1] {
+                object HogLancet(wide, wide * 2.4, HogStateOf(lit, key, f * 31 + w)) {
+                    translate Z -radius
+                    rotate Y (w + 0.5 * mod(f, 2)) * 360 / per + key * 17
+                    translate Y low + 3 + f * rise
+                }
+            }
+        }
+        material HogStoneOf(key)
+    }
+}
+
+// A square tower `wide` on a side, walls to `walls`, a corner turret at each corner standing above the parapet,
+// and a spire `spire` tall over all.
+primitive HogSquareTower(wide, walls, spire, floors, lit, key, base = -36) -> group {
+    half = wide / 2
+    rise = (walls - 8) / floors
+    corner = clamp(wide * 0.09, 0.9, 2.2)
+    return group {
+        cube { scale [half, (walls - base) / 2, half]  translate Y (walls + base) / 2 }
+        cube { scale [half + 0.4, 1.2, half + 0.4]  translate Y walls - 1.2 }
+        for f in [1, floors] {
+            cube { scale [half + 0.1, 0.22, half + 0.1]  translate Y 1.5 + f * rise }
+        }
+        for side in [0, 3] {
+            object HogWindows(wide, 3, floors, 1.1, 2.8, 3, rise, lit, key * 11 + side) {
+                translate Z -half
+                rotate Y side * 90
+            }
+            group {
+                cylinder { min Y walls - 6  max Y walls + 5  scale [corner, 1, corner] }
+                object HogCone(corner + 0.3, corner * 4) { translate Y walls + 5 }
+                translate [half, 0, half]
+                rotate Y side * 90
+            }
+        }
+        object HogSpire(wide * 0.92, spire) { translate Y walls }
+        material HogStoneOf(key)
+    }
+}
+
+// A range: a gabled block `long` along X and `deep` across, walls to `walls` and a ridge `ridge` over them,
+// with `bays` windows across each long side and `floors` up; `pair` sets them two by two.
+primitive HogRange(long, deep, walls, ridge, bays, floors, lit, key, pair = 0, base = -36) -> group {
+    rise = (walls - 6) / floors
+    tall = clamp(rise * 0.6, 2.4, 7)
+    step = long / bays
+    return group {
+        cube { scale [long / 2, (walls - base) / 2, deep / 2]  translate Y (walls + base) / 2 }
+        cube { scale [long / 2 + 0.25, 0.4, deep / 2 + 0.25]  translate Y walls - 0.4 }
+        object HogRoof(deep, long, ridge) { translate Y walls  material HogSlateOf(key) }
+        // The gables: the ends of a stone prism under the roof, a little inside its slopes so that the two
+        // never share a face.
+        object HogRoof(deep - 0.4, long + 0.6, ridge * (deep - 0.4) / deep, 0) {
+            translate Y walls
+            material HogStoneOf(key)
+        }
+        for side in [0, 1] {
+            group {
+                object HogWindows(long, bays, floors, 1.3, tall, 3, rise, lit, key * 7 + 1 + side, pair) { translate Z -deep / 2 }
+                // Buttresses between the bays, and a gabled dormer over every other bay, its window lit as the
+                // rooms under the roof are.
+                for b in [0, bays] {
+                    cube { scale [0.45, (walls - 1 - base) / 2, 0.7]  translate [b * step - long / 2, (walls - 1 + base) / 2, -deep / 2 - 0.7] }
+                }
+                for b in [0, bays - 1] {
+                    if (mod(b + key, 2) == 0) {
+                        group {
+                            cube { scale [1.6, 1.8, 1.6]  translate Y 1.4 }
+                            object HogRoof(3.2, 3.2, 2.2, 0.2) { rotate Y 90  translate Y 3.2 }
+                            object HogLancet(1.0, 2.4, HogStateOf(lit, key * 7 + 5 + side, b)) { translate [0, 0.6, -1.6] }
+                            translate [(b + 0.5) * step - long / 2, walls + ridge * 0.18, -deep / 2 * 0.8]
+                        }
+                    }
+                }
+                rotate Y side * 180
+            }
+        }
+        object HogWindows(deep, max(1, round(deep / 7)), floors, 1.3, tall, 3, rise, lit, key * 7 + 3) {
+            translate Z -long / 2  rotate Y 90
+        }
+        object HogWindows(deep, max(1, round(deep / 7)), floors, 1.3, tall, 3, rise, lit, key * 7 + 4) {
+            translate Z -long / 2  rotate Y -90
+        }
+        // A chimney stack or two on the ridge.
+        for c in [0, floor(long / 30)] {
+            cube { scale [0.9, 2.2, 0.6]  translate [(c + 0.5) * long / (floor(long / 30) + 1) - long / 2, walls + ridge + 0.6, 0] }
+        }
+        material HogStoneOf(key)
+    }
+}
+
+// -- The land ------------------------------------------------------------------------------------------------
+
+// The courtyards' level: the top of the crag, fifty meters over the lake.
+HogwartsCourtyard = 50
+
+// How far a place lies outside a box in X/Z with rounded corners, negative inside it.
+function HogBoxOut(x, z, cx, cz, hx, hz, r) -> number {
+    return sqrt(pow(max(abs(x - cx) - hx + r, 0), 2) + pow(max(abs(z - cz) - hz + r, 0), 2))
+         + min(max(abs(x - cx) - hx + r, abs(z - cz) - hz + r), 0) - r
+}
+
+function HogRidge(x, z, f, o) -> number { return 1 - abs(2 * noise(f * x, o, f * z) - 1) }
+
+// The crag's rock, standing out of the line of its fall: masses tens of meters across, and blocks on them.
+function HogCrags(x, z) -> number {
+    return 26 * (HogRidge(x, z, 0.035, 0.3) - 0.5) + 10 * (HogRidge(x, z, 0.1, 1.7) - 0.5)
+         + 3 * (noise(x / 3.2, 5.5, z / 3.2) - 0.5)
+}
+
+// The fall of the crag from a top standing at `level`, `d` meters out from its edge, down to the lake's bed: as
+// little as fourteen meters out in places and as much as fifty-four in others, so that the face stands out in
+// buttresses and falls back in bays, and in three bands with a ledge between each, the rock standing out of the
+// line of the fall most halfway down.
+function HogReach(x, z) -> number { return 34 + 40 * (noise(x / 28, 7.5, z / 28) - 0.5) }
+function HogShaped(x, z, s, level) -> number {
+    return level - (level + 12) * (s - 0.045 * sin(18.85 * s)) + 4 * s * (1 - s) * HogCrags(x, z)
+}
+// It breaks off steeply at the top and spreads at the foot, as a cliff does over its own fallen rock.
+function HogFallOf(t) -> number { return 1 - pow(1 - clamp(t, 0, 1), 2.2) }
+// Fissures: the face standing out and falling back by a few meters over a few, which on a face this steep runs
+// in ribs and gullies straight down it.
+function HogFissures(x, z) -> number {
+    return 5 * (HogRidge(x, z, 0.14, 8.5) - 0.5) + 2.5 * (HogRidge(x, z, 0.37, 9.5) - 0.5)
+}
+function HogLedge(x, z, d, level) -> number {
+    return HogShaped(x, z, HogFallOf((d + max(d, 0) / (max(d, 0) + 2) * HogFissures(x, z)) / HogReach(x, z)), level)
+}
+
+// The edge of the crag's top wanders a few meters either way of the line the castle is built to.
+function HogEdge(x, z) -> number { return 14 * (noise(x / 45, 2.5, z / 45) - 0.5) + 5 * (noise(x / 13, 3.5, z / 13) - 0.5) }
+
+// The cleft the arcade stands in, its floor climbing from the water to sixteen meters at the arcade's foot.
+function HogGully(x, z) -> number {
+    return 16 * clamp((z + 44) / 46, 0, 1) + 3 * (HogRidge(x, z, 0.08, 4.1) - 0.5) - 0.5
+}
+
+// The crag: the courtyards' top, the greenhouses' terrace eight meters below it on the east, and the cleft.
+function HogCrag(x, z) -> number {
+    return lerp(HogGully(x, z),
+                max(HogLedge(x, z, HogBoxOut(x, z, 15, 90.5, 155, 74.5, 20) + HogEdge(x, z), HogwartsCourtyard),
+                    HogLedge(x, z, HogBoxOut(x, z, 200, 55, 28, 48, 12) + HogEdge(x, z), HogwartsCourtyard - 8)),
+                smoothstep(-4, 9, HogBoxOut(x, z, -6.5, -14, 24, 26, 6)))
+}
+
+// The hills round it, rising slowly inland, with a knoll west of the ravine for the bridge to land on and a
+// pinnacle of rock beyond for the Owlery.
+function HogUplands(x, z) -> number {
+    return 30 + 40 * smoothstep(0, 700, z) + 20 * (noise(x / 260, 0.5, z / 260) - 0.5)
+         + 7 * (HogRidge(x, z, 0.012, 2.2) - 0.5)
+         + 15 * exp(-(pow(x + 310, 2) + pow(z - 170, 2)) / 14400)
+         + 48 * exp(-pow(sqrt(pow(x + 360, 2) + pow(z - 300, 2)) / 19, 1.6)) * (0.85 + 0.3 * HogRidge(x, z, 0.15, 6.2))
+}
+
+// How far inland a place is: the shore runs across in front of the crag, and a bay east of it wraps round the
+// greenhouses' end.
+function HogInland(x, z) -> number { return z + 30 - 150 * exp(-pow((x - 30) / 260, 2)) - 300 * exp(-pow((x - 330) / 160, 2)) }
+
+// The ravine west of the crag, from the lake inland, its floor rising as it goes.
+// It opens into the lake beside the crag and goes no further: left to run on under the water, it cut a trench
+// straight through the hills across the lake.
+function HogRavine(x, z) -> number { return exp(-pow(abs(x + 190 + 0.14 * z) / 32, 3.5)) * smoothstep(-160, -60, z) }
+function HogHills(x, z) -> number {
+    return min(lerp(-12, HogUplands(x, z), smoothstep(-60, 40, HogInland(x, z))),
+               lerp(HogUplands(x, z), -4 + 0.08 * z, HogRavine(x, z)))
+}
+
+// How high the grounds stand at a place, in meters over the lake.
+function HogwartsLand(x, z) -> number { return max(HogCrag(x, z), HogHills(x, z) + HogMountains(x, z)) }
+
+// What they are made of: rock where it is steep and turf where it lies gentle; in winter, snow where it can lie.
+// Patterns are read in the field's own space, fourteen hundred meters across one unit, so a feature `s` meters
+// across is scaled [s / 1400, s, s / 1400].
+HogwartsRockGrain = pigment granite {
+    [0.05, [0.13, 0.12, 0.11], 0.17, [0.18, 0.17, 0.15], 0.22, [0.22, 0.20, 0.18], 0.29, [0.25, 0.23, 0.21],
+     0.4, [0.29, 0.27, 0.24]]
+    scale [0.006, 8, 0.006]
+}
+HogwartsLichen = pigment granite { [0.05, [0.16, 0.17, 0.12], 0.25, [0.21, 0.22, 0.15], 0.4, [0.25, 0.25, 0.18]]  scale [0.004, 5, 0.004] }
+HogwartsRock = material {
+    pigment bozo { [0, HogwartsRockGrain, 0.55, HogwartsRockGrain, 0.75, HogwartsLichen, 1, HogwartsLichen]  scale [0.02, 30, 0.02] }
+    normal granite { depth 0.3  scale [0.002, 3, 0.002] }
+    specular 0.03  shininess 8
+}
+// Turf, lusher and drier over a few tens of meters and again over a few hundred.
+HogwartsLush = pigment bozo { [0, [0.09, 0.15, 0.05], 1, [0.15, 0.21, 0.08]]  scale [0.02, 28, 0.02] }
+HogwartsDry = pigment bozo { [0, [0.20, 0.22, 0.10], 1, [0.27, 0.26, 0.13]]  scale [0.02, 28, 0.02] }
+HogwartsTurf = material {
+    pigment bozo { [0, HogwartsLush, 0.45, HogwartsLush, 0.75, HogwartsDry, 1, HogwartsDry]  scale [0.16, 220, 0.16] }
+    specular 0
+}
+// Under the water, silt.
+HogwartsSilt = material { pigment [0.05, 0.05, 0.04]  specular 0 }
+HogwartsSnow = material { pigment [0.90, 0.91, 0.94]  specular 0  glints { size 0.0008  roughness 0.7 } }
+
+primitive HogGroundOf(season) -> material {
+    if (season == 'winter') {
+        return material blend linear Y gradient {
+            [0, HogwartsSilt, 0.49875, HogwartsSilt, 0.50125, material blend facing { [0.78, HogwartsRock, 0.84, HogwartsSnow] }]
+            scale [1, 400, 1]
+            translate Y -200
+        }
+    }
+    else {
+        return material blend linear Y gradient {
+            [0, HogwartsSilt, 0.49875, HogwartsSilt, 0.50125, material blend facing { [0.80, HogwartsRock, 0.88, HogwartsTurf] }]
+            scale [1, 400, 1]
+            translate Y -200
+        }
+    }
+}
+
+// The lake's water: dark with peat, a mirror at a glance and barely a window looking down, the bed lost within
+// a few meters.  Laid at `y = 0` on the `water` library's `Water`.
+HogwartsLakeWater = material {
+    pigment [0.015, 0.03, 0.025]
+    ambient 0.02
+    diffuse 0.08
+    specular 1
+    shininess 800
+    reflective 0.9
+    transparency 0.9
+    interior { index of refraction Water  clarity 2.5 }
+}
+
+// The grounds, fourteen hundred meters square, from five hundred out in the lake to nine hundred inland.
+primitive HogwartsGrounds(season = 'summer', samples = 2048) -> heightfield {
+    return heightfield {
+        function { HogwartsLand(1400 * (x - 0.5), 1400 * (z - 0.5) + 200) }
+        samples samples
+        smooth
+        material HogGroundOf(season)
+        named 'grounds'
+        translate [-0.5, 0, -0.5]
+        scale [1400, 1, 1400]
+        translate Z 200
+    }
+}
+
+// The highlands: ranges rising out of the lake and the hills from a kilometer out to three, twelve kilometers
+// square.  Inside the grounds they lie a meter and a half under them, and sixty under the water well inside,
+// so the grounds are what is seen there.
+function HogPeaks(x, z) -> number {
+    return 0.50 * pow(HogRidge(x, z, 0.00045, 0), 2) + 0.25 * pow(HogRidge(x, z, 0.0009, 0.3), 2)
+         + 0.12 * HogRidge(x, z, 0.0018, 0.6) + 0.06 * HogRidge(x, z, 0.0036, 0.9) + 0.03 * HogRidge(x, z, 0.0072, 1.2)
+}
+// Hills from a kilometer out, up to a hundred meters high, and the mountains from two and a half, six or seven
+// hundred.
+function HogMountainsAt(x, z, r) -> number {
+    return smoothstep(900, 1700, r) * 100 * HogRidge(x, z, 0.0011, 3.7)
+         + smoothstep(2600, 4200, r) * (80 + 700 * pow(HogPeaks(x, z), 1.5))
+}
+function HogMountains(x, z) -> number { return HogMountainsAt(x, z, sqrt(x * x + pow(z - 200, 2))) }
+function HogInside(x, z) -> number { return max(abs(x) - 700, abs(z - 200) - 700) }
+function HogHighland(x, z) -> number {
+    return lerp(-60, HogHills(x, z) + HogMountains(x, z) - 1.5 * (1 - smoothstep(0, 10, HogInside(x, z))),
+                smoothstep(-60, -20, HogInside(x, z)))
+}
+
+// Heather and bracken, green and brown in patches over a few hundred meters.
+HogwartsFellside = material {
+    pigment bozo { [0, [0.07, 0.09, 0.045], 0.4, [0.10, 0.12, 0.06], 0.65, [0.13, 0.10, 0.07], 1, [0.10, 0.07, 0.07]]
+                   scale [0.03, 100000, 0.03] }
+    specular 0
+}
+HogwartsCrag = material {
+    pigment granite { [0.05, [0.14, 0.14, 0.13], 0.25, [0.20, 0.19, 0.18], 0.4, [0.25, 0.24, 0.22]]  scale [0.002, 25, 0.002] }
+    specular 0.02  shininess 6
+}
+
+primitive HogHighlandsOf(season) -> material {
+    if (season == 'winter') { return material blend facing { [0.7, HogwartsCrag, 0.78, HogwartsSnow] } }
+    else { return material blend facing { [0.74, HogwartsCrag, 0.84, HogwartsFellside] } }
+}
+
+primitive HogwartsHighlands(season = 'summer', samples = 1536) -> heightfield {
+    return heightfield {
+        function { HogHighland(12000 * (x - 0.5), 12000 * (z - 0.5)) }
+        samples samples
+        smooth
+        material HogHighlandsOf(season)
+        named 'highlands'
+        translate [-0.5, 0, -0.5]
+        scale [12000, 1, 12000]
+    }
+}
+
+// -- The buildings --------------------------------------------------------------------------------------------
+//
+// Each stands in its own frame on its floor, `y = 0`, at the courtyards' level unless it says otherwise, and
+// faces the lake at `-Z`.
+
+// The Great Hall: seventy-two meters long and twenty-two across, the lake side at `-Z`, its far gable at `-X`.
+// The Great Hall is one room, so every window of it shows the same light, or none: lit whenever the castle is.
+primitive HogwartsGreatHall(lit = 0) -> group {
+    hall = lit > 0 ? 2 : 0
+    return group {
+        cube { scale [36, 27, 11]  translate Y -3 }
+        cube { scale [36.25, 0.4, 11.25]  translate Y 23.6 }
+        object HogRoof(22, 72, 19) { translate Y 24 }
+        object HogRoof(21.6, 72.6, 18.65, 0) { translate Y 24  material HogStoneOf(101) }
+        // The tall windows two by two in their bays, small ones under them, on both long sides.
+        for side in [0, 1] {
+            group {
+                object HogWindows(72, 8, 1, 1.5, 10, 11, 0, lit, 102 + side, 1, hall) { translate Z -11 }
+                object HogWindows(72, 8, 1, 1.0, 2.6, 3.5, 0, lit, 104 + side, 0, hall) { translate Z -11 }
+                // Buttresses between the bays, each with a pinnacle standing over the eaves.
+                for b in [0, 8] {
+                    group {
+                        cube { scale [0.9, 25, 1.5]  translate Y -2 }
+                        cube { scale [0.9, 6, 0.8]  translate [0, 17, -0.8] }
+                        cube { scale [0.5, 2.5, 0.5]  translate Y 25.5 }
+                        object HogCone(0.75, 4) { translate Y 28 }
+                        translate [-36 + b * 9, 0, -12.5]
+                    }
+                }
+                rotate Y side * 180
+            }
+        }
+        // The far gable: a great window of three lights between two turrets.
+        object HogWindows(9, 3, 1, 2.0, 15, 6, 0, lit, 106, 0, hall) { translate Z -36  rotate Y 90 }
+        object HogRoundTower(3.2, 34, 10, 4, 4, lit, 107) { translate [-36, 0, -11] }
+        object HogRoundTower(3.2, 34, 10, 4, 4, lit, 108) { translate [-36, 0, 11] }
+        material HogStoneOf(101)
+    }
+}
+
+// The arcade: eight tall arches in the cleft below the courtyards, its foot thirty-four meters down and its
+// head the terrace's parapet, two over the courtyards.  Fifty-five meters long, about `x = 0`.
+primitive HogwartsArcade() -> group {
+    return group {
+        difference {
+            cube { scale [27.7, 18.6, 3]  translate Y -16.4 }
+            group {
+                for i in [0, 7] {
+                    union {
+                        cube { scale [2, 13, 4]  translate [-23.1 + i * 6.6, -23, 0] }
+                        cube { rotate Z 45  scale [1.4142, 2.1213, 4]  translate [-23.1 + i * 6.6, -10, 0] }
+                    }
+                }
+            }
+        }
+        cube { scale [28, 0.4, 3.3]  translate Y -5.2 }
+        cube { scale [28, 0.6, 3.3]  translate Y 2.6 }
+        // A buttress on the face of every pier, each ending in a pinnacle over the parapet.
+        for i in [0, 8] {
+            group {
+                cube { scale [0.6, 18.3, 0.8]  translate [0, -16.4, -3.6] }
+                cube { scale [0.35, 1.4, 0.35]  translate [0, 4.6, -3.6] }
+                object HogCone(0.5, 2.6) { translate [0, 6, -3.6] }
+                translate X -26.4 + i * 6.6
+            }
+        }
+        material HogStoneOf(115)
+    }
+}
+
+// The stair from the boathouse up the cleft to the arcade's foot: a flight of twenty-nine steps between low
+// walls, each step a block down into the floor of the cleft.  Built where it stands.
+primitive HogwartsStair() -> group {
+    return group {
+        for k in [0, 28] {
+            cube { scale [1.2, 2.5, 0.5]  translate [12, 7.6 + k * 0.36 - 2.5, -24.5 + k] }
+        }
+        for side in [-1, 1] {
+            cube { scale [0.25, 1.1, 14.8]  rotate X -19.7  translate [12 + side * 1.45, 13.1, -10.5] }
+        }
+        material HogStoneOf(116)
+    }
+}
+
+// The boathouse at the water, its floor at the lake's level: a round tower and a gabled house with a water gate.
+primitive HogwartsBoathouse(lit = 0) -> group {
+    return group {
+        object HogRoundTower(4.2, 14, 8, 2, 4, lit, 120, -4)
+        object HogRange(10, 7, 9, 5, 2, 1, lit, 121, 0, -4) { translate X -9 }
+        cube { scale [2.2, 2.6, 0.3]  translate [-9, 1.4, -3.55]  material HogGlassOf(0) }
+        material HogStoneOf(120)
+    }
+}
+
+// The high hall in the middle of the front, its gable to the lake with a round window high in it.
+primitive HogwartsCentralHall(lit = 0) -> group {
+    return group {
+        object HogRange(34, 28, 40, 24, 5, 4, lit, 130) { rotate Y 90 }
+        disc { center [0, 0, 0]  normal [0, 0, -1]  radius 4.8  translate [0, 47, -17.38]  material HogStoneOf(129) }
+        disc { center [0, 0, 0]  normal [0, 0, -1]  radius 4  translate [0, 47, -17.42]
+               material HogGlassOf(lit > 0 ? 2 : 0) }
+        object HogRoundTower(3, 54, 16, 6, 3, lit, 131) { translate [-14, 0, -17] }
+        object HogRoundTower(3, 54, 16, 6, 3, lit, 132) { translate [14, 0, -17] }
+    }
+}
+
+// The Astronomy Tower: the tallest, a hundred and eighteen meters to its point, a turret at each corner of its
+// head.
+primitive HogwartsAstronomyTower(lit = 0) -> group {
+    return group {
+        object HogRoundTower(6.5, 94, 24, 12, 4, lit, 150)
+        for t in [0, 3] {
+            object HogRoundTower(1.8, 100, 6, 1, 2, lit, 151 + t, 84) { translate Z -6.6  rotate Y 45 + t * 90 }
+        }
+    }
+}
+
+// The clock tower, at the back of the castle on the left: a block under a steep roof, its clock facing out over
+// the bridge and into the courtyard.
+primitive HogwartsClockTower(lit = 0) -> group {
+    return group {
+        cube { scale [9, 38, 8]  translate Y 8 }
+        cube { scale [9.3, 0.5, 8.3]  translate Y 45.5 }
+        object HogSpire(18.6, 16) { translate Y 46  scale [1, 1, 16.6 / 18.6] }
+        for side in [0, 3] {
+            object HogWindows(side % 2 == 0 ? 16 : 18, 3, 5, 1.2, 3.2, 3, 6, lit, 140 + side) {
+                translate Z side % 2 == 0 ? -9 : -8
+                rotate Y side * 90 + 90
+            }
+        }
+        group {
+            disc { center [0, 0, 0]  normal [0, 0, -1]  radius 3.4  translate Z -0.06  material HogwartsPaint }
+            disc { center [0, 0, 0]  normal [0, 0, -1]  radius 3.8  translate Z -0.03  material HogwartsTimber }
+            cube { scale [0.12, 1.6, 0.05]  translate [0, 1.3, -0.15]  material HogwartsTimber }
+            cube { scale [0.1, 2.2, 0.05]  translate [0, 1.9, -0.2]  rotate Z -110  material HogwartsTimber }
+            translate [0, 38, -8]
+            rotate Y -90
+        }
+        material HogStoneOf(139)
+    }
+}
+
+// The covered bridge, from the clock tower's west face a hundred and fifty-five meters west across the ravine,
+// its deck two meters over the courtyards: a roofed gallery of timber on trestles standing on the ravine's
+// floor.  It is built where it stands, `x` and `z` the world's, since each trestle reaches down to the ground
+// under it.
+primitive HogwartsBridge() -> group {
+    deck = HogwartsCourtyard + 2
+    return group {
+        cube { scale [77.5, 0.3, 3]  translate [-198.5, deck - 0.3, 152] }
+        object HogRoof(6.4, 155, 2.4, 0.4) { translate [-198.5, deck + 4, 152]  material HogwartsShingle }
+        for side in [0, 1] {
+            cube { scale [77.5, 0.08, 0.1]  translate [-198.5, deck + 1.1, 152 - 2.95 + side * 5.9] }
+            cube { scale [77.5, 0.12, 0.15]  translate [-198.5, deck + 3.85, 152 - 2.95 + side * 5.9] }
+            for p in [0, 50] {
+                cube { scale [0.12, 2, 0.12]  translate [-121 - p * 3.1, deck + 2, 152 - 2.95 + side * 5.9] }
+            }
+        }
+        // The trestles, one every nine and a half meters, each two splayed legs tied across every six.
+        for b in [1, 15] {
+            here = -121 - b * 9.7
+            ground = HogwartsLand(here, 152) - 0.5
+            if (ground < deck - 3) {
+                group {
+                    tube { radius 0.3 at [here, ground, 152 - 6.5]  radius 0.3 at [here, deck - 0.6, 152 - 2.6] }
+                    tube { radius 0.3 at [here, ground, 152 + 6.5]  radius 0.3 at [here, deck - 0.6, 152 + 2.6] }
+                    for t in [0, floor((deck - ground) / 6)] {
+                        cube { scale [0.18, 0.18, 2.6 + 3.9 * min(t * 6 / (deck - ground), 1)]
+                               translate [here, deck - 0.6 - t * 6, 152] }
+                    }
+                    if (deck - ground >= 6) {
+                        for t in [0, floor((deck - ground) / 6) - 1] {
+                            tube { radius 0.15 at [here, deck - 0.6 - t * 6, 152 - 2.6 - 3.9 * t * 6 / (deck - ground)]
+                                   radius 0.15 at [here, deck - 6.6 - t * 6, 152 + 2.6 + 3.9 * (t + 1) * 6 / (deck - ground)] }
+                        }
+                    }
+                }
+            }
+        }
+        // The stringers under the deck, and braces from trestle to trestle.
+        for side in [0, 1] {
+            cube { scale [77.5, 0.35, 0.25]  translate [-198.5, deck - 0.95, 152 - 2.4 + side * 4.8] }
+        }
+        material HogwartsTimber
+    }
+}
+
+// The Owlery, on its pinnacle: a round tower whose top storey stands out over the rest, under a cone.
+primitive HogwartsOwlery(lit = 0) -> group {
+    return group {
+        object HogRoundTower(4.2, 13, 1, 1, 3, lit, 180, -12)
+        object HogRoundTower(5, 19, 9, 1, 6, lit, 181, 12)
+        cylinder { min Y 11  max Y 12.5  scale [4.7, 1, 4.7] }
+        material HogStoneOf(180)
+    }
+}
+
+// The greenhouses, on their terrace: three glasshouses side by side on low stone walls, and an octagonal
+// house under a dome behind them.
+primitive HogwartsGreenhouses(lit = 0) -> group {
+    return group {
+        for g in [0, 2] {
+            group {
+                cube { scale [4, 0.6, 16]  translate Y 0.3  material HogStoneOf(190) }
+                cube { scale [3.9, 1.8, 15.9]  translate Y 2.6  material HogwartsGlazing }
+                object HogRoof(7.8, 31.8, 3, 0.15) { rotate Y 90  translate Y 4.4  material HogwartsGlazing }
+                for r in [0, 10] {
+                    cube { scale [4.05, 0.08, 0.08]  translate [0, 4.45, -15 + r * 3] material HogwartsPaint }
+                }
+                translate X g * 12
+            }
+        }
+        group {
+            cylinder { min Y -6  max Y 11  scale [9, 1, 9] }
+            cylinder { min Y 10  max Y 11  scale [9.4, 1, 9.4] }
+            intersection {
+                sphere { scale [9.2, 7, 9.2] }
+                cube { scale 10  translate Y 10 }
+                translate Y 11
+                material HogwartsLead
+            }
+            object HogRoundTower(1.6, 21, 3, 1, 4, lit, 191, 17)
+            object HogWindows(14, 4, 1, 1.4, 4.5, 3, 0, lit, 192) { translate Z -8.9 }
+            translate [12, 0, 48]
+            material HogStoneOf(190)
+        }
+    }
+}
+
+// Wood smoke at a place, in meters from the top of the chimney: a wisp `h` tall, as wide as the flue where it leaves it
+// and widening as it climbs, carried over by the breeze `lean` of its height along +X by the top, thinning as it
+// spreads and gone by the top, and torn by noise that rolls upward with it as `rise` grows.  Nought outside.  It thins
+// more slowly than it widens (as much smoke through every height would thin it by the square), or a wisp seen from a
+// kilometer off was gone a few meters over the pot.
+function HogSmoke(px, py, pz, h, lean, rise, ox, oz) -> number {
+    return 1.6 * pow(0.3 / (0.3 + 0.2 * py), 0.75)
+           * max(0, 1 - sqrt((px - lean * py * py / h) * (px - lean * py * py / h) + pz * pz) / (0.3 + 0.2 * py))
+           * sqrt(max(0, 1 - py / h))
+           * (0.3 + 1.4 * max(0, noise(px / 1.6 + ox, (py - rise) / 1.6, pz / 1.6 + oz)
+                                 + 0.5 * noise(px / 0.6 + 2.3 + ox, (py - 1.3 * rise) / 0.6, pz / 0.6 + 5.1 + oz)
+                                 - 0.6))
+}
+
+// A wisp of smoke from a chimney, its foot at the origin and the breeze carrying it along +X: pale, since wood smoke
+// is mostly fine ash and water that scatters the light rather than soot that swallows it, and a little blue, as fine
+// smoke is against the dark.  It casts no shadow.  It climbs at a meter and a half a second as `time` runs.
+primitive HogChimneySmoke(height = 18, variant = 1) -> group {
+    lean = 0.6
+    reach = 0.6 + 0.2 * height
+    long = (lean * height + 2 * reach) / 2
+    half = height / 2
+    ox = random(variant, 221) * 40
+    oz = random(variant, 222) * 40
+    rise = 1.5 * time
+
+    return group {
+        cube {
+            material {
+                ambient 0  diffuse 0  specular 0
+                transparency 1
+                interior {
+                    ior 1.0
+                    medium {
+                        absorption [0.1, 0.1, 0.1]
+                        scattering [0.55, 0.6, 0.7]
+                        density function {
+                            max(0, HogSmoke(x * long + long - reach, y * half + half, z * reach, height, lean, rise,
+                                            ox, oz))
+                        }
+                        samples 32
+                    }
+                }
+            }
+            no shadow
+            scale [long, half, reach]
+            translate [long - reach, half, 0]
+        }
+    }
+}
+
+// Hagrid's hut, down the hill toward the forest: a round stone hut under a cone of shingles, a chimney beside its
+// door with smoke from it, and a few pumpkins in a patch in front.
+primitive HogwartsHut(lit = 0) -> group {
+    return group {
+        // The breeze off the lake carries it inland, to the north-east (the hut itself is turned 20 degrees).
+        object HogChimneySmoke(22, 1) { rotate Y -75  translate [2.2, 8.2, 2] }
+        cylinder { min Y -2  max Y 3.4  scale [3.6, 1, 3.6]  material HogStoneOf(201) }
+        conic { min Y -1  max Y 0  scale [4.4, 4.2, 4.4]  translate Y 7.4  material HogwartsShingle }
+        cube { scale [0.7, 3.6, 0.7]  translate [2.2, 4.6, 2]  material HogStoneOf(202) }
+        cube { scale [0.8, 1.15, 0.12]  translate [0, 1.15, -3.62]  material HogwartsTimber }
+        object HogLancet(0.7, 1.1, HogStateOf(lit, 203, 0)) { translate [-1.8, 1.5, -3.15]  rotate Y -30 }
+        object HogLancet(0.7, 1.1, HogStateOf(lit, 203, 1)) { translate [0, 1.5, -3.6]  rotate Y 75 }
+        for p in [0, 8] {
+            sphere {
+                scale [0.45 + random(p, 204) * 0.3, 0.32 + random(p, 205) * 0.2, 0.45 + random(p, 204) * 0.3]
+                translate [-3 + random(p, 206) * 6, 0.25, -6 - random(p, 207) * 4]
+                material { pigment [0.75, 0.32, 0.05]  specular 0.25  shininess 30 }
+            }
+        }
+    }
+}
+
+// The circle of standing stones on the hill west of the bridge: ten, each leaning a little its own way.
+primitive HogwartsStones() -> group {
+    return group {
+        for k in [0, 9] {
+            cube {
+                scale [0.7 + random(k, 211) * 0.4, 2.2 + random(k, 212) * 1.6, 0.45 + random(k, 213) * 0.3]
+                translate Y 1.6
+                rotate X (random(k, 214) - 0.5) * 12
+                rotate Z (random(k, 215) - 0.5) * 12
+                translate Z -10
+                rotate Y k * 36 + random(k, 216) * 12
+            }
+        }
+        material { pigment granite { [0.05, [0.22, 0.22, 0.2], 0.25, [0.32, 0.31, 0.29], 0.4, [0.38, 0.37, 0.34]]  scale 0.6 }
+                   specular 0.02  shininess 6 }
+    }
+}
+
+// The gatehouse on the road in, behind the castle: two towers with spires either side of an arch, and the
+// grounds' wall going off either way.
+primitive HogwartsGatehouse(lit = 0) -> group {
+    return group {
+        for side in [-1, 1] {
+            object HogSquareTower(8, 18, 12, 2, lit, 220 + side) { translate X side * 7.5 }
+            cube { scale [30, 3, 0.8]  translate [side * 41.5, 0, 0] }
+            for m in [0, 14] {
+                cube { scale [0.7, 0.6, 0.9]  translate [side * (12.5 + m * 2.1), 3.6, 0] }
+            }
+        }
+        difference {
+            cube { scale [3.5, 6.5, 2.5]  translate Y 3.5 }
+            union {
+                cube { scale [2.4, 2.6, 3]  translate Y 0.6 }
+                cylinder { min Y -3  max Y 3  scale [2.4, 1, 2.4]  rotate X 90  translate Y 3.2 }
+            }
+        }
+        material HogStoneOf(220)
+    }
+}
+
+// The paths: the road in from the gatehouse to the castle's back, and from the bridge's far end up past the
+// standing stones and down to Hagrid's hut.  A field of flat stones laid three abreast along them and dropped onto
+// the grounds, so it has to stand beside them: `object HogwartsPaths()` at the top of a scene.
+HogwartsPathways = path {
+    move to 40, 418  curve 30, 360, 5, 330 to -2, 260  curve -8, 210, 0, 185 to 6, 168
+    move to -284, 152  curve -292, 168, -296, 180 to -292, 192
+    move to -284, 152  curve -292, 136, -305, 118 to -318, 104
+}
+HogwartsGravel = material { pigment [0.33, 0.30, 0.25]  specular 0.02  shininess 6 }
+
+primitive HogGravelSlab() -> group {
+    return group { cube { scale [0.75, 0.05, 0.75]  material HogwartsGravel } }
+}
+
+primitive HogwartsPaths() -> field {
+    return field {
+        of HogGravelSlab()
+        along HogwartsPathways
+        spacing 1.2  rows 3 apart 1.1
+        over 'grounds'
+        tilted
+        sink 0.03
+    }
+}
+
+// -- The castle ---------------------------------------------------------------------------------------------
+
+primitive Hogwarts(lit = 0, season = 'summer') -> group {
+    top = HogwartsCourtyard
+    return group {
+        // Along the front, from the left seen from the lake.
+        object HogwartsGreatHall(lit) { translate [-95, top, 28] }
+        object HogRoundTower(12, 56, 40, 9, 8, lit, 110) { translate [-45, top, 34] }
+        object HogRoundTower(4.5, 18, 11, 3, 4, lit, 111, -50) { translate [-49, top, 13] }
+        object HogwartsArcade() { translate [-6.5, top, 9] }
+        object HogSquareTower(13, 56, 30, 7, lit, 112) { translate [6, top, 22] }
+        object HogwartsCentralHall(lit) { translate [38, top, 46] }
+        object HogRange(34, 18, 30, 14, 5, 5, lit, 113) { translate [69, top, 30] }
+        object HogRange(60, 20, 24, 14, 10, 4, lit, 114) { translate [116, top, 33] }
+        object HogSquareTower(17, 60, 24, 7, lit, 116) { translate [158, top, 36] }
+        object HogwartsGreenhouses(lit) { translate [182, top - 8, 20] }
+
+        // The middle: the Astronomy Tower among spired turrets.
+        object HogwartsAstronomyTower(lit) { translate [66, top, 84] }
+        object HogRoundTower(3.6, 64, 18, 7, 3, lit, 117) { translate [82, top, 52] }
+        object HogRoundTower(3, 58, 15, 6, 3, lit, 118) { translate [18, top, 66] }
+        object HogRoundTower(3.2, 70, 18, 8, 3, lit, 119) { translate [96, top, 76] }
+        object HogRoundTower(4, 48, 14, 5, 4, lit, 122) { translate [52, top, 104] }
+        object HogRoundTower(2.6, 62, 14, 7, 3, lit, 142) { translate [30, top, 70] }
+        object HogRoundTower(2.4, 52, 13, 6, 3, lit, 143) { translate [57, top, 64] }
+        object HogRoundTower(2.8, 66, 16, 7, 3, lit, 144) { translate [48, top, 82] }
+        object HogRoundTower(2.2, 48, 12, 5, 3, lit, 145) { translate [92, top, 40] }
+        object HogRoundTower(2.6, 56, 14, 6, 3, lit, 146) { translate [-8, top, 36] }
+        object HogRoundTower(2.4, 46, 12, 5, 3, lit, 147) { translate [132, top, 40] }
+        object HogRoundTower(3, 50, 14, 6, 3, lit, 148) { translate [-72, top, 50] }
+        object HogSquareTower(11, 54, 22, 6, lit, 123) { translate [118, top, 92] }
+        object HogSquareTower(11, 54, 22, 6, lit, 124) { translate [138, top, 92] }
+
+        // Round the courtyards behind.
+        object HogRange(50, 16, 28, 14, 7, 4, lit, 134) { translate [-91, top, 66] }
+        object HogRange(30, 20, 34, 16, 4, 5, lit, 135) { translate [25, top, 88] }
+        object HogRange(36, 16, 28, 14, 5, 4, lit, 136) { translate [104, top, 58] }
+        object HogRange(30, 18, 26, 14, 4, 4, lit, 137) { rotate Y 90  translate [150, top, 72] }
+        object HogRange(34, 16, 30, 14, 5, 4, lit, 138) { rotate Y 90  translate [40, top, 126] }
+        object HogRange(40, 18, 22, 13, 6, 3, lit, 141) { translate [-65, top, 108] }
+        object HogRange(76, 18, 26, 16, 10, 4, lit, 125) { rotate Y 90  translate [-125, top, 92] }
+        // The back range in three, the middle the tallest, with the gate tower standing out from it toward the
+        // grounds and a turret at its east end.
+        object HogRange(55, 18, 24, 15, 7, 4, lit, 126) { translate [-87.5, top, 146] }
+        object HogRange(50, 20, 30, 17, 6, 5, lit, 129) { translate [-35, top, 146] }
+        object HogRange(45, 18, 22, 14, 6, 3, lit, 132) { translate [12.5, top, 146] }
+        object HogSquareTower(12, 42, 18, 5, lit, 149) { translate [-35, top, 160] }
+        object HogRoundTower(3.6, 36, 12, 4, 3, lit, 157) { translate [36, top, 155] }
+        object HogRange(60, 16, 30, 14, 8, 5, lit, 127) { rotate Y 90  translate [-5, top, 96] }
+        object HogRange(40, 16, 24, 14, 5, 4, lit, 128) { translate [75, top, 132] }
+        object HogRange(40, 16, 29, 15, 5, 5, lit, 158) { translate [115, top, 132] }
+        object HogRoundTower(3.2, 40, 13, 5, 3, lit, 159) { translate [136, top, 140] }
+        object HogRange(30, 14, 18, 10, 5, 3, lit, 133) { translate [-18, top, 52] }
+        object HogwartsClockTower(lit) { translate [-112, top, 152] }
+        object HogwartsBridge()
+
+        // Down at the water, and out on the hills.
+        object HogwartsBoathouse(lit) { translate [4, 0, -30] }
+        object HogwartsStair()
+        object HogwartsOwlery(lit) { translate [-360, HogwartsLand(-360, 300) - 1, 300] }
+        object HogwartsHut(lit) { rotate Y 20  translate [-330, HogwartsLand(-330, 90) - 0.3, 90] }
+        object HogwartsStones() { translate [-305, HogwartsLand(-305, 205) - 0.4, 205] }
+        object HogwartsGatehouse(lit) { translate [40, HogwartsLand(40, 430) - 0.5, 430] }
+
+        weather { snow season == 'winter' ? 1 : 0 }
+    }
+}

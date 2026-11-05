@@ -1,0 +1,160 @@
+// Hogwarts from the air on a summer afternoon: the castle on its crag over the lake, the greenhouses below its
+// east end, the covered bridge going out across the ravine behind it, and the Forbidden Forest on the hills.
+//
+// A showcase rather than a demonstration.  The castle, its crag, the grounds and the mountains round the lake come
+// from the `hogwarts` library, the forest from `trees`; the sky, the water, the air and the woods are here.
+//
+// **Far off has to look far off.**  Without the air between, the mountains three and four kilometers away were as
+// green and as sharp as the lawn under the castle, and stood over it like a wall.  The scene is wrapped in a box of
+// thin air that takes out a third of the light over three kilometers and puts its own pale blue in its place, so
+// the forest beyond the grounds fades a little, the hills beyond that more, and the mountains go blue against the
+// sky.  The box casts no shadow, or the sun would be dimmed for crossing it as well.
+//
+// **The forest is a few trees standing in many places.**  Six trees, two of each of three kinds, are grown once
+// and stood again and again: on the hills west of the ravine, drawn back from Hagrid's hut and the standing
+// stones and cleared round the Owlery's pinnacle; behind the gatehouse; and on the hills beyond the grounds, in
+// stands with moor between them below where trees give out.  Fields dropped onto the grounds and the highlands
+// stand each where the land is.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.25
+    angles are degrees
+    info {
+        title 'Hogwarts from the Air'
+        author 'J. Stephen Kress'
+        description 'The castle on its crag, its grounds and the forest beyond, from over the lake on a summer afternoon.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'hogwarts' { Hogwarts, HogwartsGrounds, HogwartsHighlands, HogwartsLakeWater, HogwartsPaths }
+import 'water' { Water }
+import 'trees' { Fir, Pine, Oak }
+
+// Three hundred meters up over the lake off the castle's east end, far enough out that the whole crag stands in
+// the water below, looking back across it to the forest.
+camera {
+    location [500, 300, -500]
+    look at [-40, 150, 150]
+    field of view 60
+    exposure 0.3
+}
+
+// Fair-weather cloud, in heaps low over the hills and thinning to nothing overhead: noise stretched flat,
+// white where it is thick and gray beneath, laid over the sky.
+background layer {
+    linear Y gradient {
+        [0, color [1, 1, 1, 0],
+         0.02, color [1, 1, 1, 0],
+         0.06, bozo {
+             turbulence { amplitude 0.55  octaves 5 }
+             [0, color [1, 1, 1, 0], 0.52, color [1, 1, 1, 0], 0.6, color [0.86, 0.87, 0.9, 0.7],
+              0.7, color [0.95, 0.95, 0.97, 0.95], 1, color [0.98, 0.98, 1, 1]]
+             scale [0.22, 0.05, 0.22]
+         },
+         0.3, bozo {
+             turbulence { amplitude 0.55  octaves 5 }
+             [0, color [1, 1, 1, 0], 0.6, color [1, 1, 1, 0], 0.7, color [0.9, 0.9, 0.93, 0.6], 1, color [0.97, 0.97, 1, 0.9]]
+             scale [0.22, 0.05, 0.22]
+         },
+         0.45, color [1, 1, 1, 0],
+         1, color [1, 1, 1, 0]]
+    },
+    physical sky { sun elevation 38  sun azimuth 15  turbidity 2.6  brightness 3 }
+}
+sky light { samples 32 }
+
+// The air: a haze, a third of the light gone over three kilometers and its own pale blue in its place, so the
+// highlands stand back.  It casts no shadow, so the sun lights the ground whole.
+cube {
+    material {
+        transparency 1
+        interior { medium { absorption 0.00015  emission [0.000032, 0.000042, 0.000063] } }
+    }
+    no shadow
+    scale [7000, 2700, 7000]
+    translate Y 2600
+}
+
+// -- The land and the water ------------------------------------------------------------------------------------
+
+object HogwartsGrounds()
+object HogwartsHighlands()
+object HogwartsPaths()
+object Water(12000, 12000, 'calm') { material HogwartsLakeWater }
+
+// -- The Forbidden Forest ---------------------------------------------------------------------------------------
+
+// The hills west of the ravine, its far bank running back inland as the ravine does.  Its edge draws back into a bay
+// of open hillside round Hagrid's hut and the standing stones, fifty meters clear of the hut every way but the one it
+// opens on, and a clearing round the Owlery's pinnacle is cut out of it.  The bay is the edge drawn back, not a hole:
+// a hole is told from the forest by counting crossings, so a hole reaching past the edge plants trees there.
+ForestWest = path {
+    move to -268, -40
+    line to -272, 40
+    line to -302, 42  line to -334, 44  line to -360, 54  line to -376, 74  line to -380, 100  line to -372, 124
+    line to -362, 150  line to -362, 180  line to -364, 208  line to -356, 232  line to -334, 246  line to -306, 250
+    line to -289, 250
+    line to -290, 260
+    line to -300, 420
+    line to -330, 600
+    line to -700, 600
+    line to -700, -40
+    close
+    move to -360, 262  line to -326, 280  line to -326, 320  line to -360, 338  line to -394, 320  line to -394, 280  close
+}
+
+// Behind the grounds, beyond the gatehouse's wall.
+ForestSouth = path {
+    move to -300, 480  line to 260, 480  line to 330, 600  line to -330, 600  close
+}
+
+field {
+    of Fir(22, 'summer', 1), Fir(18, 'summer', 2), Pine(20, 'summer', 1), Pine(24, 'summer', 2),
+       Oak(15, 'summer', 1), Oak(13, 'summer', 2)
+    within ForestWest
+    spacing 9  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 160 } from 0.3 to 0.42
+    over 'grounds'
+    steepest 38
+    sink 1
+}
+
+field {
+    of Fir(22, 'summer', 1), Fir(18, 'summer', 2), Pine(20, 'summer', 1), Oak(15, 'summer', 1)
+    within ForestSouth
+    spacing 9  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 160 } from 0.35 to 0.45
+    over 'grounds'
+    steepest 38
+    sink 1
+}
+
+// And on the hills beyond the grounds, in stands with moor between them, below where trees give out.
+Hills = path {
+    move to -2600, -300  line to -700, -300  line to -700, 900  line to 2600, 900  line to 2600, 3200
+    line to -2600, 3200  close
+}
+
+field {
+    of Fir(22, 'summer', 1), Fir(18, 'summer', 2), Pine(20, 'summer', 1), Pine(24, 'summer', 2)
+    within Hills
+    spacing 13  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 420 } from 0.42 to 0.5
+    over 'highlands'
+    above 2  below 420
+    steepest 32
+    sink 1
+}
+
+// -- The castle ----------------------------------------------------------------------------------------------
+
+object Hogwarts()

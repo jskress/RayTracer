@@ -1,0 +1,87 @@
+// Hogwarts at dusk, seen from out on the lake: the sun gone behind the hills, and a light in most windows.
+//
+// A showcase rather than a demonstration.  The castle, its crag and the hills round the lake come from the
+// `hogwarts` library; the sky, the water and the air are here.
+//
+// **The spires have to stand against the sky.**  Seen from the water seven hundred meters out, the mountains
+// behind rose above the roofs and the castle was lost against them, a dark shape on a dark one; from half a
+// kilometer, low on the water, the castle stands taller in the picture than the ridge does, so its whole skyline
+// is against the twilight -- which is what makes it this castle at a glance.
+//
+// **No sun, no lamp: the sky lights everything.**  The sun is below the hills, so there is nothing to cast a
+// shadow, and the castle's face toward the lake is lit only by the dim blue of the sky over the camera's
+// shoulder.  What reads is the windows, seven in ten lit, each one of three warm lights, and their lights again
+// in the water, which is glassy at this hour so that they lie in it as columns rather than glitter.
+//
+// **The sky is painted, not worked out.**  A physical sky with its sun below the horizon is black, and one with
+// its sun just above it is a brown glow wherever the sun is; twilight is a gradient, deep blue overhead going
+// down through mauve to a warm band along the hills, with the last of the glow behind the castle to its right
+// laid over it.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 2
+    antialiasing threshold 0.25
+    angles are degrees
+    info {
+        title 'Hogwarts at Dusk'
+        author 'J. Stephen Kress'
+        description 'The castle on its crag across the lake at dusk, a light in most of its windows.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'hogwarts' { Hogwarts, HogwartsGrounds, HogwartsHighlands, HogwartsLakeWater }
+import 'water' { Water }
+
+// Low on the water half a kilometer out, a little west of the castle's middle, near enough that its spires
+// stand against the sky over the hills.
+camera {
+    location [-100, 4, -470]
+    look at [15, 78, 80]
+    field of view 44
+    exposure 0
+}
+
+// -- The sky -------------------------------------------------------------------------------------------------
+
+// Twilight: deep blue overhead going down through mauve to a warm band along the hills, and the last of the
+// glow where the sun went down, behind the castle and to its right.
+background layer {
+    spherical {
+        [0, color [1, 1, 1, 0], 0.45, color [1, 0.62, 0.35, 0.35], 1, color [1, 0.55, 0.28, 0.9]]
+        scale [1.1, 0.3, 1.1]
+        translate [0.4, 0, 0.92]
+    },
+    linear Y gradient {
+        [0, color [0.50, 0.30, 0.26], 0.05, color [0.34, 0.24, 0.32], 0.14, color [0.15, 0.16, 0.32],
+         0.35, color [0.05, 0.08, 0.21], 1, color [0.015, 0.03, 0.09]]
+    }
+}
+
+sky light { samples 32 }
+
+// The air over the lake, thick enough at this hour to stand the hills back into the twilight: a fifth of the
+// light gone over three kilometers and the dusk's own blue in its place.  It casts no shadow.
+cube {
+    material {
+        transparency 1
+        interior { medium { absorption 0.00008  emission [0.0000034, 0.0000042, 0.0000085] } }
+    }
+    no shadow
+    scale [7000, 2700, 7000]
+    translate Y 2600
+}
+
+// -- The land and the water ------------------------------------------------------------------------------------
+
+object HogwartsGrounds()
+object HogwartsHighlands()
+object Water(12000, 12000, 'glassy') { material HogwartsLakeWater }
+
+// -- The castle ----------------------------------------------------------------------------------------------
+
+object Hogwarts(0.7)

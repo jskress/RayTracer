@@ -1696,7 +1696,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Showcase</b> &mdash; 3 images &middot; whole pictures, made for their own sake</summary>
+<summary><b>Showcase</b> &mdash; 6 images &middot; whole pictures, made for their own sake</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1705,6 +1705,30 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/showcase/before-the-show.igl">Before the Show</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/hogwarts-at-dusk.png">
+      <img alt="Hogwarts at Dusk" height="120" src="Local/showcase/hogwarts-at-dusk.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/hogwarts-at-dusk.igl">Hogwarts at Dusk</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/hogwarts-from-above-the-grounds.png">
+      <img alt="Hogwarts from above the Grounds" height="120" src="Local/showcase/hogwarts-from-above-the-grounds.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/hogwarts-from-above-the-grounds.igl">Hogwarts from above the Grounds</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/hogwarts-from-the-air.png">
+      <img alt="Hogwarts from the Air" height="120" src="Local/showcase/hogwarts-from-the-air.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/hogwarts-from-the-air.igl">Hogwarts from the Air</a>
     </td>
   </tr>
   <tr style="border: none;">

@@ -4302,4 +4302,125 @@ public class TestShippedLibraries
         Assert.IsFalse(Differs(creeper[1], Climbed("Creeper", "fall")),
             "a creeper in the fall should be the same as one in the autumn");
     }
+
+    /// <summary>
+    /// Copies the Hogwarts library beside the scenes this class writes.
+    /// </summary>
+    private void UseHogwarts()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "hogwarts.igl"),
+            Path.Combine(_directory, "hogwarts.igl"), true);
+    }
+
+    [TestMethod]
+    public void TestHogwartsStandsOnItsCragOverTheLake()
+    {
+        // How high the grounds stand at five places, each shown as a ball stood there and seen from the front, a
+        // quarter of a meter to a pixel: the courtyards fifty meters up under the Great Hall and the Astronomy Tower,
+        // the lake's bed under its water in front, the knoll the covered bridge lands on near its deck, two over the
+        // courtyards, and the ravine it crosses well below that.
+        UseHogwarts();
+
+        (string Name, double X, double Z, double Low, double High)[] places =
+        [
+            ("the Great Hall's floor", -95, 28, 49.9, 50.1),
+            ("the Astronomy Tower's foot", 66, 84, 49.9, 50.1),
+            ("the lake in front of the crag", 0, -300, -13, -1),
+            ("where the bridge lands", -276, 152, 46, 56),
+            ("the ravine under the bridge", -205, 152, -10, 25)
+        ];
+        const double Size = 0.25;
+        IEnumerable<string> balls = places.Select((place, k) =>
+            $"sphere {{ scale 1  translate [{k * 10}, HogwartsLand({place.X}, {place.Z}), 0]  material {{ pigment Red }} }}");
+        Canvas front = OrthographicView("import 'hogwarts' { HogwartsLand }", balls, (20, 20, 0), (0, 0, -1),
+            "[0, 1, 0]", Size, 200, 480, "[0, 0, 1]");
+
+        for (int k = 0; k < places.Length; k++)
+        {
+            int column = (int) Math.Round(100 + (k * 10 - 20) / Size);
+            List<int> rows = Enumerable.Range(0, front.Height)
+                .Where(row => !IsTheBackdrop(front.GetPixel(column, row)))
+                .ToList();
+
+            Assert.IsNotEmpty(rows, $"no ball was found standing at {places[k].Name}");
+
+            double height = 20 + (front.Height / 2.0 - (rows.Min() + rows.Max() + 1) / 2.0) * Size;
+
+            Assert.IsTrue(height >= places[k].Low && height <= places[k].High,
+                $"{places[k].Name} stands {height:F2} up, not within {places[k].Low} to {places[k].High}");
+        }
+    }
+
+    [TestMethod]
+    public void TestHogwartsWindowsAreDarkByDayAndLitAtDusk()
+    {
+        // The castle from across the lake with nothing to light it, so all that can show is its windows' own light: none
+        // with `lit` nought, and a warm light in most of them with it one.
+        UseHogwarts();
+
+        double[] Seen(string share)
+        {
+            string scene = Path.Combine(_directory, "scene.igl");
+
+            File.WriteAllText(scene, $$"""
+                import 'hogwarts' { Hogwarts }
+                context { angles are degrees  no gamma  scale ambient by 0 }
+                camera { location [-100, 4, -470]  look at [15, 78, 80]  field of view 44 }
+                background Black
+                object Hogwarts({{share}})
+                """);
+
+            Assert.IsNull(Render(scene, 160, 90), "the castle should build");
+
+            Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+            double red = 0, blue = 0, bright = 0;
+
+            for (int x = 0; x < picture.Width; x++)
+            for (int y = 0; y < picture.Height; y++)
+            {
+                Color pixel = picture.GetPixel(x, y);
+
+                red += pixel.Red;
+                blue += pixel.Blue;
+                bright += pixel.Red > 0.2 ? 1 : 0;
+            }
+
+            return [red, blue, bright];
+        }
+
+        double[] day = Seen("0");
+        double[] dusk = Seen("1");
+
+        Assert.AreEqual(0, day[0], 1e-9, "by day, with nothing to light it, the castle should show nothing");
+        Assert.IsTrue(dusk[2] > 60, $"at dusk only {dusk[2]} pixels showed a lit window");
+        Assert.IsTrue(dusk[0] > 1.6 * dusk[1], $"the windows' light should be warm: red {dusk[0]:F1}, blue {dusk[1]:F1}");
+    }
+
+    [TestMethod]
+    public void TestTheGreatHallIsOneRoomAndLitAsOne()
+    {
+        // The Great Hall's lake side from the front, a quarter of a meter to a pixel, its end turrets left out: with a
+        // third of the castle's windows lit, the hall's are lit exactly as they are with every window lit, since they are
+        // all one room's.  Until 2026-11-05 each was drawn for alone, and the hall at dusk was lit in patches.
+        UseHogwarts();
+
+        Canvas Hall(string lit) => OrthographicView("import 'hogwarts' { HogwartsGreatHall }",
+            [$"object HogwartsGreatHall({lit})"], (0, 14, 0), (0, 0, -1), "[0, 1, 0]", 0.25, 320, 160, "[0, -0.5, 1]");
+
+        Canvas third = Hall("0.3"), every = Hall("1"), none = Hall("0");
+        int differing = 0, glowing = 0;
+
+        for (int x = 44; x < 300; x++)
+        for (int y = 0; y < third.Height; y++)
+        {
+            Color a = third.GetPixel(x, y), b = every.GetPixel(x, y), dark = none.GetPixel(x, y);
+
+            differing += Math.Abs(a.Red - b.Red) + Math.Abs(a.Green - b.Green) + Math.Abs(a.Blue - b.Blue) > 1e-6 ? 1 : 0;
+            glowing += b.Red > dark.Red + 0.3 ? 1 : 0;
+        }
+
+        Assert.IsTrue(glowing > 300, $"only {glowing} pixels of the hall's windows were lit");
+        Assert.AreEqual(0, differing, "a third of the castle lit should light the hall as all of it lit does");
+    }
 }
