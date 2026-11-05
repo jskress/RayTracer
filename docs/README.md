@@ -176,6 +176,7 @@ branches, any one of the branches will do.
   - [Mandelbulb](advanced-surfaces.md#mandelbulb)
   - [Mandelbox](advanced-surfaces.md#mandelbox)
   - [Menger Sponge](advanced-surfaces.md#menger-sponge)
+  - [Hypertexture](advanced-surfaces.md#hypertexture)
   - [Parametric](advanced-surfaces.md#parametric)
   - [Generic Shape](advanced-surfaces.md#generic-shape)
   - [Text](advanced-surfaces.md#text)

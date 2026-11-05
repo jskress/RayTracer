@@ -45,6 +45,7 @@ adv-height-field.png|docs/examples/advanced/height-field.igl|340|250
 adv-erosion.png|docs/examples/advanced/erosion.igl|640|240
 adv-isosurface.png|docs/examples/advanced/isosurface.igl|320|240
 adv-fractals.png|docs/examples/advanced/fractals.igl|640|240
+adv-hypertexture.png|docs/examples/advanced/hypertexture.igl|640|240
 adv-parametric.png|docs/examples/advanced/parametric.igl|320|240
 adv-lathe.png|docs/examples/advanced/lathe.igl|320|240
 adv-lsystem.png|docs/examples/advanced/lsystem.igl|340|260

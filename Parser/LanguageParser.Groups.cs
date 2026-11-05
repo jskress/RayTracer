@@ -148,6 +148,9 @@ public partial class LanguageParser
                 case "tiles":
                     resolver.SurfaceResolvers.Add(ParseTilesClause(clause));
                     break;
+                case "hypertexture":
+                    resolver.SurfaceResolvers.Add(ParseHypertextureClause(clause));
+                    break;
 
                 case "hyperboloid":
                     resolver.SurfaceResolvers.Add(ParseHyperboloidClause(clause));

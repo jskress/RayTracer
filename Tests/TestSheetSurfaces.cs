@@ -137,6 +137,8 @@ public class TestSheetSurfaces
             // All are marched by distance, and all are solids: the field is negative within them,
             // which is what "inside" means for a distance.
             "SignedDistanceSurface", "JuliaFractal", "Mandelbulb", "Mandelbox", "MengerSponge",
+            // A hypertexture is a solid's skin moved, hard, or the shell round its stuff, soft: closed either way.
+            "Hypertexture",
             "Sphere", "Cube", "Cylinder", "Conic", "Torus", "Egg", "Superellipsoid", "Blob",
             "Isosurface", "Extrusion", "Lathe", "Tube", "TubeSegment", "TubeQuadSegment",
             "TubeCubicSegment", "CsgSurface", "Group", "Instance", "HeightField", "LSystem",

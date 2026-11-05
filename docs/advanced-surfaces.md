@@ -1672,6 +1672,104 @@ iteration — the distance to the cube, and to each cut's cross of square tunnel
 so the march takes long strides through the holes, and the surface is the sponge's own, with no detail
 to choose.
 
+### Hypertexture
+
+A solid's skin broken up by noise (Perlin and Hoffert, 1989).  **Hard**, the noise moves the skin in and out and
+what is drawn is a surface: stone worn by weather, clay pushed about, wax run.  **Soft**, the skin becomes stuff that
+thins out across it, held in a [medium](scene-files.md#filling-that-space): fuzz, a cloud the shape of a thing, letters
+burning.  The solid may be anything closed — a ball, a box, a word of [text](#text), a lathe, a CSG, a library's
+model.
+
+![A ball moved both ways, a box eaten into, and a ball turned to burning stuff](images/figures/adv-hypertexture.png)
+
+```
+hypertexture {
+    solid { cube { scale 0.6 } }
+    reach 0.06
+    eroded
+    noise granite { scale 0.8 }
+    material stone
+}
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/hypertextureClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/hypertextureClause.svg">
+  <img alt="A hypertexture" src="images/advanced/hypertextureClause.svg">
+</picture>
+
+**Everything is measured from the solid's skin.**  Most shapes have no formula for how far their skin is, so before
+the first ray the hypertexture sends rays along every line of a grid over the solid, in each of the three
+directions.  Between where a line crosses the skin it is inside or out, and the crossings themselves are places
+exactly on the skin, so every point of the grid knows how far the nearest of them is and on which side.  Read
+between its points, that distance is within about a quarter of a grid cell of the true one for a ball, and a
+corner sharper than a cell comes out rounded.  The parts of a group are taken together, so two that overlap are one
+solid.
+
+| Property | What it does |
+| --- | --- |
+| `solid` | **Required.**  What is broken up: surfaces written in braces, a surface's name, or a call of a primitive, as a [fracture](#fracture)'s solid is. |
+| `reach` | How far the noise moves the skin, either way.  A twentieth of the solid's longest side unless you say. |
+| `noise` | The pattern that moves it, with its transforms in braces, as a medium's density pattern is written.  Bozo stirred by turbulence, its lumps about four reaches across, unless you say. |
+| `eroded` | The skin is only eaten into, never pushed out: weathering. |
+| `drawn` | A vector: the skin is drawn out along it, as far as its length, where the skin faces its way and the noise is lowest.  Flames rising, wax dripping. |
+| `soft` | Makes the hypertexture soft: how far either side of the moved skin its stuff thins out over. |
+| `medium` | **Required when soft**, and only then: what the stuff is, [written as anywhere else](scene-files.md#filling-that-space). |
+| `resolution` | How many cells of the grid span the longest side of what is measured: 128 unless you say. |
+| `accuracy` | How closely the skin is found.  A hundredth of a cell unless you say. |
+
+**The noise is measured before the first ray too**, over the places near the skin, and stretched so that its
+middle ninety-six percent runs from nought to one: so a reach means what it says whatever the pattern, though a
+granite's values all lie low and a bozo's in the middle.  Where it is highest the skin moves in by the whole reach,
+where lowest out by it — or, `eroded`, in by the whole reach where it is highest and not at all where lowest.
+Mind the reach against the thinnest part of the solid: moved either way by more than half a stroke's width, a
+letter is eaten through.
+
+**Drawn out**, the skin moves along the vector where it faces that way — fully where it faces square along it, not
+at all where it faces across or against it — and further where the noise is lower.  So a word drawn upward rises off
+its tops in tongues of differing heights, and nothing hangs below it.
+
+#### Soft
+
+```
+hypertexture {
+    solid Word
+    soft 0.03
+    reach 0.015
+    drawn [0, 0.5, 0]
+    noise bozo { turbulence 0.7  scale [0.05, 0.2, 0.05] }
+    medium {
+        density 1.2
+        absorption 3
+        emission by density [0, Black, 0.3, [3, 0.9, 0.15], 1, [6, 5, 3.6]]
+    }
+    no shadow
+    gives light samples 32
+}
+```
+
+**Soft, the skin is stuff**: whole where the moved skin lies more than the soft width inside, nothing where it lies
+more than that outside, and a smooth step between.  Where the skin was drawn out the stuff thins over as far again
+as it was drawn, so a flame is whole at its root and nothing at its tip — and its light, read
+[by its density](scene-files.md#a-medium-whose-light-follows-its-density), runs from the white of the heart to the
+red of the tips.  Give the stuff `absorption` as well as light: with nothing to absorb, light only adds up along a
+ray through it, and a deep flame is white all through.
+
+**A soft hypertexture is a clear shell round its medium**, which it makes itself, so it takes no `material`: what
+the shell holds is its `medium`, and the hypertexture gives that medium its shape — a medium written with a
+`density function` or pattern of its own is refused.  The shell lies as far out as the stuff can reach, a little
+generous, so a ray's [medium samples](context.md#media) are spent near the stuff rather than across an
+empty box; raise them for stuff with fine edges.  `gives light` makes the glow light what is round it, and `no
+shadow` keeps the shell from shading anything, as for any [glow](scene-files.md#a-medium-whose-light-follows-its-density).
+
+**What it costs.**  The measuring is done once, before the first ray: the gallery's two words and two plinths are
+measured, all four, in under a second.  Rendering is a march, as for any [distance](#signed-distance-surface): near
+the skin each step is slowed by how steeply the noise was found to change there, so a fine noise costs more than a
+broad one, and far from it the march strides.
+
+The complete scene is [`docs/examples/advanced/hypertexture.igl`](examples/advanced/hypertexture.igl), and
+`gallery/Local/equations/weathered-and-burning.igl` stands a word worn by the weather beside the same word burning.
+
 ### Parametric
 
 The other way of writing a shape down as arithmetic.  An [isosurface](#isosurface) says where a

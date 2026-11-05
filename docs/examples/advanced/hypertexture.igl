@@ -1,0 +1,56 @@
+// Hypertexture: a solid's skin broken up by noise.  A ball whose skin the noise moves both ways, a box it only eats
+// into, and a ball turned to soft stuff that glows, its skin drawn upward into flames.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.7, -7.8]
+    look at [0, 0.8, 0]
+    field of view 50
+}
+
+background [0.10, 0.11, 0.14]
+
+point light { location [-6, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -5]   color [0.25, 0.26, 0.3] }
+
+plane { material { pigment color [0.36, 0.36, 0.34]  specular 0 } }
+
+clay = material { pigment color [0.78, 0.62, 0.48]  specular 0.1  shininess 20 }
+stone = material { pigment color [0.72, 0.70, 0.66]  specular 0.05 }
+
+// Moved both ways, by up to a tenth.
+hypertexture {
+    solid { sphere { scale 0.7 } }
+    reach 0.1
+    noise bozo { turbulence 0.4  scale 0.25 }
+    material clay
+    translate [-2.2, 0.8, 0]
+}
+
+// Only eaten into, by a granite's grain.
+hypertexture {
+    solid { cube { scale 0.6  rotate Y 30 } }
+    reach 0.06
+    eroded
+    noise granite { scale 0.8 }
+    material stone
+    translate [0, 0.66, 0]
+}
+
+// Soft: stuff, whole inside and thinning across the skin, drawn up into flames.
+hypertexture {
+    solid { sphere { scale 0.45 } }
+    soft 0.05
+    reach 0.04
+    drawn [0, 0.9, 0]
+    noise bozo { turbulence 0.7  scale [0.1, 0.35, 0.1] }
+    medium {
+        samples 48
+        density 1.5
+        absorption 3
+        emission by density [0, Black, 0.05, [1.2, 0.12, 0.02], 0.3, [3, 0.9, 0.15], 0.7, [4.5, 2.2, 0.5],
+                             1, [6, 5, 3.6]]
+    }
+    no shadow
+    translate [2.2, 0.55, 0]
+}

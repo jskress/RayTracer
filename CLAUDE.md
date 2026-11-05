@@ -403,6 +403,23 @@ true outside the cube, a lower bound in it).  The bulb and the box stand off the
 the box cut the standing-off surface flat on every face) with normals over half the detail
 (`DistanceEstimatedSurface.NormalStep`): drawn at the set's exact edge after N rounds, or with normals over eight
 accuracies, both came out a speckled dust, every pixel's facing and shadow at random among crinkles far finer than it.
+A `Hypertexture` (`hypertexture { solid ... reach noise <pattern> { } eroded drawn v soft s medium { } resolution }`,
+`Geometry/Hypertexture.cs`, a `DistanceEstimatedSurface`) measures ANY closed solid by a sampled distance field
+(`Geometry/DistanceGrid.cs`): rays along every grid line in all three axes, nodes signed by two of three (a group's
+parts unioned, as `Containment` does), the crossings exact skin points spread to every node by jump flooding
+(ping-pong, deterministic), read trilinearly; within 0.26 cell on a ball (a face along a grid line is outvoted, no
+offset needed).  The noise is stretched over its 2nd-98th percentile
+near the skin (so `reach` means what it says), field d + reach (2n - 1) (`eroded` d + reach n), less `drawn` x
+max(0, facing . way) x (1 - n), the facing read four cells either way (one cell: a flame's field changed 97x as fast
+as a distance).  Hard: marched by the field over its sampled slope near the skin, d less the most it can move far off,
+`TrustedInside` (the base class's inside stride floor, for collapsing escape-time estimates, leapt gaps in a rough
+skin).
+Soft: a clear shell the resolver builds round a COPY of its medium, whose `DensityPattern` is a `HypertextureDensity`
+(`DensityShape.ValueAt` virtual): smoothstep over (soft - f) / (2 soft + drawn), so a flame thins root to tip (over
+the soft width alone it was whole and white to the tip); the shell is d less the most the stuff reaches, a true
+distance (traced along the stuff's edge it marched at 1/97 stride, 210 s -> 18 s) faced by the distance alone (given
+the noise's slope it faced off at random: black blots).  `MediumResolver.ShapedByItsHolder` (thread-static) excuses
+its `emission by density` from needing a shape.  `gallery/Local/equations/weathered-and-burning.igl`.
 An isosurface's and
 `swells`' interval march (`March`) narrows a span whose ends differ in sign only once it is under 64 accuracies
 (`StraddleSpan`), else subdivides it as any other: narrowed at once, a span holding three crossings recorded one, and

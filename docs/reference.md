@@ -36,7 +36,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `aberration` | Camera: `chromatic aberration`, how far the lens parts red from blue toward the corners. | [Chromatic aberration](cameras.md#chromatic-aberration) |
 | `above` | Field: the lowest ground a copy may stand on, dropped or all over.  Grown tree climbing a surface: the lowest its points may stand.  Tiles: what lies over the grid's top layer. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Climbing a surface](advanced-surfaces.md#climbing-a-surface), [Tiles](advanced-surfaces.md#tiles) |
 | `absorption` | Medium: how much light it takes out per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
-| `accuracy` | Isosurface, parametric surface, distance surface, Julia set, Mandelbulb, Mandelbox, Menger sponge or swells: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface), [Swells](surfaces.md#swells) |
+| `accuracy` | Isosurface, parametric surface, distance surface, Julia set, Mandelbulb, Mandelbox, Menger sponge, hypertexture or swells: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface), [Swells](surfaces.md#swells), [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `across` | Shape grammar: a gabled `roof` whose ridge runs along the scope's Z rather than its X. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `agate` | Pattern: turbulent, wandering bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `agx` | Context: `film curve agx`, a film's curve over the whole range. | [Context](context.md#film-curve) |
@@ -164,6 +164,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `distortion` | Camera: how far the lens bows straight lines — more than nought outward (barrel), less inward (pincushion). | [Distortion](cameras.md#distortion) |
 | `drag` | Body or swarm: how much of the air's drag on a thing its size and shape it feels. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `drawLine` | L-system turtle: draw forward. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `drawn` | Hypertexture: a vector the skin is drawn out along, as far as its length, where it faces that way: flames rising, wax dripping. | [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `droop` | Hair: how far strands sag under their own weight. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `dust` | Weather: dust or sand settled on whatever faces up. | [Weathering a Model](materials.md#weathering-a-model) |
 | `ease` | Keys: the value comes to the key slowly, `ease in`, `ease out` or `ease in out`. | [Keys](animation.md#keys) |
@@ -175,6 +176,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `else` | The second way out of a [choice](scene-files.md#choosing-inside-a-body) in a function or primitive, and the other way out of an `if` where surfaces are listed; optional there.  A shape grammar's `if`, the other way. | [Scene Files](scene-files.md#choosing-inside-a-body), [Surfaces](surfaces.md#choosing-what-to-make) |
 | `emission` | Medium: how much light it gives off per unit of distance, as one color, as a pigment, or `by density`, from a map read at its density.  Material: light the surface gives off of its own.  Context: `emission samples`. | [Scene Files](scene-files.md#filling-that-space), [Materials](materials.md#emission), [Context](context.md#bounced-light), [Light by Density](scene-files.md#a-medium-whose-light-follows-its-density) |
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
+| `eroded` | Hypertexture: the skin is only eaten into by the noise, never pushed out. | [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `erosion` | Height field: how its ground has been worn before it is drawn: `rivers`, `scree`, `rain`. | [Erosion](advanced-surfaces.md#erosion) |
 | `error` | Context: `diffuse cache error`, how far the cache of bounced light may stray. | [Context](context.md#a-cache-of-bounced-light) |
 | `exposure` | Camera: how many stops brighter or darker it takes the light. | [Cameras](cameras.md#exposure) |
@@ -242,6 +244,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `hole` | Fracture: how far round the point struck the pieces are gone. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `horizontal` | Text layout: horizontal placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `hyperboloid` | Surface: a waisted surface of revolution. | [Surfaces](surfaces.md#hyperboloid) |
+| `hypertexture` | Surface: a solid's skin broken up by noise, moved in and out (hard) or turned to stuff thinning across it, held in a medium (soft). | [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `icon` | Path: a FontAwesome icon's outline. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `if` | Chooses which of two answers a [function or primitive](scene-files.md#choosing-inside-a-body) gives back, or which surfaces to make where they are listed.  In a shape grammar, which way a scope goes by what its rule sees. | [Surfaces](surfaces.md#choosing-what-to-make), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -301,7 +304,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `materials` | L-system: maps characters or depths to materials.  Fracture: the materials its pieces take one of. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Fracture](advanced-surfaces.md#fracture) |
 | `matrix` | Transform: a raw 4x4 matrix. | [Transforms](transforms.md#matrix) |
 | `max` | Extrusion: the high Y of the solid (`max Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid, and the far end of a decal's reach (`max Y`, `max radius`).  Also `max()` in an expression. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Materials](materials.md#reach), [Functions](advanced-surfaces.md#what-a-function-may-hold) |
-| `medium` | What fills a piece of space; in a context block, `medium samples` and `medium bounces`.  Also a font weight. | [Scene Files](scene-files.md#filling-that-space) |
+| `medium` | What fills a piece of space; in a context block, `medium samples` and `medium bounces`.  Also a font weight.  Hypertexture: what a soft one's stuff is. | [Scene Files](scene-files.md#filling-that-space), [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `melanin` | Material, for hair only: colors it as natural hair is colored — a named shade, or amounts of eumelanin and pheomelanin. | [How hair is lit](advanced-surfaces.md#how-hair-is-lit) |
 | `menger` | Surface: a Menger sponge, a cube cut into twenty-seven again and again. | [Menger Sponge](advanced-surfaces.md#menger-sponge) |
 | `metal` | Material: a real metal, by name (`'gold'`, `'chromium'`, ...) or by the color it mirrors, with an `edge` color for how it fares at a slant. | [Metals](materials.md#metals) |
@@ -314,7 +317,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `named` | Gives the thing being defined a name. | [Materials](materials.md#naming-and-reusing) |
 | `neutral` | Context: `film curve neutral`, which eases light brighter than eight tenths of white toward white, keeping its hue. | [Context](context.md#film-curve) |
 | `no` | Begins `no shadow`, `no shadows`, `no caustics`, `no gamma`, `no jitter`, `no center`, `no fade`, `no light tree`, and a `physical sky`'s `no light`. | [Surfaces](surfaces.md#no-shadow), [Materials](materials.md#fading), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
-| `noise` | Mottling: dims a color by noise.  Also the `noise` function, one smooth layer of it. | [Pigments & Patterns](pigments-and-patterns.md#mottling), [Scene Files](scene-files.md#functions) |
+| `noise` | Mottling: dims a color by noise.  Also the `noise` function, one smooth layer of it.  Hypertexture: `noise <pattern> { }`, what moves the skin. | [Pigments & Patterns](pigments-and-patterns.md#mottling), [Scene Files](scene-files.md#functions), [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `none` | Context: `film curve none`, which cuts light off at white. | [Context](context.md#film-curve) |
 | `normal` | Roughens a surface: a pattern that tilts the normal, or with `map` a normal map; a blob plane or a disc: which way it faces. | [Materials](materials.md#roughening-the-surface), [Normal maps](materials.md#normal-maps), [Blob](surfaces.md#a-plane-component), [Disc](surfaces.md#disc) |
 | `normals` | Smooth triangle or bilinear patch: the normal at each corner. | [Surfaces](surfaces.md#triangle-and-smooth-triangle), [Bilinear Patch](surfaces.md#bilinear-patch) |
@@ -378,7 +381,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `ramp` | Wave shape: a sawtooth. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `rate` | Context's `animation`: frames a second, 30 unless said.  Swarm: copies thrown a second, in a steady flow rather than a `burst`. | [Saying How Long](animation.md#saying-how-long), [Swarms](animation.md#swarms) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
-| `reach` | Grown tree: how far a point reaches to draw a twig toward it.  Joint: `reach <place or name> with <name>`, turning it and the joints in it to bring the named thing there. | [Advanced Surfaces](advanced-surfaces.md#grown-tree), [Reaching](animation.md#reaching) |
+| `reach` | Grown tree: how far a point reaches to draw a twig toward it.  Joint: `reach <place or name> with <name>`, turning it and the joints in it to bring the named thing there.  Hypertexture: how far the noise moves the skin. | [Advanced Surfaces](advanced-surfaces.md#grown-tree), [Reaching](animation.md#reaching), [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `red` | Image pattern: `channel red`, the picture's red alone. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `reflection` | Context: `reflection samples`, how many directions a rough surface looks in. | [Context](context.md#rough-reflections) |
 | `reflective` | Finish: how mirror-like the surface is. | [Materials](materials.md#reflective) |
@@ -387,6 +390,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `render` | Names which scene and camera to render. | [Scene Files](scene-files.md#the-render-command) |
 | `repeat` | Shape grammar: tiles a scope along an axis with as many parts of about a size as fit. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `repose` | Erosion: the steepest angle loose rock rests at, which scree lies at and a river's valley sides fall back to. | [Erosion](advanced-surfaces.md#erosion) |
+| `resolution` | Hypertexture: how many cells of the grid it measures its solid on span the longest side. | [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `return` | The answer a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `ribbon` | Surface: a flat strand of a given width running through a series of points. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
 | `right` | Text layout: `text alignment right` and `horizontal position right`.  Placement: `right of`, beside another on its `+X` side, touching; `align right with`, its `+X` edge level with another's.  Tile: what lies on its `+X` side. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another), [Tiles](advanced-surfaces.md#tiles) |
@@ -433,9 +437,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals.  Height field: shaded as the smooth surface it stands for.  Keys: `keys smooth` passes through every key without stopping. | [Surfaces](surfaces.md#triangle-and-smooth-triangle), [Height Field](advanced-surfaces.md#height-field), [Keys](animation.md#keys) |
 | `snow` | Weather: snow lying whole over whatever is flat enough to hold it. | [Weathering a Model](materials.md#weathering-a-model) |
-| `soft` | Context: `film curve soft`, the default; eases each channel brighter than eight tenths of white toward white. | [Context](context.md#film-curve) |
+| `soft` | Context: `film curve soft`, the default; eases each channel brighter than eight tenths of white toward white.  Hypertexture: how far either side of the skin its stuff thins out over, which makes it soft. | [Context](context.md#film-curve), [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
-| `solid` | Fracture: the thing that is broken. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
+| `solid` | Fracture: the thing that is broken.  Hypertexture: the thing whose skin is broken up. | [Advanced Surfaces](advanced-surfaces.md#fracture), [Hypertexture](advanced-surfaces.md#hypertexture) |
 | `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `spacing` | How far apart a `field` stands its copies.  Grown tree climbing a surface: how far apart its points stand, in place of how many. | [Advanced Surfaces](advanced-surfaces.md#field), [Climbing a surface](advanced-surfaces.md#climbing-a-surface) |
 | `span` | Surface: `span from <name> to <name> [stretched]`, stood between two named places. | [Marks and Spans](animation.md#marks-and-spans) |
