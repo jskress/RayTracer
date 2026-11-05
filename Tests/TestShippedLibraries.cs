@@ -4120,13 +4120,13 @@ public class TestShippedLibraries
     }
 
     /// <summary>
-    /// Copies the droids library beside the scenes this class writes.
+    /// Copies the Star Wars library beside the scenes this class writes.
     /// </summary>
     private void UseDroids()
     {
         File.Copy(
-            Shipped.First(path => Path.GetFileName(path) == "droids.igl"),
-            Path.Combine(_directory, "droids.igl"), true);
+            Shipped.First(path => Path.GetFileName(path) == "star-wars.igl"),
+            Path.Combine(_directory, "star-wars.igl"), true);
     }
 
     /// <summary>
@@ -4148,7 +4148,7 @@ public class TestShippedLibraries
         const double Size = 0.005;
         const double Face = 3.6 - 1.69 * 1.5 / 4.9;
         const double Sunk = Face - 0.08 / 0.95620;
-        Canvas cut = OrthographicView("import 'droids' { R2Foot }",
+        Canvas cut = OrthographicView("import 'star-wars' { R2Foot }",
             ["intersection { object R2Foot()  cube { scale [8, 0.01, 8]  translate Y 2.5 } }"],
             (3, 2.5, 0), (0, 1, 0), "[1, 0, 0]", Size, 2700, 300, "[0, -1, 0]");
 
@@ -4183,7 +4183,7 @@ public class TestShippedLibraries
         // Cut again 5.18 up, through the band across the top: it stands at the face, with the face sunk between its
         // ends and the rim.
         const double High = 3.6 - 4.37 * 1.5 / 4.9;
-        Canvas top = OrthographicView("import 'droids' { R2Foot }",
+        Canvas top = OrthographicView("import 'star-wars' { R2Foot }",
             ["intersection { object R2Foot()  cube { scale [8, 0.01, 8]  translate Y 5.18 } }"],
             (2.2, 5.18, 0), (0, 1, 0), "[1, 0, 0]", Size, 2700, 300, "[0, -1, 0]");
 
@@ -4205,7 +4205,7 @@ public class TestShippedLibraries
 
         // Cut upright down its middle and seen from in front, +X up the picture, so up runs to the left: the block's
         // face 3.354 out but in its two slots, sunk 0.04 at 4.52 and 4.02 up.
-        Canvas upright = OrthographicView("import 'droids' { R2Foot }",
+        Canvas upright = OrthographicView("import 'star-wars' { R2Foot }",
             ["intersection { object R2Foot()  cube { scale [8, 8, 0.01] } }"],
             (3.2, 4, 0), (0, 0, -1), "[1, 0, 0]", Size, 740, 120, "[0, 0, 1]");
 
@@ -4235,7 +4235,7 @@ public class TestShippedLibraries
         UseDroids();
 
         const double Size = 0.01;
-        Canvas cut = OrthographicView("import 'droids' { R2Foot }",
+        Canvas cut = OrthographicView("import 'star-wars' { R2Foot }",
             ["intersection { object R2Foot()  cube { scale [0.01, 8, 8] } }"],
             (0, 2.4, 0), (1, 0, 0), "[0, 0, 1]", Size, 200, 1400, "[-1, 0, 0]");
         (int first, int last) = ColumnsOf(cut.Width, Size, 2 - 2.4, 2.8 - 2.4);

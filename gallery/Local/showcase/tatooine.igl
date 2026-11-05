@@ -59,7 +59,7 @@ context {
     }
 }
 
-import 'droids' { R2D2 }
+import 'star-wars' { R2D2 }
 
 // Low, in front of him and to his right, looking past him toward the setting suns.
 camera { location [2.4, 0.62, -3.4]  look at [0, 0.7, 0.5]  field of view 52 }
