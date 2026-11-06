@@ -4425,6 +4425,130 @@ public class TestShippedLibraries
     }
 
     /// <summary>
+    /// Where a place `across` meters along the Quidditch pitch's length and `along` meters across it stands in the
+    /// grounds, as `Hogwarts` stands the pitch: at [500, 230], turned -130 degrees about Y.
+    /// </summary>
+    private static (double X, double Z) OnThePitch(double across, double along)
+    {
+        double turn = -130 * Math.PI / 180;
+
+        return (500 + across * Math.Cos(turn) + along * Math.Sin(turn), 230 - across * Math.Sin(turn) + along * Math.Cos(turn));
+    }
+
+    [TestMethod]
+    public void TestTheQuidditchPitchStandsOnGroundCutLevelAndNoWhereElse()
+    {
+        // How far the grounds stand from where they should, a million times over, each shown as a ball stood at that
+        // height and seen from the front a quarter of a meter to a pixel: on the pitch, at a hoop's foot, behind the
+        // stands and at the edge of the cut, exactly the level it is cut to; past the twenty-two meters it eases back
+        // over, exactly the ground as it lay, so nothing else in the grounds moves by so much as a millionth.
+        UseHogwarts();
+
+        (string Name, double Across, double Along, bool Cut)[] places =
+        [
+            ("the middle of the pitch", 0, 0, true),
+            ("a hoop's foot", 70, 0, true),
+            ("behind the stands at an end", 91, 0, true),
+            ("behind the stands at a side", 0, -43, true),
+            ("the end of the cut", 97, 0, true),
+            ("past the cut beyond an end", 122, 0, false),
+            ("past the cut beyond a side", 0, -75, false),
+            ("past the cut toward the bay", 0, 75, false)
+        ];
+        const double Size = 0.25;
+        IEnumerable<string> balls = places.Select((place, k) =>
+        {
+            (double x, double z) = OnThePitch(place.Across, place.Along);
+            string should = place.Cut ? "39.5" : $"max(HogCrag({x}, {z}), HogHills({x}, {z}) + HogMountains({x}, {z}))";
+
+            return $"sphere {{ scale 1  translate [{k * 10}, 1000000 * (HogwartsLand({x}, {z}) - {should}), 0]  material {{ pigment Red }} }}";
+        });
+        Canvas front = OrthographicView("import 'hogwarts' { HogwartsLand, HogCrag, HogHills, HogMountains }", balls,
+            (35, 0, 0), (0, 0, -1), "[0, 1, 0]", Size, 400, 120, "[0, 0, 1]");
+
+        for (int k = 0; k < places.Length; k++)
+        {
+            int column = (int) Math.Round(200 + (k * 10 - 35) / Size);
+            List<int> rows = Enumerable.Range(0, front.Height)
+                .Where(row => !IsTheBackdrop(front.GetPixel(column, row)))
+                .ToList();
+
+            Assert.IsNotEmpty(rows, $"the ground at {places[k].Name} is more than 15 micrometers from where it should be");
+
+            double height = (front.Height / 2.0 - (rows.Min() + rows.Max() + 1) / 2.0) * Size;
+
+            Assert.AreEqual(0, height, Size, $"the ground at {places[k].Name} is {height / 1e6:E1} meters from where it should be");
+        }
+    }
+
+    [TestMethod]
+    public void TestTheQuidditchStandsAreFull()
+    {
+        // A stretch of the stands along one long side of the pitch, from straight above, five centimeters to a pixel,
+        // past the staff's tower in its middle: the people in them, dropped onto the benches, show the blue of the
+        // Ravenclaws' scarves among them -- about two hundred pixels of it, the tower's shadow over some.  Nothing else
+        // in the pitch is blue, so with nobody sitting there there would be none.
+        UseHogwarts();
+
+        Canvas above = OrthographicView("import 'hogwarts' { HogwartsQuidditchPitch }", ["object HogwartsQuidditchPitch()"],
+            (11.5, 0, 40.2), (0, 1, 0), "[0, 0, 1]", 0.05, 340, 104, "[0.2, -1, 0.3]");
+        int blue = 0, seen = 0;
+
+        for (int x = 0; x < above.Width; x++)
+        for (int y = 0; y < above.Height; y++)
+        {
+            Color pixel = above.GetPixel(x, y);
+
+            seen += IsTheBackdrop(pixel) ? 0 : 1;
+            blue += pixel.Blue > 1.8 * pixel.Red && pixel.Blue > 1.8 * pixel.Green && pixel.Blue > 0.05 ? 1 : 0;
+        }
+
+        Assert.IsTrue(seen > 0.95 * above.Width * above.Height, $"the stands should fill the view: {seen} pixels did");
+        Assert.IsTrue(blue > 100, $"only {blue} pixels showed a Ravenclaw's scarf in the stands");
+    }
+
+    [TestMethod]
+    public void TestAQuidditchPlayerSitsTheirBroomInTheirHousesRobes()
+    {
+        // Two players from the side, a centimeter to a pixel, their brooms along X: each stretches from the bristles a
+        // meter and a quarter behind where they sit to the handle's end a meter in front, with their head well above
+        // the handle; and a Gryffindor's robes are scarlet where a Slytherin's show none.
+        UseHogwarts();
+
+        (double Left, double Right, double Top, int Scarlet) Seen(int house)
+        {
+            Canvas side = OrthographicView("import 'hogwarts' { HogwartsQuidditchPlayer }",
+                [$"object HogwartsQuidditchPlayer({house}, 1)"], (0, 0.1, 0), (0, 0, -1), "[0, 1, 0]", 0.01, 300, 200,
+                "[0.3, -0.5, 1]");
+            int left = int.MaxValue, right = -1, top = int.MaxValue, scarlet = 0;
+
+            for (int x = 0; x < side.Width; x++)
+            for (int y = 0; y < side.Height; y++)
+            {
+                Color pixel = side.GetPixel(x, y);
+
+                if (IsTheBackdrop(pixel))
+                    continue;
+
+                left = Math.Min(left, x);
+                right = Math.Max(right, x);
+                top = Math.Min(top, y);
+                scarlet += pixel.Red > 2.5 * pixel.Green && pixel.Red > 2.5 * pixel.Blue && pixel.Red > 0.05 ? 1 : 0;
+            }
+
+            return ((left - 150) * 0.01, (right + 1 - 150) * 0.01, 0.1 + (100 - top) * 0.01, scarlet);
+        }
+
+        (double Left, double Right, double Top, int Scarlet) gryffindor = Seen(1), slytherin = Seen(2);
+
+        Assert.AreEqual(-1.2, gryffindor.Left, 0.1, "the bristles should reach a meter and a fifth behind the seat");
+        Assert.AreEqual(1.05, gryffindor.Right, 0.05, "the handle should reach a meter in front of the seat");
+        Assert.IsTrue(gryffindor.Top > 0.5 && gryffindor.Top < 0.95, $"the rider's head stood {gryffindor.Top:F2} over the handle");
+        Assert.IsTrue(gryffindor.Scarlet > 500, $"only {gryffindor.Scarlet} pixels of a Gryffindor's robes were scarlet");
+        Assert.AreEqual(0, slytherin.Scarlet, "a Slytherin should wear no scarlet");
+    }
+
+    /// <summary>
     /// Copies the Ringworld library beside the scenes this class writes.
     /// </summary>
     private void UseRingworld()

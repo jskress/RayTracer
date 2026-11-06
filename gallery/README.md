@@ -2,7 +2,8 @@
 
 All the images collected from the parts of the gallery are shown below.  Clicking on each
 thumbnail will show the full-sized image.  Clicking the image title will show the source
-`.igl` file that generated it.
+`.igl` file that generated it.  They can also be seen one at a time, full size, as a
+[slideshow](https://jskress.github.io/RayTracer/gallery/), which reads this index to know what to show.
 
 <details>
 <summary><b>Ray Tracer Challenge Book</b> &mdash; 32 images</summary>
@@ -269,7 +270,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 182 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 194 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -1696,7 +1697,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Showcase</b> &mdash; 10 images &middot; whole pictures, made for their own sake</summary>
+<summary><b>Showcase</b> &mdash; 11 images &middot; whole pictures, made for their own sake</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1729,6 +1730,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/showcase/hogwarts-from-the-air.igl">Hogwarts from the Air</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/hogwarts-quidditch-match.png">
+      <img alt="A Quidditch Match at Hogwarts" height="120" src="Local/showcase/hogwarts-quidditch-match.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/hogwarts-quidditch-match.igl">A Quidditch Match at Hogwarts</a>
     </td>
   </tr>
   <tr style="border: none;">

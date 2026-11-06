@@ -664,7 +664,15 @@ bay round the east end, and mountains (`HogMountains`, from 2.6 km out) that the
 two fields agree at the grounds' edge (1.5 m under them, -60 well inside).  Erosion on the highlands carved the land
 behind down to the lake's level and was taken off.  `gallery/Local/showcase/hogwarts-at-dusk.igl`,
 `hogwarts-from-the-air.igl` and `hogwarts-from-above-the-grounds.igl` (close, from behind); all wrap the scene in a `no shadow` box of absorbing, glowing haze (an `environment`
-medium dims the sun itself, its light crossing endless haze).
+medium dims the sun itself, its light crossing endless haze).  The Quidditch pitch (the first two films': sixteen
+draped towers, stands, three gold hoops each end) is part of `Hogwarts`, on the flat shelf across the bay
+(`HogwartsPitch` [500, 39.5, 230], turned `HogwartsPitchTurn` -130), its frame's length along X; `HogwartsLand`
+cuts the shelf level within `HogPitchOut` and eases back over 22 m by `HogTerraced` -- a sum, not `lerp` (whose
+a + (b - a) t need not give b back at t = 1) nor a choice (a height field's function may make none), so every place
+past it is bit for bit the ground it was.  The spectators are a field along the ring (`HogStandRing`) dropped
+`over 'stands'`, refused below the benches and on tower roofs by `above`/`below`.  `Hogwarts(lit, season, wind)`
+turns the chimney smoke and the pennants together.  `hogwarts-quidditch-match.igl` flies `HogwartsQuidditchPlayer`s
+over it from 16 m up (lower, the stands across the pitch hide the crag).
 
 The `ringworld` library (meters; figures from Niven, and where he is silent the licensed Chaosium RPG, 1984) puts the
 origin on the Ring's floor, the star straight up at `[0, RingRadius, 0]`, the Ring's axis along X, spinward +Z, the

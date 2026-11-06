@@ -23,6 +23,12 @@ the finished droid, on Tatooine under its two setting suns:
 
 ![R2-D2 on Tatooine](gallery/Local/showcase/tatooine.png)
 
+## Gallery
+
+Every picture in the gallery, with a link to the scene that made it, can be seen as a slideshow
+**[here](https://jskress.github.io/RayTracer/gallery/)**, or browsed as an index of thumbnails in
+[`gallery/`](gallery/README.md).
+
 ## Documentation
 
 The scene language and everything the renderer can do are documented in full under
@@ -33,19 +39,4 @@ The following are improvements I want to make.  Most of the ones relating to pat
 from the "Putting It Together" section of chapter 10, plus some things that POVRay has that
 I want to add.  Once an item is checked, you can assume it's done.
 
-### General To-Dos:
-
-- [x] Motion blur.
-
-### To-Dos for Lights:
-- [x] Area lights/soft shadows.
-- [x] Spotlights.
-
-### To-Dos for Cameras:
-- [x] Focal blur.
-
-### To-Dos for Surfaces:
-- [x] Normal perturbation.
-- [ ] Other surfaces
-
-More to come...
+*No improvements planned at this time; helpful suggestions are always welcome.*
