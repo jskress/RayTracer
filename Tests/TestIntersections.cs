@@ -225,4 +225,74 @@ public class TestIntersections
             }
         }
     }
+
+    /// <summary>
+    /// This tests how far a surface's places may lie from its own origin, which its rays' nudge is never less than a
+    /// share of: each of its own axes by how far that axis is stretched, so a height field twelve kilometers wide
+    /// with heights to 891 in its own units reaches twelve kilometers, not ten thousand; and nothing at all for a box
+    /// drawn to the end of the numbers, which is how text's outline says it has no end (taken at its word, a text
+    /// surface's rays would have set off 10^295 meters away).
+    /// </summary>
+    [TestMethod]
+    public void TestASurfacesReachIsMeasuredAxisByAxis()
+    {
+        Cube field = new () { Transform = Transforms.Scale(12000, 1, 12000) };
+        Cube endless = new ();
+
+        field.PrepareForRendering();
+        field.BoundingBox = new BoundingBox().Add(new Point(0, -69, 0)).Add(new Point(1, 891, 1));
+        endless.PrepareForRendering();
+        endless.BoundingBox = new BoundingBox()
+            .Add(new Point(-double.MaxValue, 0, -double.MaxValue))
+            .Add(new Point(double.MaxValue, 0.1, double.MaxValue));
+
+        Assert.AreEqual(12000, field.ReachInTheWorld, 1);
+        Assert.AreEqual(0, endless.ReachInTheWorld);
+    }
+
+    /// <summary>
+    /// This tests that a ray cast on through a surface far larger than where it is met -- the top of the Ringworld's
+    /// air, a band eight kilometers over a floor 150 million kilometers round its star, met a few kilometers from the
+    /// world's middle -- sets off past it.  The crossing is found in the band's own space, where it is known only to
+    /// some hundredths of a millimeter, and until 2026-11-05 a ray set off a millionth past it met it again as often
+    /// as not: a mountain seen through the top of the air came out in rings.
+    /// </summary>
+    [TestMethod]
+    public void TestARayOnThroughAFarLargerSurfaceLeavesIt()
+    {
+        const double radius = 152888000000;
+        Random random = new (1105);
+        Cylinder top = new ()
+        {
+            MinimumY = -0.006, MaximumY = 0.006,
+            Transform = Transforms.Translate(0, radius, 0) * Transforms.RotateAroundZ(90) *
+                        Transforms.Scale(radius - 8000)
+        };
+
+        top.PrepareForRendering();
+
+        for (int index = 0; index < 200; index++)
+        {
+            double up = 2 + random.NextDouble() * 80;
+            double side = (random.NextDouble() * 2 - 1) * 0.01;
+            Vector going = new Vector(side, Math.Sin(up * Math.PI / 180), Math.Cos(up * Math.PI / 180)).Unit;
+            Ray ray = new (new Point(0, 2, 0), going);
+            List<Intersection> hits = [];
+
+            top.Intersect(ray, hits);
+
+            Intersection hit = hits.Where(crossing => crossing.Distance > 0).MinBy(crossing => crossing.Distance);
+
+            Assert.IsNotNull(hit, "a ray up through the air should leave it");
+
+            hit.PrepareUsing(ray, hits);
+
+            List<Intersection> again = [];
+
+            top.Intersect(new Ray(hit.UnderPoint, going), again);
+
+            Assert.IsFalse(again.Any(crossing => crossing.Distance > 0 && crossing.Distance < 1e6),
+                $"a ray {up:F1} degrees up met the top of the air again just past it: {string.Join(", ", again.Select(crossing => crossing.Distance))}, set off {hit.SelfOffset}, met at {hit.Distance}");
+        }
+    }
 }

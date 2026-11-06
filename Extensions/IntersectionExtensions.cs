@@ -73,7 +73,17 @@ public static class IntersectionExtensions
         // **A shape and the place it is standing in**, because a shared shape gives the same surface
         // for every instance of it: a ray entering one glass ball and then another would otherwise
         // read as entering and *leaving* the one ball, and come out the far side unrefracted.
-        List<(Surface Surface, Portals Portals)> containers = [];
+        //
+        // **And for a combination, the whole of it**: every crossing a CSG reports is a crossing of its
+        // boundary, so each takes a ray into the whole or out of it, whichever of its parts the boundary
+        // belongs to there.  Counted part by part, a ray leaving a hollow -- a difference -- by the face of
+        // what was cut out of it went *into* that part, and the hollow was taken to be full of what fills
+        // the whole: the air over the Ringworld's far side was charged all the way across the Ring, until
+        // 2026-11-05.  What a ray is said to be inside is the whole when the whole is dressed -- a medium filling
+        // it is read in its space, and read in the space of the part a ray came in by, the inner face of the
+        // Ring's air, scaled a hair smaller, the air's density came out e^9 too great -- and the part it came in
+        // by when only the parts are, so a combination whose parts are dressed apart keeps each part's interior.
+        List<(Surface Whole, Portals Portals, Surface Surface)> containers = [];
         Surface before = null;
         Surface after = null;
         Portals beforeThrough = default;
@@ -82,11 +92,13 @@ public static class IntersectionExtensions
         foreach (Intersection intersection in intersections)
         {
             if (intersection == hit && !containers.IsEmpty())
-                (before, beforeThrough) = containers.Last();
+                (_, beforeThrough, before) = containers.Last();
 
             // A strand is crossed once, as a ribbon, so it is never gone into: a ray passing one is in
-            // whatever it was in before, and stays there.
-            if (intersection.Surface is StrandSurface)
+            // whatever it was in before, and stays there.  Nor is a tube or a shade left open at an end (see
+            // ExtrudedSurface.IsOpen): what is within it is outside it, and an eye in an open tube in a haze,
+            // having crossed the tube's far wall behind it, was taken to stand in the tube rather than the haze.
+            if (intersection.Surface is StrandSurface or ExtrudedSurface { IsOpen: true })
             {
                 if (intersection != hit)
                     continue;
@@ -120,23 +132,61 @@ public static class IntersectionExtensions
                 surface = field;
             }
 
-            (Surface, Portals) inside = (surface, intersection.Portals);
+            Surface whole = WholeOf(surface);
+            int at = containers.FindIndex(entry =>
+                ReferenceEquals(entry.Whole, whole) && entry.Portals.Equals(intersection.Portals));
 
-            if (containers.Contains(inside))
-                containers.Remove(inside);
+            if (at >= 0)
+                containers.RemoveAt(at);
             else
-                containers.Add(inside);
+                containers.Add((whole, intersection.Portals, DressedAsAWhole(whole) ? whole : surface));
 
             if (intersection == hit)
             {
                 if (!containers.IsEmpty())
-                    (after, afterThrough) = containers.Last();
+                    (_, afterThrough, after) = containers.Last();
 
                 break;
             }
         }
 
         return (before, after, beforeThrough, afterThrough);
+    }
+
+    /// <summary>
+    /// This method reports whether a surface a ray may be inside is dressed as a whole: a combination given a material
+    /// of its own, which its parts wear.  Anything else is taken part by part.
+    /// </summary>
+    private static bool DressedAsAWhole(Surface whole) =>
+        whole is CsgSurface && !whole.WearsTheDefault && whole.Material is not null;
+
+    /// <summary>
+    /// This method returns what a ray crossing the given surface goes into or comes out of, as far as what fills it
+    /// goes: the whole combination the surface is part of, when that is dressed as a whole, and otherwise the surface
+    /// itself.  A medium filling a combination is read in the combination's space, and where it ends is where the
+    /// combination does.
+    /// </summary>
+    /// <param name="surface">The surface crossed.</param>
+    /// <returns>What is filled.</returns>
+    internal static Surface FilledThrough(Surface surface)
+    {
+        Surface whole = WholeOf(surface);
+
+        return DressedAsAWhole(whole) ? whole : surface;
+    }
+
+    /// <summary>
+    /// This method returns the outermost combination a surface is part of, climbing through combinations only, or the
+    /// surface itself when it is part of none.
+    /// </summary>
+    private static Surface WholeOf(Surface surface)
+    {
+        Surface whole = surface;
+
+        for (Surface up = surface.Parent; up is CsgSurface csg; up = up.Parent)
+            whole = csg;
+
+        return whole;
     }
 
     /// <summary>

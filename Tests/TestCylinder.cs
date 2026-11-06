@@ -154,6 +154,62 @@ public class TestCylinder
         }
     }
 
+    /// <summary>
+    /// A cylinder scaled far more across than along -- the Ringworld's floor, a hundred and fifty million kilometers
+    /// round and a million and a half across -- is met from inside by a ray square to its axis in the world, however
+    /// little of that the ray keeps across in the cylinder's own space.  Until 2026-11-05 a ray there within a
+    /// millionth of the axis was taken to run along the wall, and the floor was never seen from inside it.
+    /// </summary>
+    [TestMethod]
+    public void TestACylinderScaledFarMoreAcrossThanAlongIsMetFromInside()
+    {
+        foreach (double radius in new[] { 1e3, 5e8, 1.5e11 })
+        {
+            Cylinder floor = new ()
+            {
+                MinimumY = -1e12, MaximumY = 1e12, Closed = false,
+                Transform = Transforms.Translate(0, radius - 1, 0) * Transforms.RotateAroundZ(90) *
+                            Transforms.Scale(radius, 1, radius)
+            };
+
+            foreach (Vector direction in new[] { new Vector(0, 0.34, 0.94), new Vector(-0.45, 0.34, 0.83) })
+            {
+                Ray ray = new (new Point(0, 2, 0), direction.Unit);
+                List<Intersection> crossings = [];
+
+                floor.Intersect(ray, crossings);
+
+                Intersection ahead = crossings.SingleOrDefault(crossing => crossing.Distance > 0);
+
+                Assert.IsNotNull(ahead, $"a ray up and along {direction} from the floor of a cylinder {radius} round " +
+                                        "found no wall ahead");
+
+                Point met = ray.At(ahead.Distance);
+                double fromTheAxis = Math.Sqrt((met.Y - (radius - 1)) * (met.Y - (radius - 1)) + met.Z * met.Z);
+
+                Assert.AreEqual(radius, fromTheAxis, radius * 1e-9, "the wall was met off the wall");
+            }
+        }
+    }
+
+    /// <summary>
+    /// The caps of a cylinder scaled far more along than across -- a rod a hundred meters thick and two million
+    /// kilometers long -- are met by a ray crossing an end at a slant, though the ray keeps next to nothing of its
+    /// part along the rod in the rod's own space.
+    /// </summary>
+    [TestMethod]
+    public void TestTheCapsOfACylinderScaledFarMoreAlongThanAcrossAreMet()
+    {
+        Cylinder rod = new () { Transform = Transforms.Scale(100, 1e9, 100) };
+        Ray ray = new (new Point(-150, 1e9 + 100, 0), new Vector(1, -1, 0).Unit);
+        List<Intersection> crossings = [];
+
+        rod.Intersect(ray, crossings);
+
+        Assert.IsTrue(crossings.Any(crossing => Math.Abs(ray.At(crossing.Distance).Y - 1e9) < 1e-3),
+            $"the rod's top was not met: crossings at {string.Join(", ", crossings.Select(crossing => crossing.Distance))}");
+    }
+
     [TestMethod]
     public void TestCappedCylinderNormals()
     {

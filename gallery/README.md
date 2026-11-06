@@ -1696,7 +1696,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Showcase</b> &mdash; 6 images &middot; whole pictures, made for their own sake</summary>
+<summary><b>Showcase</b> &mdash; 10 images &middot; whole pictures, made for their own sake</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1729,6 +1729,38 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/showcase/hogwarts-from-the-air.igl">Hogwarts from the Air</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/ringworld-at-midnight.png">
+      <img alt="The Ringworld at Midnight" height="120" src="Local/showcase/ringworld-at-midnight.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/ringworld-at-midnight.igl">The Ringworld at Midnight</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/ringworld-at-noon.png">
+      <img alt="The Ringworld at Noon" height="120" src="Local/showcase/ringworld-at-noon.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/ringworld-at-noon.igl">The Ringworld at Noon</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/ringworld-at-the-rim-wall.png">
+      <img alt="The Ringworld at the Rim Wall" height="120" src="Local/showcase/ringworld-at-the-rim-wall.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/ringworld-at-the-rim-wall.igl">The Ringworld at the Rim Wall</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/ringworld-from-space.png">
+      <img alt="The Ringworld from Space" height="120" src="Local/showcase/ringworld-from-space.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/ringworld-from-space.igl">The Ringworld from Space</a>
     </td>
   </tr>
   <tr style="border: none;">

@@ -1,0 +1,56 @@
+// The Ringworld from space: the whole Ring round its star, seen from outside it, a little above its plane.
+//
+// A showcase rather than a demonstration.  Everything but the stars comes from the `ringworld` library.
+//
+// **What is seen is what the Ring looks like coming in to it**: the star blazing at its middle, the near side of the
+// Ring a dark band across the stars -- its underside, which faces away from the light -- and the far side a pale blue
+// ribbon, the land on its inner face seen through its own air, broken into long streaks of day and shorter strips of
+// night.  Round the star, close in, the twenty shadow squares that make that night stand in a ring of their own.
+//
+// **It is thin.**  The Ring is a million miles wide and nearly two hundred million across, so seen whole it is a
+// line: a hundred and ninetieth of its own width across.  Its land is lit by a star always overhead, so it glows
+// alike everywhere it is not in shadow, and needs no lamp; the one point light at the star's middle is there for the
+// shadow squares, whose sunward faces turn toward the camera on the far side of their ring.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    angles are degrees
+    info {
+        title 'The Ringworld from Space'
+        author 'J. Stephen Kress'
+        description 'The Ringworld round its star, its shadow squares close about the star, from a little above its plane.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'ringworld' { Ringworld, RingRadius, RingFloorDrop }
+
+// The Ring's middle, where the star is.
+Middle = point [0, RingRadius - RingFloorDrop, 0]
+
+// Twice the Ring's radius out from the star and fourteen degrees above the Ring's plane, the Ring's axis up.
+Out = 2 * RingRadius
+
+camera {
+    location [Out * sin(14°), RingRadius - Out * cos(14°), 0]
+    look at Middle + vector [0, 0.1 * RingRadius, 0]
+    up [1, 0, 0]
+    field of view 62
+    glare 0.2
+}
+
+// The stars: a `granite` pattern whose map was measured, as for the other space scenes.
+background granite {
+    [0, Black, 0.56, Black, 0.6, [0.30, 0.32, 0.40], 0.66, White, 1, White]
+    scale [0.009, 0.009, 0.009]
+}
+
+object Ringworld(0, 0.13, 150)
+
+// The star's light, for the shadow squares.
+point light { location Middle  color [1.0, 0.97, 0.92] }

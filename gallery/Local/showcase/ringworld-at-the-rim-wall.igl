@@ -1,0 +1,95 @@
+// The Ringworld at its rim wall: forty-five kilometers up, over the air, five hundred from the wall, looking
+// spinward along it -- the wall a thousand miles high running off to a point at the horizon, the spill mountains
+// leaning against its foot all the way, and the Arch shooting up from where it ends.
+//
+// A showcase rather than a demonstration.  The Ring and its spill mountains come from the `ringworld` library; the
+// land under them is here.
+//
+// **The wall is seen against the stars.**  It is scrith, milky gray, but the star is overhead and the wall stands
+// upright, so it is lit only at a graze and by the sky; from inside the air it would be hardly brighter than the sky
+// in front of it.  From up here, over the air, it is a featureless gray plane where the stars stop, hazed blue at its
+// foot where it rises out of the air.  Its top runs back to the horizon, and over it is the sky: from close by, the
+// gap between the wall's top and the Arch read as the wall cutting across the floor.
+//
+// **The spill mountains are where the Ring's soil comes back.**  It washes down the rivers to the seas, is pumped up
+// through the walls, and is let fall again at their feet: fifty-kilometer half-cones every seven hundred kilometers
+// here (the books say only that they are evenly spaced), their tops in vacuum, bare spoil above a grown-over foot.
+//
+// **The Arch rises where the wall meets the horizon**, because the wall is its edge: the Ring curves up toward the
+// star, and its near wall with it.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.15
+    angles are degrees
+    info {
+        title 'The Ringworld at the Rim Wall'
+        author 'J. Stephen Kress'
+        description 'Above the air beside the Ringworld rim wall, its spill mountains along its foot and the Arch rising where it ends.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'ringworld' { Ringworld, SpillMountains, RingWidth }
+
+// Five hundred kilometers from the wall on the Ring's +X side.
+Across = RingWidth / 2 - 500000
+
+camera {
+    location [0, 45000, 0]
+    look at [140, 45000 + 1000 * tan(5°), 1000]
+    field of view 75
+}
+
+// Above the air, the stars.
+background granite {
+    [0, Black, 0.56, Black, 0.6, [0.30, 0.32, 0.40], 0.66, White, 1, White]
+    scale [0.007, 0.007, 0.007]
+}
+
+object Ringworld(Across, 0.02, 60)
+object SpillMountains(Across, 1, 900000, 60, 700000)
+
+distant light { direction [0, -1, 0]  color [1.0, 0.97, 0.92] }
+sky light {
+    pigment linear Y gradient { [0, [0.55, 0.62, 0.75], 1, [0.18, 0.28, 0.5]] }
+    samples 16
+}
+
+// The land, seen from forty-five kilometers: plains and woods, a lake here and there, laid flat -- from this high a
+// hill is a shade, not a shape.
+plane {
+    material {
+        pigment layer {
+            // A lake here and there.
+            bozo {
+                turbulence { amplitude 0.5  octaves 4 }
+                [0, color [0, 0, 0, 0], 0.7, color [0, 0, 0, 0], 0.74, color [0.04, 0.08, 0.11, 0.9], 1, color [0.03, 0.07, 0.10]]
+                scale 40000
+            },
+            // Woods, thinning off into the plains round them.
+            bozo {
+                turbulence { amplitude 0.6  octaves 5 }
+                [0, color [0, 0, 0, 0], 0.42, color [0, 0, 0, 0], 0.62, color [0.05, 0.08, 0.035, 0.9], 1, color [0.04, 0.07, 0.03, 0.95]]
+                scale 12000
+            },
+            // Fields and scrub, greener and browner by turns a kilometer or two across.
+            bozo {
+                turbulence { amplitude 0.4  octaves 3 }
+                [0, color [0.09, 0.12, 0.05, 0.4], 0.5, color [0.13, 0.15, 0.07, 0], 1, color [0.18, 0.16, 0.09, 0.4]]
+                scale 1800
+            },
+            // Plains, greener and browner by turns.
+            bozo {
+                turbulence { amplitude 0.5  octaves 5 }
+                [0, [0.08, 0.12, 0.05], 0.5, [0.12, 0.15, 0.07], 1, [0.17, 0.16, 0.09]]
+                scale 30000
+            }
+        }
+        diffuse 0.85  specular 0.02
+    }
+}
