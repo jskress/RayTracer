@@ -2806,18 +2806,22 @@ object Hogwarts(0.6)
 
 | | |
 | --- | --- |
-| `Hogwarts` | The castle: every building of it standing where it stands on the crag, the boathouse and its stair at the water, and out on the hills the Owlery, Hagrid's hut with smoke going up from its chimney, the standing stones and the gatehouse. |
+| `Hogwarts` | The castle: every building of it standing where it stands on the crag, the boathouse and its stair at the water, and out on the hills the Owlery, Hagrid's hut with smoke going up from its chimney, the standing stones, the gatehouse, and the Quidditch pitch across the bay. |
 | `HogwartsGrounds` | The crag, the ravine the bridge crosses and the hills round them: a height field fourteen hundred meters square, named `'grounds'`. |
 | `HogwartsHighlands` | The mountains round the lake, a height field twelve kilometers square, named `'highlands'`. |
 | `HogwartsPaths` | The road in from the gatehouse and the path down to the hut, flat stones dropped onto the grounds. |
 | `HogwartsLakeWater` | The lake's water, dark with peat, for the [water](#water) library's `Water`. |
 | `HogwartsLand(x, z)` | How high the grounds stand at a place, for standing something on them. |
+| `HogwartsQuidditchPitch` | The pitch on its own, in its own frame, as `Hogwarts` stands it; see [The Quidditch pitch](#the-quidditch-pitch). |
+| `HogwartsQuidditchPlayer` | A player on a broom, in a house's robes, for flying over it. |
+| `HogwartsPitch`, `HogwartsPitchTurn` | Where `Hogwarts` stands the pitch, and how far it turns it about Y. |
 
-`Hogwarts(lit, season)`: **`lit` is the share of the windows with a light behind them**, nought by day and
+`Hogwarts(lit, season, wind)`: **`lit` is the share of the windows with a light behind them**, nought by day and
 two thirds or so at dusk, each lit window one of three warm lights a little different from one another -- but
 the Great Hall is one room, so its windows are all lit alike whenever any are, and all dark when none are;
 **`season`** is `'summer'` or `'winter'`, and winter lays snow on whatever faces up, on the grounds and the
-mountains as well as the castle.  `HogwartsGrounds(season, samples)` and `HogwartsHighlands(season,
+mountains as well as the castle; **`wind`** turns the breeze, in degrees about Y from the north-east it blows
+toward unless said, and the smoke from Hagrid's chimney and the pennants over the Quidditch stands go with it.  `HogwartsGrounds(season, samples)` and `HogwartsHighlands(season,
 samples)` take how fine to sample, 2048 and 1536 unless said: the grounds' crag wants a cell under a meter
 for its fissures to read from across the lake, and the mountains, seen from kilometers off, one of fifteen.
 
@@ -2829,7 +2833,8 @@ Lay the lake with `object Water(12000, 12000, 'calm') { material HogwartsLakeWat
 beside them, at the top of the scene, as the grounds do.  Out on the hills Hagrid's hut stands at
 `(-330, 90)`, the standing stones at `(-305, 205)` and the Owlery at `(-360, 300)`: a forest planted over the
 grounds wants drawing back from them, or trees twenty meters tall hide a hut seven high from anywhere but
-overhead.  The hut's chimney smokes, a wisp carried off to the north-east.
+overhead.  The hut's chimney smokes, a wisp carried off to the north-east.  The Quidditch pitch is across the
+bay east of the castle, about `(500, 230)`.
 
 ##### Built from the studio's model
 
@@ -2865,9 +2870,39 @@ few meters along the edge, which a height field can only say by moving where the
 Mountains rising right behind the grounds made a wall of the whole upper picture, from the lake and from the
 air; they rise now from two and a half kilometers out, to six or seven hundred meters, with lower hills
 between, so that from the water the castle's spires stand against the sky over them.  What makes them read as
-far off is the haze between, and both pictures in the gallery wrap the scene in a box of thin air that
+far off is the haze between, and the pictures in the gallery wrap the scene in a box of thin air that
 absorbs and glows -- see `gallery/Local/showcase/hogwarts-from-the-air.igl`.  The box casts no shadow, or the
 sun would be dimmed for crossing it too.
+
+##### The Quidditch pitch
+
+The pitch of the first two films: an oval of turf the books' size, five hundred feet by a hundred and eighty,
+and round it **sixteen slender towers draped from top to bottom in checked cloth** of the houses' colors --
+the two at the middles of the long sides the staff's, black and white, the rest the four houses in turn --
+each with a box of spectators at its top under a pointed roof, and a long pennant flying from a pole over
+that.  **Stands** of six rows of benches fill the gaps between the towers, stepping up from behind a dark
+barrier of boards three and a half meters high, and the school sits in them, dark-robed with scarves of the
+houses' colors, half a meter apart: laid along the ring as a
+[field](advanced-surfaces.md#laying-a-field-along-a-path) and dropped onto the benches, so each kind of
+spectator is one shape built once.  At each end stand **three gold hoops** on gold
+poles, the middle one fifty feet up and the others forty.
+
+**Where it stands.**  The films moved the pitch about the grounds from one to the next; here it is on the
+flat shelf across the bay east of the castle, ten meters under the courtyards, its long axis beside the bay's
+shore -- the castle seen across the water over the stands from it, as the first film sees it over the towers.
+The shelf is cut level twelve meters past the stands all round and eased back into the hills over twenty-two
+more, in `HogwartsLand` itself, so the grounds, the paths and anything a scene drops onto them agree with it;
+past that the ground is exactly as it was.  `HogwartsQuidditchPitch(wind)` builds it in its own frame, its
+middle on the origin, its turf on `y = 0` and its length along X, and `Hogwarts` stands it at
+`HogwartsPitch`, turned `HogwartsPitchTurn` (-130) about Y: a scene laying out a game builds it in that frame
+and carries it the same way.
+
+`HogwartsQuidditchPlayer(house, variant)` is a player on a broom: one Gryffindor, two Slytherin, three
+Ravenclaw, four Hufflepuff, in that house's robes over pale breeches and boots, `variant` setting how far
+forward they lean and their hair.  The broom runs along +X with its handle on the origin where they sit, up
+is +Y, and it is about two meters from bristles to tip.  `gallery/Local/showcase/hogwarts-quidditch-match.igl`
+flies a game over the pitch, looking from sixteen meters up past the hoops to the castle: lower, and the
+stands across the pitch hide the crag.
 
 #### Instruments
 

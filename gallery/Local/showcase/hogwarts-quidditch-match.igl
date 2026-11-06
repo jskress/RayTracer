@@ -1,0 +1,193 @@
+// A Quidditch match at Hogwarts: from the turf of the pitch on the shelf across the bay, past the three gold
+// hoops at the near end and the towers of the stands, to the castle's east end on its crag across the water, with
+// Gryffindor and Slytherin in the air.
+//
+// A showcase rather than a demonstration.  The castle, the pitch, the players, the grounds and the mountains round
+// the lake come from the `hogwarts` library, the forest from `trees`; the sky, the water, the air, the woods and
+// the game are here.
+//
+// **The pitch is the first two films'**: sixteen slender towers in checked cloth of the houses' colors, a box of
+// spectators at the top of each under a pointed roof, pennants flying, a dark barrier from tower to tower, and three
+// gold hoops at each end.  The films moved it about the grounds; the library stands it on the flat shelf across the
+// bay from the castle, ten meters under the courtyards, so the castle is seen over the stands across the water.
+//
+// **The game is laid out in the pitch's own frame** (`HogwartsPitch`, turned `HogwartsPitchTurn`), its length
+// along X: a Gryffindor Chaser bringing the Quaffle up toward Slytherin's hoops with a Slytherin Chaser coming at
+// her, the Slytherin Keeper waiting before them, Beaters and a Bludger above, and both Seekers diving together.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.25
+    angles are degrees
+    info {
+        title 'A Quidditch Match at Hogwarts'
+        author 'J. Stephen Kress'
+        description 'Gryffindor and Slytherin in the air over the Quidditch pitch, the castle across the bay beyond the hoops.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'hogwarts' { Hogwarts, HogwartsGrounds, HogwartsHighlands, HogwartsLakeWater, HogwartsPaths, HogwartsPitch,
+                    HogwartsPitchTurn, HogwartsQuidditchPlayer }
+import 'water' { Water }
+import 'trees' { Fir, Pine, Oak }
+
+// Sixteen meters over the turf near the pitch's -Z side, as a player sees it, looking past the hoops at its +X end
+// to the castle across the bay: in the pitch's frame [50, 16, -28] looking at [196, 40, 436], carried into the
+// grounds by its turn and its place.  Any lower, and the stands across the pitch hid the crag, and the castle stood
+// on nothing.
+camera {
+    location [489.3, 55.5, 286.3]
+    look at [40.0, 79.5, 99.9]
+    field of view 60
+    exposure 0.3
+}
+
+// Fair-weather cloud, in heaps low over the hills and thinning to nothing overhead: noise stretched flat,
+// white where it is thick and gray beneath, laid over the sky.
+background layer {
+    linear Y gradient {
+        [0, color [1, 1, 1, 0],
+         0.02, color [1, 1, 1, 0],
+         0.06, bozo {
+             turbulence { amplitude 0.55  octaves 5 }
+             [0, color [1, 1, 1, 0], 0.52, color [1, 1, 1, 0], 0.6, color [0.86, 0.87, 0.9, 0.7],
+              0.7, color [0.95, 0.95, 0.97, 0.95], 1, color [0.98, 0.98, 1, 1]]
+             scale [0.22, 0.05, 0.22]
+         },
+         0.3, bozo {
+             turbulence { amplitude 0.55  octaves 5 }
+             [0, color [1, 1, 1, 0], 0.6, color [1, 1, 1, 0], 0.7, color [0.9, 0.9, 0.93, 0.6], 1, color [0.97, 0.97, 1, 0.9]]
+             scale [0.22, 0.05, 0.22]
+         },
+         0.45, color [1, 1, 1, 0],
+         1, color [1, 1, 1, 0]]
+    },
+    physical sky { sun elevation 38  sun azimuth 15  turbidity 2.6  brightness 3 }
+}
+sky light { samples 32 }
+
+// The air: a haze, a third of the light gone over three kilometers and its own pale blue in its place, so the
+// highlands stand back.  It casts no shadow, so the sun lights the ground whole.
+cube {
+    material {
+        transparency 1
+        interior { medium { absorption 0.00015  emission [0.000032, 0.000042, 0.000063] } }
+    }
+    no shadow
+    scale [7000, 2700, 7000]
+    translate Y 2600
+}
+
+// -- The land and the water ------------------------------------------------------------------------------------
+
+object HogwartsGrounds()
+object HogwartsHighlands()
+object HogwartsPaths()
+object Water(12000, 12000, 'calm') { material HogwartsLakeWater }
+
+// -- The Forbidden Forest ---------------------------------------------------------------------------------------
+
+// The hills west of the ravine, its far bank running back inland as the ravine does.  Its edge draws back into a bay
+// of open hillside round Hagrid's hut and the standing stones, fifty meters clear of the hut every way but the one it
+// opens on, and a clearing round the Owlery's pinnacle is cut out of it.  The bay is the edge drawn back, not a hole:
+// a hole is told from the forest by counting crossings, so a hole reaching past the edge plants trees there.
+ForestWest = path {
+    move to -268, -40
+    line to -272, 40
+    line to -302, 42  line to -334, 44  line to -360, 54  line to -376, 74  line to -380, 100  line to -372, 124
+    line to -362, 150  line to -362, 180  line to -364, 208  line to -356, 232  line to -334, 246  line to -306, 250
+    line to -289, 250
+    line to -290, 260
+    line to -300, 420
+    line to -330, 600
+    line to -700, 600
+    line to -700, -40
+    close
+    move to -360, 262  line to -326, 280  line to -326, 320  line to -360, 338  line to -394, 320  line to -394, 280  close
+}
+
+// Behind the grounds, beyond the gatehouse's wall.
+ForestSouth = path {
+    move to -300, 480  line to 260, 480  line to 330, 600  line to -330, 600  close
+}
+
+field {
+    of Fir(22, 'summer', 1), Fir(18, 'summer', 2), Pine(20, 'summer', 1), Pine(24, 'summer', 2),
+       Oak(15, 'summer', 1), Oak(13, 'summer', 2)
+    within ForestWest
+    spacing 9  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 160 } from 0.3 to 0.42
+    over 'grounds'
+    steepest 38
+    sink 1
+}
+
+field {
+    of Fir(22, 'summer', 1), Fir(18, 'summer', 2), Pine(20, 'summer', 1), Oak(15, 'summer', 1)
+    within ForestSouth
+    spacing 9  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 160 } from 0.35 to 0.45
+    over 'grounds'
+    steepest 38
+    sink 1
+}
+
+// And on the hills beyond the grounds, in stands with moor between them, below where trees give out.
+Hills = path {
+    move to -2600, -300  line to -700, -300  line to -700, 900  line to 2600, 900  line to 2600, 3200
+    line to -2600, 3200  close
+}
+
+field {
+    of Fir(22, 'summer', 1), Fir(18, 'summer', 2), Pine(20, 'summer', 1), Pine(24, 'summer', 2)
+    within Hills
+    spacing 13  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 420 } from 0.42 to 0.5
+    over 'highlands'
+    above 2  below 420
+    steepest 32
+    sink 1
+}
+
+
+// -- The game -------------------------------------------------------------------------------------------------
+
+Quaffle = material { pigment [0.45, 0.06, 0.04]  specular 0.15  shininess 20 }
+Bludger = material { pigment [0.03, 0.03, 0.03]  specular 0.5  shininess 60 }
+
+group {
+    // A Gryffindor Chaser with the Quaffle under her arm, making for Slytherin's hoops at the +X end, and a Slytherin
+    // Chaser coming at her.
+    group {
+        object HogwartsQuidditchPlayer(1, 3)
+        sphere { scale 0.15  translate [0.3, 0.3, -0.27]  material Quaffle }
+        rotate X -16  rotate Z 4  rotate Y -34  translate [50.4, 14.5, -13.4]
+    }
+    object HogwartsQuidditchPlayer(2, 4) { rotate X 14  rotate Z -3  rotate Y 146  translate [57.8, 15.5, -8.3] }
+    // The Slytherin Keeper before the middle hoop, and another Gryffindor Chaser coming up.
+    object HogwartsQuidditchPlayer(2, 5) { rotate Z 5  rotate Y 147  translate [66.5, 14.6, -3] }
+    object HogwartsQuidditchPlayer(1, 6) { rotate X 20  rotate Y 43  translate [44, 17, 26] }
+    // The Beaters, higher, and a Bludger between them.
+    object HogwartsQuidditchPlayer(1, 9) { rotate X -22  rotate Z 6  rotate Y 150  translate [63.2, 20, -5.9] }
+    object HogwartsQuidditchPlayer(2, 10) { rotate X 18  rotate Y -160  translate [47.4, 24, 30.5] }
+    sphere { scale 0.13  translate [57, 21, 4]  material Bludger }
+    // The Seekers, diving together after something too small to see.
+    object HogwartsQuidditchPlayer(1, 11) { rotate X 28  rotate Z -18  rotate Y 160  translate [60.1, 27, 10.8] }
+    object HogwartsQuidditchPlayer(2, 12) { rotate X 24  rotate Z -16  rotate Y 166  translate [61.6, 27.6, 13.5] }
+
+    rotate Y HogwartsPitchTurn
+    translate HogwartsPitch
+}
+
+// -- The castle ----------------------------------------------------------------------------------------------
+
+// The breeze turned from the north-east to the north-west, so the pennants fly across the view, not at it.
+object Hogwarts(0, 'summer', -90)

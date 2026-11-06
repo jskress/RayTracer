@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ray Tracer Gallery</title>
+<meta name="description" content="A slideshow of the pictures made with the ray tracer, read from the gallery's own index.">
+<!--
+    The gallery as a slideshow.  It keeps no list of its own: it reads the gallery's index, README.md beside it,
+    every time it is opened, so a picture added there is in the slideshow too.  Served as plain files (a local
+    server in this folder's parent), it reads that file; on GitHub Pages, which turns Markdown into HTML, it reads
+    the same file from the repository instead.
+-->
+<style>
+    :root {
+        --ground: #0e0f11;
+        --panel: #16181b;
+        --line: #2a2d32;
+        --text: #e8e6e1;
+        --soft: #a19d95;
+        --accent: #d9b45a;
+        --gap: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+        margin: 0;
+        height: 100%;
+        background: var(--ground);
+        color: var(--text);
+        font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover, a:focus-visible { text-decoration: underline; }
+
+    header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px var(--gap);
+        padding: 12px var(--gap);
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+    }
+
+    header h1 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        margin-right: auto;
+    }
+
+    header h1 a { color: var(--text); }
+
+    select, button {
+        font: inherit;
+        color: var(--text);
+        background: #1f2226;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px 10px;
+        cursor: pointer;
+    }
+
+    select { max-width: 100%; }
+
+    button:hover, select:hover { border-color: #4a4e55; }
+    button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+
+    .counter { color: var(--soft); font-variant-numeric: tabular-nums; min-width: 5.5em; text-align: right; }
+
+    main {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+        padding: var(--gap);
+        overflow: hidden;
+        touch-action: pan-y;
+    }
+
+    /* Every picture is shown as large as the stage allows, small ones (the book's, the movies) scaled up. */
+    main img {
+        display: block;
+        width: 100%;
+        height: calc(100vh - 190px);
+        height: calc(100dvh - 190px);
+        object-fit: contain;
+        opacity: 1;
+        transition: opacity 220ms ease;
+    }
+
+    main img.leaving { opacity: 0; }
+
+    .step {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 64px;
+        padding: 0;
+        font-size: 26px;
+        line-height: 1;
+        background: rgba(20, 22, 25, 0.55);
+        border-color: transparent;
+    }
+
+    .step:hover { background: rgba(20, 22, 25, 0.85); }
+    .step.back { left: 8px; }
+    .step.on { right: 8px; }
+
+    .message { color: var(--soft); text-align: center; max-width: 36em; }
+
+    footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 6px var(--gap);
+        padding: 12px var(--gap) 14px;
+        border-top: 1px solid var(--line);
+        background: var(--panel);
+    }
+
+    footer h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    footer .where { color: var(--soft); }
+    footer .links { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-left: auto; }
+
+    .hint { width: 100%; color: #6f6b64; font-size: 12.5px; }
+
+    @media (max-width: 600px) {
+        header h1 { width: 100%; }
+        .step { width: 36px; height: 52px; font-size: 22px; }
+        .hint { display: none; }
+        main img { height: calc(100dvh - 250px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        main img { transition: none; }
+    }
+</style>
+</head>
+<body>
+<header>
+    <h1><a id="home" href="https://github.com/jskress/RayTracer">Ray Tracer Gallery</a></h1>
+    <select id="section" aria-label="Which part of the gallery to show" disabled>
+        <option>Loading…</option>
+    </select>
+    <button id="play" type="button" aria-pressed="false" title="Play or pause (space)">Play</button>
+    <button id="full" type="button" title="Fill the screen (F)">Full screen</button>
+    <span class="counter" id="counter" aria-live="off"></span>
+</header>
+
+<main id="stage">
+    <button class="step back" id="back" type="button" aria-label="Previous picture" title="Previous (←)">&#8249;</button>
+    <img id="picture" alt="" hidden>
+    <p class="message" id="message">Loading the gallery…</p>
+    <button class="step on" id="on" type="button" aria-label="Next picture" title="Next (→)">&#8250;</button>
+</main>
+
+<footer aria-live="polite">
+    <h2 id="title"></h2>
+    <span class="where" id="where"></span>
+    <span class="links" id="links"></span>
+    <span class="hint">← → to step, space to play, F for full screen.  Each picture was rendered by the ray tracer from
+        the scene file linked beside it.</span>
+</footer>
+
+<script>
+(() => {
+    // How long each picture stays up when playing.
+    const HOLD = 6000;
+    // The section shown when none is asked for: whole pictures, made for their own sake.
+    const OPENING = 'Showcase';
+
+    const $ = id => document.getElementById(id);
+    const picture = $('picture'), message = $('message'), section = $('section'), counter = $('counter');
+    const play = $('play'), title = $('title'), where = $('where'), links = $('links');
+
+    // The repository this page belongs to: on GitHub Pages, its owner and name are the site's host and first path
+    // part; anywhere else, the one it was written for.
+    const repository = (() => {
+        const host = location.hostname.match(/^([^.]+)\.github\.io$/);
+        const part = location.pathname.split('/').filter(Boolean)[0];
+
+        return host && part ? `${host[1]}/${part}` : 'jskress/RayTracer';
+    })();
+
+    $('home').href = `https://github.com/${repository}`;
+
+    // `showing` numbers each change of picture, so a picture that finishes loading after a later one was asked for
+    // is not put up over it.
+    let slides = [], shown = [], at = 0, timer = null, showing = 0;
+
+    const slug = text => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    // The gallery's index, as text: beside this page when it is served as it stands, else from the repository.
+    async function readTheIndex() {
+        const places = ['README.md', `https://raw.githubusercontent.com/${repository}/main/gallery/README.md`];
+
+        for (const place of places) {
+            try {
+                const answer = await fetch(place, { cache: 'no-cache' });
+
+                if (answer.ok) {
+                    const text = await answer.text();
+
+                    if (text.includes('<summary>'))
+                        return text;
+                }
+            }
+            catch (problem) {
+                // Not there; try the next place.
+            }
+        }
+
+        throw new Error('the gallery index could not be read');
+    }
+
+    // Every picture in the index: each row of its tables is one, under the section (and the part, for the sections
+    // that hold others) whose summary heads it.
+    function readTheSlides(text) {
+        const page = new DOMParser().parseFromString(text, 'text/html');
+        const heading = details => details?.querySelector(':scope > summary b')?.textContent.trim();
+        const found = [];
+
+        for (const row of page.querySelectorAll('tr')) {
+            const image = row.querySelector('img');
+
+            if (!image)
+                continue;
+
+            const pointed = [...row.querySelectorAll('a')].map(link => link.getAttribute('href') || '');
+            const inner = row.closest('details');
+            const outer = inner?.parentElement?.closest('details');
+
+            found.push({
+                title: image.getAttribute('alt') || '',
+                still: image.getAttribute('src'),
+                movie: pointed.find(place => /\.(webp|gif|mp4)$/i.test(place)),
+                scene: pointed.find(place => place.endsWith('.igl')),
+                section: heading(inner) || 'Gallery',
+                group: outer ? heading(outer) : null
+            });
+        }
+
+        return found;
+    }
+
+    // The choice of what to show: everything, then each section in the index's order, a section that holds others
+    // given its own group with "all of it" first.
+    function offerTheSections() {
+        const choices = [{ key: 'everything', label: `Everything (${slides.length})`, take: () => true }];
+        const seen = new Set();
+
+        section.textContent = '';
+        section.append(new Option(choices[0].label, choices[0].key));
+
+        const offer = (choice, into) => {
+            choices.push(choice);
+            into.append(new Option(choice.label, choice.key));
+        };
+
+        for (const slide of slides) {
+            const name = slide.group || slide.section;
+
+            if (seen.has(name))
+                continue;
+
+            seen.add(name);
+
+            if (slide.group) {
+                const members = slides.filter(other => other.group === name);
+                const group = document.createElement('optgroup');
+
+                group.label = name;
+                section.append(group);
+                offer({ key: slug(name), label: `All of it (${members.length})`, take: s => s.group === name }, group);
+
+                for (const part of [...new Set(members.map(member => member.section))]) {
+                    const count = members.filter(member => member.section === part).length;
+
+                    offer({ key: slug(part), label: `${part} (${count})`, take: s => s.group === name && s.section === part }, group);
+                }
+            }
+            else {
+                const count = slides.filter(other => other.section === name && !other.group).length;
+
+                offer({ key: slug(name), label: `${name} (${count})`, take: s => !s.group && s.section === name }, section);
+            }
+        }
+
+        section.disabled = false;
+
+        return choices;
+    }
+
+    let choices = [];
+
+    function choose(key, index) {
+        const choice = choices.find(c => c.key === key) || choices.find(c => c.key === slug(OPENING)) || choices[0];
+
+        section.value = choice.key;
+        shown = slides.filter(choice.take);
+        show(Math.min(Math.max(index || 0, 0), shown.length - 1));
+    }
+
+    function show(index) {
+        if (!shown.length)
+            return;
+
+        at = (index + shown.length) % shown.length;
+
+        const slide = shown[at];
+        const source = slide.movie || slide.still;
+
+        const ticket = ++showing;
+
+        picture.classList.add('leaving');
+
+        const next = new Image();
+
+        next.onload = next.onerror = () => {
+            if (ticket !== showing)
+                return;
+
+            picture.src = next.complete && next.naturalWidth ? source : slide.still;
+            picture.alt = slide.title;
+            picture.hidden = false;
+            message.hidden = true;
+            requestAnimationFrame(() => picture.classList.remove('leaving'));
+        };
+        next.src = source;
+
+        title.textContent = slide.title;
+        where.textContent = slide.group ? `${slide.group} · ${slide.section}` : slide.section;
+        counter.textContent = `${at + 1} / ${shown.length}`;
+        links.textContent = '';
+
+        const link = (text, href) => {
+            const a = document.createElement('a');
+
+            a.textContent = text;
+            a.href = href;
+            links.append(a);
+        };
+
+        if (slide.scene)
+            link('The scene', `https://github.com/${repository}/blob/main/gallery/${slide.scene}`);
+
+        if (slide.movie)
+            link('The still', slide.still);
+
+        link('Full size', source);
+
+        history.replaceState(null, '', `#${section.value}/${at + 1}`);
+
+        // Have the pictures either side ready.
+        for (const step of [1, -1]) {
+            const near = shown[(at + step + shown.length) % shown.length];
+
+            new Image().src = near.movie || near.still;
+        }
+
+        if (timer)
+            restart();
+    }
+
+    function restart() {
+        clearInterval(timer);
+        timer = setInterval(() => show(at + 1), HOLD);
+    }
+
+    function toggle(playing = !timer) {
+        if (playing && !timer)
+            restart();
+        else if (!playing && timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+
+        play.textContent = timer ? 'Pause' : 'Play';
+        play.setAttribute('aria-pressed', timer ? 'true' : 'false');
+    }
+
+    function fromTheAddress() {
+        const [key, number] = decodeURIComponent(location.hash.slice(1)).split('/');
+
+        choose(key, (parseInt(number, 10) || 1) - 1);
+    }
+
+    $('back').addEventListener('click', () => show(at - 1));
+    $('on').addEventListener('click', () => show(at + 1));
+    play.addEventListener('click', () => toggle());
+    section.addEventListener('change', () => choose(section.value, 0));
+    $('full').addEventListener('click', () => {
+        if (document.fullscreenElement)
+            document.exitFullscreen();
+        else
+            document.documentElement.requestFullscreen?.();
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.target === section || event.altKey || event.ctrlKey || event.metaKey)
+            return;
+
+        const keys = {
+            ArrowRight: () => show(at + 1),
+            ArrowLeft: () => show(at - 1),
+            Home: () => show(0),
+            End: () => show(shown.length - 1),
+            ' ': () => toggle(),
+            f: () => $('full').click(),
+            F: () => $('full').click()
+        };
+
+        if (keys[event.key]) {
+            event.preventDefault();
+            keys[event.key]();
+        }
+    });
+
+    // A swipe across the picture steps through them on a touch screen.
+    let downAt = null;
+
+    $('stage').addEventListener('pointerdown', event => { downAt = event.clientX; });
+    $('stage').addEventListener('pointerup', event => {
+        if (downAt === null || event.pointerType === 'mouse')
+            return;
+
+        const moved = event.clientX - downAt;
+
+        downAt = null;
+
+        if (Math.abs(moved) > 50)
+            show(at + (moved < 0 ? 1 : -1));
+    });
+
+    // Playing stops while the page is out of sight, and starts again when it comes back.
+    let wasPlaying = false;
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            wasPlaying = !!timer;
+            toggle(false);
+        }
+        else if (wasPlaying)
+            toggle(true);
+    });
+
+    window.addEventListener('hashchange', fromTheAddress);
+
+    readTheIndex()
+        .then(text => {
+            slides = readTheSlides(text);
+
+            if (!slides.length)
+                throw new Error('the gallery index holds no pictures');
+
+            choices = offerTheSections();
+            fromTheAddress();
+        })
+        .catch(problem => {
+            message.innerHTML = '';
+            message.append(`The gallery could not be loaded: ${problem.message}.  `);
+
+            const a = document.createElement('a');
+
+            a.href = `https://github.com/${repository}/tree/main/gallery`;
+            a.textContent = 'See it on GitHub instead.';
+            message.append(a);
+        });
+})();
+</script>
+</body>
+</html>

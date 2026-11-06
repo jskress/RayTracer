@@ -10,15 +10,19 @@
 //     object Hogwarts()                 // by day
 //     object Hogwarts(0.7)              // at dusk, seven windows in ten lit
 //
-// | `Hogwarts` | The castle, every building of it standing where it stands on its crag, and the Owlery, Hagrid's hut (its chimney smoking), the standing stones and the gatehouse out on the hills. |
+// | `Hogwarts` | The castle, every building of it standing where it stands on its crag, and the Owlery, Hagrid's hut (its chimney smoking), the standing stones and the gatehouse out on the hills, and the Quidditch pitch across the bay. |
 // | `HogwartsGrounds` | The crag the castle stands on, the ravine the bridge crosses, and the hills round it, named 'grounds'. |
 // | `HogwartsHighlands` | The mountains round the lake, from a kilometer out, named 'highlands'. |
 // | `HogwartsPaths` | The road in from the gatehouse and the path to the hut, dropped onto the grounds: stand it beside them. |
 // | `HogwartsLakeWater` | The lake's water, dark with peat, for the `water` library's `Water`. |
 // | `HogwartsLand(x, z)` | How high the grounds stand at a place, for standing something on them. |
+// | `HogwartsQuidditchPitch` | The pitch on its own, in its own frame: its middle on the origin, its turf on `y = 0`, its length along X. |
+// | `HogwartsQuidditchPlayer` | A player on a broom in a house's robes, for flying over it. |
+// | `HogwartsPitch`, `HogwartsPitchTurn` | Where `Hogwarts` stands the pitch, and how far it turns it about Y. |
 //
-// `Hogwarts(lit, season)`: `lit` is the share of the windows with a light behind them, nought by day; `season`
-// is `'summer'` or `'winter'`, and winter lays snow on everything that faces up.  `HogwartsGrounds(season,
+// `Hogwarts(lit, season, wind)`: `lit` is the share of the windows with a light behind them, nought by day;
+// `season` is `'summer'` or `'winter'`, and winter lays snow on everything that faces up; `wind` turns the breeze
+// the chimney smoke and the pitch's pennants go with, in degrees about Y from the north-east.  `HogwartsGrounds(season,
 // samples)` and `HogwartsHighlands(season, samples)` take the season too, and how finely to sample.
 //
 // **The lake's rest level is `y = 0`, and the castle faces it at `-Z`.**  The courtyards stand fifty meters up
@@ -373,7 +377,7 @@ function HogHills(x, z) -> number {
 }
 
 // How high the grounds stand at a place, in meters over the lake.
-function HogwartsLand(x, z) -> number { return max(HogCrag(x, z), HogHills(x, z) + HogMountains(x, z)) }
+function HogwartsLand(x, z) -> number { return HogTerraced(max(HogCrag(x, z), HogHills(x, z) + HogMountains(x, z)), HogPitchOut(x, z)) }
 
 // What they are made of: rock where it is steep and turf where it lies gentle; in winter, snow where it can lie.
 // Patterns are read in the field's own space, fourteen hundred meters across one unit, so a feature `s` meters
@@ -774,10 +778,10 @@ primitive HogChimneySmoke(height = 18, variant = 1) -> group {
 
 // Hagrid's hut, down the hill toward the forest: a round stone hut under a cone of shingles, a chimney beside its
 // door with smoke from it, and a few pumpkins in a patch in front.
-primitive HogwartsHut(lit = 0) -> group {
+primitive HogwartsHut(lit = 0, wind = 0) -> group {
     return group {
         // The breeze off the lake carries it inland, to the north-east (the hut itself is turned 20 degrees).
-        object HogChimneySmoke(22, 1) { rotate Y -75  translate [2.2, 8.2, 2] }
+        object HogChimneySmoke(22, 1) { rotate Y wind - 75  translate [2.2, 8.2, 2] }
         cylinder { min Y -2  max Y 3.4  scale [3.6, 1, 3.6]  material HogStoneOf(201) }
         conic { min Y -1  max Y 0  scale [4.4, 4.2, 4.4]  translate Y 7.4  material HogwartsShingle }
         cube { scale [0.7, 3.6, 0.7]  translate [2.2, 4.6, 2]  material HogStoneOf(202) }
@@ -859,9 +863,406 @@ primitive HogwartsPaths() -> field {
     }
 }
 
+// -- The Quidditch pitch ------------------------------------------------------------------------------------
+//
+// The pitch of the first two films: an oval of turf the books' size, five hundred feet by a hundred and eighty,
+// and round it sixteen slender towers draped from top to bottom in checked cloth of the houses' colors, each with
+// a box of spectators at its top under a pointed roof and a long pennant flying from a pole over that.  A dark
+// barrier of timber runs from tower to tower round the pitch, and at each end stand three gold hoops on gold
+// poles, the middle one fifty feet up and the others forty.  The two towers at the middles of the long sides are
+// the staff's, black and white; the other fourteen take the houses in turn.  The films moved the pitch about the
+// grounds from one to the next; here it is on the shelf across the bay east of the castle, ten meters under the
+// courtyards, its long axis running beside the bay's shore, where the land is flat already.
+
+// Where it stands: the middle of the pitch, on the level the shelf is cut to, and how far it is turned about Y.
+HogwartsPitch = [500, 39.5, 230]
+HogwartsPitchTurn = -130
+
+// The towers stand on a ring of two straight sides `HogRingHalf` either side of the middle and two half circles
+// `HogRingRadius` round at the ends, sixteen of them evenly round it, the first at the middle of the -Z side.
+HogRingHalf = 48
+HogRingRadius = 37
+HogRingStep = (4 * 48 + 2 * π * 37) / 16
+
+// Where on the ring a share `s` meters round it from the first tower lies, across and along.
+function HogRingX(s) -> number {
+    return s < 48 ? s
+         : (s < 48 + π * 37 ? 48 + 37 * sin((s - 48) / 37)
+         : (s < 144 + π * 37 ? 48 - (s - 48 - π * 37)
+         : (s < 144 + 2 * π * 37 ? -48 - 37 * sin((s - 144 - π * 37) / 37)
+         : s - 144 - 2 * π * 37 - 48)))
+}
+function HogRingZ(s) -> number {
+    return s < 48 ? -37
+         : (s < 48 + π * 37 ? -37 * cos((s - 48) / 37)
+         : (s < 144 + π * 37 ? 37
+         : (s < 144 + 2 * π * 37 ? 37 * cos((s - 144 - π * 37) / 37)
+         : -37)))
+}
+// How far a tower at `x`, `z` on the ring is turned about Y so that its front, `-Z`, faces the pitch: toward the
+// nearest place on the line between the half circles' middles.
+function HogRingFacing(x, z) -> number { return atan2(x - clamp(x, -48, 48), z) * 180 / π }
+
+// How far a place in the grounds lies outside the pitch's ground, which is cut level twelve meters past the
+// towers all round: the place carried into the pitch's frame (turned 130 degrees), and measured from a box with
+// half circles for ends.
+function HogPitchOut(x, z) -> number {
+    return HogBoxOut(-0.6428 * (x - 500) + 0.7660 * (z - 230), -0.7660 * (x - 500) - 0.6428 * (z - 230),
+                     0, 0, 97, 49, 49)
+}
+
+// The ground as it lies, cut level for the pitch where `away` (`HogPitchOut`) is under twenty-two meters and
+// eased back into it over those; past them exactly as it was, so nothing else in the grounds moves -- which is
+// why it is not `lerp`, whose `a + (b - a) t` need not come back to `b` exactly when `t` is one.  A height field's
+// function may make no choices, so it is a sum.
+function HogTerraced(h, away) -> number {
+    return h * smoothstep(0, 22, away) + 39.5 * (1 - smoothstep(0, 22, away))
+}
+
+// The house a tower is dressed for: nought the staff, then Gryffindor, Slytherin, Ravenclaw and Hufflepuff.
+function HogTowerHouse(k) -> number { return mod(k, 8) == 0 ? 0 : 1 + mod(k - 1 - floor(k / 8), 4) }
+
+// The cloth: a check of the house's two colors, its squares eighty centimeters, hanging in folds.
+primitive HogHouseCheck(house) -> pigment {
+    if (house == 1) {
+        return checker { [0.40, 0.04, 0.035], [0.66, 0.48, 0.13]  scale 0.8  translate [0.4, 0, 0.4] }
+    }
+    else if (house == 2) {
+        return checker { [0.03, 0.18, 0.08], [0.52, 0.54, 0.55]  scale 0.8  translate [0.4, 0, 0.4] }
+    }
+    else if (house == 3) {
+        return checker { [0.05, 0.09, 0.28], [0.44, 0.29, 0.13]  scale 0.8  translate [0.4, 0, 0.4] }
+    }
+    else if (house == 4) {
+        return checker { [0.64, 0.46, 0.07], [0.09, 0.07, 0.05]  scale 0.8  translate [0.4, 0, 0.4] }
+    }
+    else {
+        return checker { [0.04, 0.04, 0.04], [0.70, 0.70, 0.67]  scale 0.8  translate [0.4, 0, 0.4] }
+    }
+}
+primitive HogHouseCloth(house) -> material {
+    return material {
+        pigment HogHouseCheck(house)
+        normal bozo { depth 0.5  scale [0.35, 40, 0.35] }
+        specular 0.05  shininess 10
+    }
+}
+// A roof and a pennant: the house's first color, the staff's black.
+primitive HogHouseColor(house) -> material {
+    if (house == 1) {
+        return material { pigment [0.40, 0.04, 0.035]  specular 0.05  shininess 10 }
+    }
+    else if (house == 2) {
+        return material { pigment [0.03, 0.18, 0.08]  specular 0.05  shininess 10 }
+    }
+    else if (house == 3) {
+        return material { pigment [0.05, 0.09, 0.28]  specular 0.05  shininess 10 }
+    }
+    else if (house == 4) {
+        return material { pigment [0.64, 0.46, 0.07]  specular 0.05  shininess 10 }
+    }
+    else {
+        return material { pigment [0.04, 0.04, 0.04]  specular 0.05  shininess 10 }
+    }
+}
+
+HogwartsGilt = material { metal 'gold'  roughness 0.3 }
+HogwartsTimberDark = material {
+    pigment linear Y gradient { [0, [0.07, 0.05, 0.035], 0.88, [0.07, 0.05, 0.035], 0.9, [0.03, 0.02, 0.015], 1, [0.03, 0.02, 0.015]]
+                                scale 0.32 }
+    specular 0.04  shininess 8
+}
+// The turf, mown in bands across the pitch.
+HogwartsPitchTurf = material {
+    pigment linear X gradient { [0, [0.10, 0.19, 0.05], 0.5, [0.10, 0.19, 0.05], 0.5, [0.14, 0.24, 0.07], 1, [0.14, 0.24, 0.07]]
+                                scale 9.5 }
+    specular 0
+}
+
+// The stands between the towers, in pieces short enough to follow the ring round its ends: piece `j` of four in
+// the gap after tower `k`, from a little past one tower's box to a little short of the next's.
+function HogStandS(k, j) -> number { return k * (192 + 74 * π) / 16 + 2.3 + j * ((192 + 74 * π) / 16 - 4.6) / 4 }
+function HogStandDX(k, j) -> number { return HogRingX(HogStandS(k, j + 1)) - HogRingX(HogStandS(k, j)) }
+function HogStandDZ(k, j) -> number { return HogRingZ(HogStandS(k, j + 1)) - HogRingZ(HogStandS(k, j)) }
+function HogStandLength(k, j) -> number { return sqrt(pow(HogStandDX(k, j), 2) + pow(HogStandDZ(k, j), 2)) }
+// Its middle, set out a little from the ring so it stands behind the barrier, and how far it is turned about Y
+// so that its rows face the pitch.
+function HogStandX(k, j) -> number {
+    return (HogRingX(HogStandS(k, j)) + HogRingX(HogStandS(k, j + 1))) / 2 + 0.35 * HogStandDZ(k, j) / HogStandLength(k, j)
+}
+function HogStandZ(k, j) -> number {
+    return (HogRingZ(HogStandS(k, j)) + HogRingZ(HogStandS(k, j + 1))) / 2 - 0.35 * HogStandDX(k, j) / HogStandLength(k, j)
+}
+function HogStandTurn(k, j) -> number { return -atan2(-HogStandDX(k, j), HogStandDZ(k, j)) * 180 / π }
+
+// A piece of the stands `long` meters along, its front on `x = 0` and running out along +X: six rows of benches
+// stepping up from the barrier's top, three and a half meters up, to eight, and a rail behind.  The people on them
+// are laid by the pitch.
+primitive HogStand(long) -> group {
+    half = long / 2
+    return group {
+        extrusion {
+            path {
+                move to 0, 0  line to 0, 3.5  line to 0.9, 3.5  line to 0.9, 4.4  line to 1.8, 4.4  line to 1.8, 5.3
+                line to 2.7, 5.3  line to 2.7, 6.2  line to 3.6, 6.2  line to 3.6, 7.1  line to 4.5, 7.1  line to 4.5, 8
+                line to 5.4, 8  line to 5.4, 9.1  line to 5.6, 9.1  line to 5.6, 0  close
+            }
+            min Y -half  max Y half
+            material HogwartsTimber
+        }
+        rotate X -90
+    }
+}
+
+// The ring the stands stand on, as a path walked counterclockwise from the middle of the -Z side, so that the
+// stands lie to its right.
+HogStandRing = path {
+    move to -48, -37  line to 48, -37
+    curve 68.43, -37, 85, -20.43 to 85, 0  curve 85, 20.43, 68.43, 37 to 48, 37
+    line to -48, 37
+    curve -68.43, 37, -85, 20.43 to -85, 0  curve -85, -20.43, -68.43, -37 to -48, -37
+    close
+}
+
+// A spectator seated on a bench on `y = 0`, facing +Z: a dark robe, a scarf of `house`'s colors, a face, and hair
+// `shade` of the way from black to fair.
+HogwartsRobe = material { pigment [0.06, 0.055, 0.065]  specular 0.04  shininess 8 }
+HogwartsSkin = material { pigment [0.72, 0.52, 0.42]  specular 0.08  shininess 12 }
+primitive HogSpectator(house, shade) -> group {
+    return group {
+        sphere { scale [0.21, 0.33, 0.18]  translate Y 0.33  material HogwartsRobe }
+        torus { radii 0.12, 0.055  translate Y 0.6  material HogHouseColor(house) }
+        sphere { scale 0.1  translate Y 0.75  material HogwartsSkin }
+        sphere { scale 0.104  translate [0, 0.78, -0.028]
+                 material { pigment (color [0.05, 0.035, 0.02]) * (1 - shade) + (color [0.45, 0.30, 0.14]) * shade
+                            specular 0.1  shininess 20 } }
+    }
+}
+
+// A tower `tall` to its box, dressed for `house`, standing on `y = 0` with its box open to the pitch at `-Z`:
+// a draped shaft 3.2 meters square, a parapet of the same cloth round a box of spectators in the house's scarves,
+// looking out over it on every side, a post at each corner, and a pointed roof.  Its pennant is laid by the pitch, so that every pennant flies with the one wind.
+primitive HogPitchTower(house, tall) -> group {
+    return group {
+        extrusion {
+            path { move to -1.6, -1.6  line to 1.6, -1.6  line to 1.6, 1.6  line to -1.6, 1.6  close }
+            min Y -1  max Y tall
+            material HogHouseCloth(house)
+        }
+        extrusion {
+            path {
+                move to -2, -2  line to 2, -2  line to 2, 2  line to -2, 2  close
+                move to -1.8, -1.8  line to 1.8, -1.8  line to 1.8, 1.8  line to -1.8, 1.8  close
+            }
+            min Y tall  max Y tall + 1.1
+            material HogHouseCloth(house)
+        }
+        for side in [0, 3] {
+            for p in [-1, 1] {
+                object HogSpectator(house, random(side * 3 + p, 232)) {
+                    translate [p * 1.05, tall + 0.5, 1.35]
+                    rotate Y side * 90
+                }
+            }
+        }
+        for c in [0, 3] {
+            cube { scale [0.09, 1.05, 0.09]  translate [1.9, tall + 2.15, 1.9]  rotate Y c * 90  material HogwartsTimberDark }
+        }
+        tapered extrusion {
+            taper 0
+            path { move to -2.4, -2.4  line to 2.4, -2.4  line to 2.4, 2.4  line to -2.4, 2.4  close }
+            min Y 0  max Y 5.5
+            translate Y tall + 3.2
+            material HogHouseColor(house)
+        }
+        cylinder { min Y 0  max Y 4  scale [0.05, 1, 0.05]  translate Y tall + 8.4  material HogwartsGilt }
+    }
+}
+
+// A pennant nine meters long and a meter and a quarter deep at its pole, flying toward +X from a pole at the origin,
+// its top edge on `y = 0`, rippling as it goes.
+primitive HogPennant(house) -> group {
+    return group {
+        for i in [0, 3] {
+            triangle {
+                points [i * 2.25, -0.18 * i, 0.4 * sin(i * 1.7)],
+                       [i * 2.25, -0.18 * i - 1.25 * (1 - i * 0.24), 0.4 * sin(i * 1.7)],
+                       [(i + 1) * 2.25, -0.18 * (i + 1), 0.4 * sin((i + 1) * 1.7)]
+            }
+            triangle {
+                points [(i + 1) * 2.25, -0.18 * (i + 1), 0.4 * sin((i + 1) * 1.7)],
+                       [i * 2.25, -0.18 * i - 1.25 * (1 - i * 0.24), 0.4 * sin(i * 1.7)],
+                       [(i + 1) * 2.25, -0.18 * (i + 1) - 1.25 * max(1 - (i + 1) * 0.24, 0.04), 0.4 * sin((i + 1) * 1.7)]
+            }
+        }
+        material HogHouseColor(house)
+    }
+}
+
+// A goal: a gold hoop three meters across, its middle `high` over the ground, on a gold pole standing on a round
+// foot, facing along X.
+primitive HogHoop(high) -> group {
+    return group {
+        cylinder { min Y 0  max Y high - 1.52  scale [0.12, 1, 0.12] }
+        cylinder { min Y 0  max Y 0.7  scale [0.34, 1, 0.34] }
+        sphere { scale 0.36  translate Y 0.7 }
+        torus { radii 1.5, 0.09  rotate Z 90  translate Y high }
+        material HogwartsGilt
+    }
+}
+
+// The pitch in its own frame: its middle on the origin, its turf on `y = 0`, its length along X.  `Hogwarts`
+// stands it at `HogwartsPitch`, turned by `HogwartsPitchTurn`; a scene placing players over it can carry them
+// the same way.  `wind` is the way, about Y in the pitch's frame, that the pennants fly: 85 is north-east in the
+// grounds, as the smoke from Hagrid's chimney drifts.
+primitive HogwartsQuidditchPitch(wind = 85) -> group {
+    return group {
+        // The turf: the books' oval, 152.4 by 54.9 meters.
+        extrusion {
+            path {
+                move to 76.2, 0
+                curve 76.2, 15.14, 42.08, 27.43 to 0, 27.43
+                curve -42.08, 27.43, -76.2, 15.14 to -76.2, 0
+                curve -76.2, -15.14, -42.08, -27.43 to 0, -27.43
+                curve 42.08, -27.43, 76.2, -15.14 to 76.2, 0
+                close
+            }
+            min Y -0.5  max Y 0.04
+            material HogwartsPitchTurf
+        }
+
+        // The barrier round it, from tower to tower: dark boards three and a half meters high.
+        extrusion {
+            path {
+                move to -48, -37.25  line to 48, -37.25
+                curve 68.57, -37.25, 85.25, -20.57 to 85.25, 0
+                curve 85.25, 20.57, 68.57, 37.25 to 48, 37.25
+                line to -48, 37.25
+                curve -68.57, 37.25, -85.25, 20.57 to -85.25, 0
+                curve -85.25, -20.57, -68.57, -37.25 to -48, -37.25
+                close
+                move to -48, -36.75  line to 48, -36.75
+                curve 68.30, -36.75, 84.75, -20.30 to 84.75, 0
+                curve 84.75, 20.30, 68.30, 36.75 to 48, 36.75
+                line to -48, 36.75
+                curve -68.30, 36.75, -84.75, 20.30 to -84.75, 0
+                curve -84.75, -20.30, -68.30, -36.75 to -48, -36.75
+                close
+            }
+            min Y -0.5  max Y 3.5
+            material HogwartsTimberDark
+        }
+
+        // The stands, all round between the towers, and the school in them: six rows of people half a meter apart,
+        // laid along the ring and dropped onto the benches.  Those that fall past a stand -- onto the ground by a
+        // tower or a tower's roof -- are not kept.
+        group {
+            for k in [0, 15] {
+                for j in [0, 3] {
+                    object HogStand(HogStandLength(k, j)) {
+                        rotate Y HogStandTurn(k, j)
+                        translate [HogStandX(k, j), 0, HogStandZ(k, j)]
+                    }
+                }
+            }
+            named 'stands'
+        }
+        field {
+            of HogSpectator(1, 0.15), HogSpectator(2, 0.7), HogSpectator(3, 0.35), HogSpectator(4, 0.9),
+               HogSpectator(1, 0.85), HogSpectator(2, 0.05), HogSpectator(3, 0.8), HogSpectator(4, 0.3)
+            along HogStandRing
+            spacing 0.5  jitter 0.2
+            rows 6 apart 0.9  offset -3.05
+            turned 30
+            over 'stands'
+            above 3  below 9.5
+        }
+
+        // The towers, and over each its pennant, every one flying the same way.
+        for k in [0, 15] {
+            object HogPitchTower(HogTowerHouse(k), HogTowerHouse(k) == 0 ? 25 : 21 + random(k, 230) * 5) {
+                rotate Y HogRingFacing(HogRingX(k * HogRingStep), HogRingZ(k * HogRingStep))
+                translate [HogRingX(k * HogRingStep), 0, HogRingZ(k * HogRingStep)]
+            }
+            object HogPennant(HogTowerHouse(k)) {
+                rotate Y wind + (random(k, 231) - 0.5) * 16
+                translate [HogRingX(k * HogRingStep),
+                           (HogTowerHouse(k) == 0 ? 25 : 21 + random(k, 230) * 5) + 12.3,
+                           HogRingZ(k * HogRingStep)]
+            }
+        }
+
+        // The goals, three at each end, the middle one fifty feet up and the others forty.
+        for end in [-1, 1] by 2 {
+            object HogHoop(12.19) { translate [end * 70, 0, -7.5] }
+            object HogHoop(15.24) { translate [end * 70, 0, 0] }
+            object HogHoop(12.19) { translate [end * 70, 0, 7.5] }
+        }
+    }
+}
+
+// A player on a broom, for a scene to fly over the pitch: `house` as a tower's (one Gryffindor, two Slytherin,
+// three Ravenclaw, four Hufflepuff), `variant` for how far forward they lean and the color of their hair.  The
+// broom runs along +X, its handle on the origin where they sit, and up is +Y: about two meters from bristles to
+// the handle's end.
+HogwartsBroomstick = material { pigment [0.28, 0.17, 0.08]  specular 0.2  shininess 30 }
+HogwartsBristles = material { pigment bozo { [0, [0.36, 0.26, 0.12], 1, [0.48, 0.36, 0.17]]  scale [0.4, 0.02, 0.02] }  specular 0 }
+HogwartsBreeches = material { pigment [0.62, 0.60, 0.54]  specular 0.03  shininess 8 }
+HogwartsBoots = material { pigment [0.17, 0.10, 0.05]  specular 0.15  shininess 25 }
+primitive HogHairOf(variant) -> material {
+    shade = random(variant, 241)
+    return material { pigment (color [0.05, 0.035, 0.02]) * (1 - shade) + (color [0.45, 0.30, 0.14]) * shade  specular 0.1  shininess 20 }
+}
+
+primitive HogwartsQuidditchPlayer(house = 1, variant = 1) -> group {
+    lean = 30 + random(variant, 240) * 18
+    s = sin(lean * π / 180)
+    c = cos(lean * π / 180)
+    return group {
+        cylinder { min Y -0.5  max Y 1.05  scale [0.022, 1, 0.022]  rotate Z -90  material HogwartsBroomstick }
+        conic { min Y -1  max Y 0  scale [0.16, 0.78, 0.16]  rotate Z -90  translate X -0.42  material HogwartsBristles }
+        // The body, leaning forward over the handle.
+        group {
+            sphere { scale [0.18, 0.32, 0.22]  translate Y 0.3  material HogHouseColor(house) }
+            sphere { scale 0.105  translate Y 0.74  material HogwartsSkin }
+            sphere { scale 0.11  translate [-0.03, 0.765, 0]  material HogHairOf(variant) }
+            rotate Z -lean
+        }
+        // Arms reaching to the handle, legs bent under, and the robe streaming behind.
+        for side in [-1, 1] by 2 {
+            tube {
+                discontinuous
+                radius 0.05 at [0.56 * s, 0.56 * c, side * 0.19]
+                radius 0.045 at [(0.56 * s + 0.62) / 2, (0.56 * c + 0.03) / 2 - 0.06, side * 0.24]
+                radius 0.04 at [0.62, 0.03, side * 0.05]
+                material HogHouseColor(house)
+            }
+            tube {
+                radius 0.07 at [0.02, 0, side * 0.11]
+                radius 0.06 at [0.30, -0.24, side * 0.16]
+                material HogwartsBreeches
+            }
+            tube {
+                radius 0.058 at [0.30, -0.24, side * 0.16]
+                radius 0.05 at [0.0, -0.47, side * 0.14]
+                material HogwartsBoots
+            }
+            sphere { scale [0.12, 0.05, 0.055]  translate [0.06, -0.5, side * 0.14]  material HogwartsBoots }
+        }
+        // The robe, hanging back over the bristles in two falls from the shoulders.
+        group {
+            triangle { points [0.56 * s - 0.08, 0.56 * c, 0.21], [0.56 * s - 0.08, 0.56 * c, -0.21], [-0.25, 0.28, -0.3] }
+            triangle { points [0.56 * s - 0.08, 0.56 * c, 0.21], [-0.25, 0.28, -0.3], [-0.25, 0.28, 0.3] }
+            triangle { points [-0.25, 0.28, 0.3], [-0.25, 0.28, -0.3], [-0.72, 0.05 + 0.08 * random(variant, 242), -0.33] }
+            triangle { points [-0.25, 0.28, 0.3], [-0.72, 0.05 + 0.08 * random(variant, 242), -0.33], [-0.72, 0.1, 0.33] }
+            material HogHouseColor(house)
+        }
+    }
+}
+
 // -- The castle ---------------------------------------------------------------------------------------------
 
-primitive Hogwarts(lit = 0, season = 'summer') -> group {
+primitive Hogwarts(lit = 0, season = 'summer', wind = 0) -> group {
     top = HogwartsCourtyard
     return group {
         // Along the front, from the left seen from the lake.
@@ -919,9 +1320,10 @@ primitive Hogwarts(lit = 0, season = 'summer') -> group {
         object HogwartsBoathouse(lit) { translate [4, 0, -30] }
         object HogwartsStair()
         object HogwartsOwlery(lit) { translate [-360, HogwartsLand(-360, 300) - 1, 300] }
-        object HogwartsHut(lit) { rotate Y 20  translate [-330, HogwartsLand(-330, 90) - 0.3, 90] }
+        object HogwartsHut(lit, wind) { rotate Y 20  translate [-330, HogwartsLand(-330, 90) - 0.3, 90] }
         object HogwartsStones() { translate [-305, HogwartsLand(-305, 205) - 0.4, 205] }
         object HogwartsGatehouse(lit) { translate [40, HogwartsLand(40, 430) - 0.5, 430] }
+        object HogwartsQuidditchPitch(85 + wind) { rotate Y HogwartsPitchTurn  translate HogwartsPitch }
 
         weather { snow season == 'winter' ? 1 : 0 }
     }
