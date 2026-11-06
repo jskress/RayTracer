@@ -1,0 +1,103 @@
+// The Ringworld at midnight: on the shore of a long lake, under a shadow square, with the whole Arch overhead -- from
+// one horizon to the other, across the stars, its feet still in daylight and glowing through the long way to them.
+//
+// A showcase rather than a demonstration.  The Ring and the Arch's light come from the `ringworld` library, the
+// trees from `trees` and the lake from `water`; the shore is here.
+//
+// **Night on the Ring is a shadow.**  A square stands between this place and the star, so the land here is in its
+// shadow, and so is a strip of the Ring every eighteen degrees round it -- the Arch is dashed with them.  The rest of
+// the Ring is in daylight, and the nearest of it, a few degrees away either way, is wide and low and seen through a
+// long way of air, which reddens it: the Arch's feet glow orange, and the lake shows them back.
+//
+// **The Arch is what lights the night**, about a thousandth of the day's light, coming evenly from every height
+// along it; the library lays that out as lamps along the Arch (`RingArchLights`).  The camera's exposure is raised
+// four and a half stops for it, which is why the daylit Arch is white.
+//
+// **The view is wider than a half-circle**, rectangular rather than round (`ultraWide`), because the Arch's two feet
+// lie a quarter turn to either side of the way it looks; straight lines bow in it, which is why the shore curves.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.15
+    angles are degrees
+    info {
+        title 'The Ringworld at Midnight'
+        author 'J. Stephen Kress'
+        description 'The whole Arch across the stars at midnight on the Ringworld, over a long lake.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'ringworld' { Ringworld, RingArchLights }
+import 'trees' { Oak, Pine }
+import 'water' { Water, LakeWater }
+
+// On the near shore, looking across the lake and up: the Ring's width runs along X, the Arch across the view.
+ultraWide camera {
+    location [-12, 1.8, 0]
+    look at [988, 1.8 + 1000 * tan(36°), 0]
+    field of view 200
+    exposure 4.6
+}
+
+background granite {
+    [0, Black, 0.56, Black, 0.6, [0.30, 0.32, 0.40], 0.66, White, 1, White]
+    scale [0.006, 0.006, 0.006]
+}
+
+// Midnight here: the middle of a square's shadow.
+object Ringworld(0, 0.5, 60)
+object RingArchLights(0.5, 16)
+
+// -- The shore -----------------------------------------------------------------------------------------------
+
+// The lake, from twenty meters off to a kilometer and a half across, running on both ways along the Ring; the land
+// rises gently behind the near shore and into low wooded hills beyond the far one.
+function FromTheLake(x, z) -> number { return max(20 - x, x - 1500) }
+function ShoreLand(x, z) -> number {
+    return -3 + 7 * smoothstep(-40, 120, FromTheLake(x, z))
+         + smoothstep(0, 400, FromTheLake(x, z)) * (6 * (noise(x / 300, 0.4, z / 300) - 0.5) + 30 * smoothstep(1700, 4500, x))
+         + 18 * smoothstep(200, 1800, -x)
+}
+
+Shore = material {
+    pigment bozo {
+        turbulence { amplitude 0.5  octaves 4 }
+        [0, [0.16, 0.20, 0.08], 0.5, [0.20, 0.24, 0.10], 1, [0.24, 0.26, 0.12]]
+        scale 25
+    }
+    diffuse 0.85  specular 0.03
+}
+
+heightfield {
+    function { ShoreLand(12000 * (x - 0.5) + 1000, 40000 * (z - 0.5)) }
+    samples 2048
+    smooth
+    material Shore
+    named 'shore'
+    translate [-0.5, 0, -0.5]
+    scale [12000, 1, 40000]
+    translate X 1000
+}
+
+object Water(12000, 40000, 'calm') { material LakeWater  translate [1000, 0, 0] }
+
+// The woods along the far shore, dark against the Arch's glow low in the sky.
+FarShore = path {
+    move to 1560, -9000  line to 4800, -9000  line to 4800, 9000  line to 1560, 9000  close
+}
+
+field {
+    of Oak(16, 'summer', 1), Oak(13, 'summer', 2), Pine(20, 'summer', 1), Pine(24, 'summer', 2)
+    within FarShore
+    spacing 12  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 300 } from 0.4 to 0.5
+    over 'shore'
+    above 0.5
+    sink 1
+}

@@ -431,7 +431,13 @@ shape found to a ten-thousandth in its own units is a tenth off in the world, an
 Whatever the surface, the nudge is never under 2^-40 of the crossing's largest world coordinate
 (`Intersection.FarShare`; it passes the millionth only past 1,100 km, so ordinary scenes are untouched): a place far
 off is rounded by a share of how far off it is, and a planet ten times the Moon's distance off came out speckled with
-its own shadow.  A `Sphere` is solved without cancelling (Ray Tracing Gems ch. 7: the discriminant from the ray's
+its own shadow -- nor under 2^-40 of `Surface.ReachInTheWorld` (its own box's farthest corner, stretched into the
+world, worked out once), since a crossing is rounded in the surface's own space: the Ringworld's air, a band scaled to
+150 million km, met near the origin, met itself again a ray's nudge past, and a mountain seen through it came out in
+rings (until 2026-11-05).  A `Cylinder` cut to length refuses only a ray of no sideways direction at all, and caps
+only a ray of no direction along it: a ray truly along the axis finds its crossings impossibly far, which the length
+turns away, and judged against the whole direction a cylinder scaled [5e8, 1, 5e8] lost its wall (only an endless
+one is still judged so).  A `Sphere` is solved without cancelling (Ray Tracing Gems ch. 7: the discriminant from the ray's
 nearest approach to the middle, the near root from the product of the roots): the book's b^2 - 4ac lost the square of
 the ray's distance in radii, and the Earth seen from the Moon was speckled the same way.  A faulty bound (the smaller sampled value) lit
 grazed shadows, caught only by rays grazing the degenerate sphere.
@@ -513,8 +519,15 @@ than out, with an edge (until 2026-10-30); so air over a planet's ground must ca
 stands in is found by toggling every crossing along the WHOLE line, behind the eye too (`FindContainers`), so a
 height field's triangles, walls (a group each, a step down) and underside count as the one field when it is closed and
 never when `open` (a look up from over the ground, followed back past the eye, went into one triangle and never left:
-mountains over a valley came through a box of haze undimmed and upside down, until 2026-11-05); other sheets still
-toggle alone.  A sheet met from behind is not a ray LEAVING it (`Scene.LeavesItsInsides`: Inside and not a sheet),
+mountains over a valley came through a box of haze undimmed and upside down, until 2026-11-05); a CSG's crossings
+count for the OUTERMOST CSG (every crossing a CSG reports is its boundary: counted part by part, a ray leaving a
+difference's hollow by the cut-out part's face went INTO that part), and what the ray is said to be in is that whole
+when it is dressed, else the part it came in by (`IntersectionExtensions.FilledThrough`, which GetHitColor's leaving
+branch hands the medium too: read in a part's space, the Ringworld's air came out e^9 too thick); an extruded
+surface left `open` at an end it has (`ExtrudedSurface.IsOpen`) is, like a strand, never gone into, nor left
+(`LeavesItsInsides`) -- the Ringworld's floor met from within skipped the far air, and the inside of an open cup in
+a hazy room skipped the haze -- but it is NOT a sheet: lit as one, from either side, a cup's inside was lit through
+its own wall; other sheets still toggle alone.  A sheet met from behind is not a ray LEAVING it (`Scene.LeavesItsInsides`: Inside and not a sheet),
 or half a wood's leaves came through fog or haze undimmed.  Every medium helper finds its container's edges and density where it stands, the ray carried into
 its parent's space (`IntoTheSpaceOf`) through its portals (`Intersection.Portals` leaving it,
 `Intersection.ContainerPortals` inside it); until 2026-10-19 a medium in a moved group found its edge where the
@@ -652,6 +665,21 @@ two fields agree at the grounds' edge (1.5 m under them, -60 well inside).  Eros
 behind down to the lake's level and was taken off.  `gallery/Local/showcase/hogwarts-at-dusk.igl`,
 `hogwarts-from-the-air.igl` and `hogwarts-from-above-the-grounds.igl` (close, from behind); all wrap the scene in a `no shadow` box of absorbing, glowing haze (an `environment`
 medium dims the sun itself, its light crossing endless haze).
+
+The `ringworld` library (meters; figures from Niven, and where he is silent the licensed Chaosium RPG, 1984) puts the
+origin on the Ring's floor, the star straight up at `[0, RingRadius, 0]`, the Ring's axis along X, spinward +Z, the
+floor `RingFloorDrop` 250 m under the origin so a scene's own land covers it.  `Ringworld(across, day, around)`: the
+floor is an open cylinder scaled R that GLOWS (`emission`, the star always overhead) under `RingNight(day)`, a `radial`
+pattern at frequency 20 whose map is the shadow of a square across the star's disc (`RingCovered(t)`, the disc's share
+past a line), over a black underside cylinder 30 m out; the air one annulus from 10 m to 72 km with `density function`
+exp(-h/8 km) and glow-times-absorption emission under the same night (one shell: trace depth 4 counts every
+transparent face, and layered air made a look at the Arch cross seven); rim walls are discs with `inner radius`; the
+shadow squares parallelograms at `rotate X -(0.5 - day + k) * 18`; the star an emissive ball.  A perspective view
+always shows the Arch as a straight spire (its plane holds the eye); `ultraWide` 200 across the Ring bends it.
+`RingArchLights(day, count)` lights a night as point lamps 10,000 km off along the Arch, each its strip's share of
+about a thousandth of daylight.  `SpillMountains` (shared: `SpillMountain` gives back a group, since only a group can
+be the one shape in many places) and `FistOfGod` are height fields.  The rim wall is scrith, milky gray (the wiki;
+the RPG says black), lit only at a graze and by the sky, so from inside the air hardly brighter than the haze; `gallery/Local/showcase/ringworld-*.igl` are the four views.
 
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with

@@ -4423,4 +4423,135 @@ public class TestShippedLibraries
         Assert.IsTrue(glowing > 300, $"only {glowing} pixels of the hall's windows were lit");
         Assert.AreEqual(0, differing, "a third of the castle lit should light the hall as all of it lit does");
     }
+
+    /// <summary>
+    /// Copies the Ringworld library beside the scenes this class writes.
+    /// </summary>
+    private void UseRingworld()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "ringworld.igl"),
+            Path.Combine(_directory, "ringworld.igl"), true);
+    }
+
+    /// <summary>
+    /// The light seen along one look from two meters over the Ringworld's floor, `up` degrees up toward spinward, at
+    /// what `body` builds, as it stands (no curve) to sixteen bits, with the camera's exposure raised `exposure` stops.
+    /// </summary>
+    private Color SeenOnTheRing(string import, string body, double up, double exposure = 0)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        string output = Path.Combine(_directory, "ring.png");
+
+        File.WriteAllText(scene, $$"""
+            import 'ringworld' { {{import}} }
+            context { angles are degrees  no gamma }
+            camera {
+                location [0, 2, 0]
+                look at [0, 2 + 1000 * sin({{up}}°), 1000 * cos({{up}}°)]
+                up [1, 0, 0]
+                field of view 0.01
+                exposure {{exposure}}
+            }
+            background Black
+            {{body}}
+            """);
+
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+
+        Console.SetOut(captured);
+
+        try
+        {
+            ImageRenderer renderer = new LanguageParser(scene).Parse();
+
+            Assert.IsNotNull(renderer, captured.ToString());
+
+            renderer.Render(new RenderOptions { OutputFileName = output, Width = 1, Height = 1, BitsPerChannel = 16 });
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+
+        Assert.DoesNotContain("Error", captured.ToString(), captured.ToString());
+
+        return new ImageFile(output).Load()[0].GetPixel(0, 0);
+    }
+
+    [TestMethod]
+    public void TestTheRingworldsNightsLieUnderItsShadowSquares()
+    {
+        // Looks up the Arch at four heights, at the floor alone, at three times of day: when that place is at noon,
+        // at midnight, and at the edge of a square's shadow, where the star's disc is half hidden.  A place `e` up the
+        // Arch is `2e` round the Ring, and a square's spacing is eighteen degrees, so its time of day is the origin's
+        // plus 2e / 18; the shadow's edge lies under the square's end, 4.18 of the 13.84 million kilometers from one
+        // square to the next being square, so a half of 0.151 either side of its middle.
+        UseRingworld();
+
+        const string floor = "group { object RingFloor(DAY, 0)  translate [0, -RingFloorDrop, 0] }";
+        const double edge = 0.5 - 4.18 / (2 * 13.84);
+
+        foreach (double up in new[] { 5.0, 12, 20, 30 })
+        {
+            double there = 2 * up / 18;
+
+            double Seen(double share) =>
+                SeenOnTheRing("RingFloor, RingFloorDrop", floor.Replace("DAY", $"{(share - there + 10) % 1:R}"), up)
+                    .Green;
+
+            double noon = Seen(0), midnight = Seen(0.5), dusk = Seen(edge);
+
+            Assert.IsTrue(noon > 0.01, $"{up} degrees up the Arch at noon showed {noon}");
+            Assert.IsTrue(midnight < 0.01 * noon, $"{up} degrees up the Arch at midnight showed {midnight} of {noon}");
+            Assert.AreEqual(0.5, dusk / noon, 0.08, $"{up} degrees up the Arch at the shadow's edge");
+        }
+    }
+
+    [TestMethod]
+    public void TestAShadowSquareHidesTheStarAtMidnight()
+    {
+        // Straight up from the origin: the star at noon, and at midnight the square between, which is black.
+        UseRingworld();
+
+        double noon = SeenOnTheRing("Ringworld", "object Ringworld(0, 0)", 89.99).Green;
+        double midnight = SeenOnTheRing("Ringworld", "object Ringworld(0, 0.5)", 89.99).Green;
+
+        Assert.IsTrue(noon > 0.99, $"the star at noon showed only {noon}");
+        Assert.IsTrue(midnight < 0.01, $"the square at midnight let {midnight} through");
+    }
+
+    [TestMethod]
+    public void TestTheArchLightsTheNightAboutAThousandthOfTheDay()
+    {
+        // A white level floor at midnight, lit by the Arch alone and seen straight down with the exposure raised eight
+        // stops: the light on it is the Arch's strips' light, each W / 2R wide over its distance and lighting a level
+        // place by the sine of its height, so in all about a thousandth of the star's.
+        UseRingworld();
+
+        double green = SeenOnTheRing("RingArchLights", """
+            object RingArchLights(0.5)
+            plane { material { pigment White  ambient 0  diffuse 1  specular 0 }  translate Y -1 }
+            """, -89.99, 8).Green / 256;
+
+        Assert.IsTrue(green > 0.0005 && green < 0.003, $"the Arch lit a white floor at midnight to {green}");
+    }
+
+    [TestMethod]
+    public void TestEveryPieceOfTheRingworldBuilds()
+    {
+        // The documented examples, all at once: the whole Ring, its night lights, a row of spill mountains and
+        // Fist-of-God, which only a scene that makes them can find out about.
+        UseRingworld();
+
+        Color seen = SeenOnTheRing("Ringworld, RingArchLights, SpillMountains, FistOfGod", """
+            object Ringworld(0, 0.5)
+            object RingArchLights(0.5)
+            object SpillMountains(0, 1, 0, 2)
+            object FistOfGod() { translate [0, -250, 5000000] }
+            """, 10);
+
+        Assert.IsNotNull(seen);
+    }
 }

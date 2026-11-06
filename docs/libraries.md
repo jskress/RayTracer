@@ -3178,6 +3178,96 @@ and nothing but a faint earthshine in the shadows.  Its ground is NASA's elevati
 into two height maps that are not part of the repository; the scene says where the data is to be had and
 how the maps are made from it.
 
+#### Ringworld
+
+Larry Niven's Ring round its star: a band a million miles wide and ninety-five million in radius, walled along
+both edges, spinning for its gravity, with a ring of shadow squares close about the star to make its nights.
+
+```
+import 'ringworld' { Ringworld }
+
+object Ringworld()              // here at noon, halfway across
+object Ringworld(0, 0.5)        // here at midnight, under a shadow square
+```
+
+| | |
+| --- | --- |
+| `Ringworld` | The whole of it: the floor, its air, the rim walls, the shadow squares and the star. |
+| `RingFloor`, `RingAir`, `RingWalls`, `ShadowSquares`, `RingSun` | Its pieces, for a scene that wants less. |
+| `RingArchLights` | The light the Arch gives at night, as a row of lamps along it. |
+| `SpillMountains`, `SpillMountain` | A row of the mountains along the foot of a rim wall, and one of them. |
+| `FistOfGod` | The mountain a thousand miles high, punched up from beneath, named `'fist'`. |
+| `RingRadius`, `RingWidth`, `RingWallHeight`, ... | Its figures, in meters. |
+
+**The origin is a place on the Ring's floor, and the star is straight up from it**, at `[0, RingRadius, 0]`.
+A scene is set somewhere on the floor and the camera wants to be near it, so that is where the numbers are
+small: land, trees and lakes are built about the origin as on any other ground, standing on `y = 0` -- the
+Ring's own floor runs `RingFloorDrop`, 250 meters, under it, so a scene's land covers it.  The Ring runs on
+spinward along `+Z` and back along `-Z`, curving up toward the star, and its width runs along `X`.
+
+`Ringworld(across, day, around)`: **`across`** is how far the origin stands from the middle of the Ring's
+width toward `+X`, nought for the middle, `RingWidth / 2 - 500000` for 500 km from the wall; **`day`** is the
+share of a day past noon there, nought noon and a half midnight, which is where the shadow squares stand;
+**`around`** is how far spinward the origin is of the oval Great Ocean, in degrees.
+
+##### What it looks like from the ground
+
+**The Arch is the rest of the Ring.**  From the floor it rises out of the haze spinward and antispinward and
+meets itself overhead, a band narrowing as it climbs: a strip of it `e` degrees up is `2e` degrees round the
+Ring and as wide as the Ring over its distance, `2R sin e`, so four degrees across five up and a third of a
+degree at the zenith.  **It lies in a plane through the eye, so an ordinary camera always sees it as a
+straight spire** rising from the horizon; a [`fisheye` or `ultraWide`](cameras.md#projections) one looking
+across the Ring and up bends it into the arch it is.  It is broken by night where the shadow squares shade
+it, and the shadow squares themselves stand along it near the star.
+
+**The floor glows rather than being lit.**  The star is always overhead, so the light falling on the land is
+the same everywhere it is not in shadow, and the floor is given it as its own `emission` with the night laid
+over it; it lights nothing and casts nothing, and a scene's own land is lit by its own lights -- a distant
+light straight down for the star, and a sky light for the blue overhead.  Its land, seas and clouds are laid
+at the sizes that read from across the Ring, so a scene builds the land it stands on itself.
+
+**The air is the sky.**  It is a shell over the floor thinning upward as the Earth's does, eight kilometers
+of it at the floor's density, taking out what a clear day's air takes and glowing its own blue by day; at
+night it glows a five-hundredth as much.  Seen through twice -- ours and the far side's own -- the Arch is
+pale.  The air's density is worked out place by place, so it is walked rather than answered exactly; it is
+one shell rather than layers because a ray is followed through only four faces that let light through
+unless [`trace depth`](context.md#trace-depth) says more, and a look at the Arch through layered air crossed seven.
+
+**At night the Arch is the light**: a thousandth of the day's, more or less, and coming evenly from every
+height along it, since a strip of it `e` up is as wide as the sine of `e` falls and lights a level place by
+that same sine.  `RingArchLights(day, count, shine)` lays that out as `count` lamps along the Arch, each as
+bright as the strip it stands for, lit or dark as the floor there is at `day`, and dimmed by the air between.
+`gallery/Local/showcase/ringworld-at-midnight.igl` raises the camera's exposure four and a half stops for it.
+
+##### The rim walls, the spill mountains, and Fist-of-God
+
+**The rim walls are scrith, milky gray, and dark.**  They stand upright under a star overhead, so they are lit
+only at a graze and by the sky, and from inside the air one is hardly brighter than the sky in front of it.
+From over the air it is a gray plane where the stars stop.  **The spill mountains** are where the Ring's soil
+comes back, washed down to the seas, pumped up through the walls and let fall at their feet: half-cones some
+fifty kilometers high, `SpillMountains(across, side, first, count, spacing, height)` laying `count` of them
+along the foot of the wall on the `+X` side (`side` 1) or the `-X` side (-1), the first `first` meters
+spinward of the origin and the rest every `spacing` meters, 1,500 km unless said -- the books say only that
+they are evenly spaced.  **Fist-of-God**, `FistOfGod(height, wide)`, is a spike with hollow flanks and a
+crater for a summit, a thousand miles high and two thousand across its foot, standing on the origin; place it
+far off, on `y = -RingFloorDrop`.  Most of it stands above the air.
+
+##### Where the figures come from
+
+The Ring is described in Niven's *Ringworld* (1970) and its sequels; where those are silent, the figures are
+those of the Ringworld role-playing game Chaosium published under license in 1984.  **The Ring**: 95 million
+miles in radius, 997,000 miles wide, walls 1,000 miles high, spinning at 770 miles a second for 0.99 g.
+**The star**: a yellow dwarf a little smaller and cooler than the Sun.  **The shadow squares**: twenty, each
+1.6 by 4.18 million kilometers and 9.66 million from the next, in a ring of their own about the star, joined
+by wire; they shade any place on the Ring for nine of its thirty-hour days, which is the share of their ring
+they fill.  **The Great Oceans**: two, half a turn apart, one an oval and the other a ragged four-pointed
+star; their size is not given, and here they are about two and a half million kilometers long.  **Scrith**,
+what the floor and walls are built of: milky gray and translucent, as the Ringworld wiki has it; the game
+calls the walls black.
+
+The gallery's four are `gallery/Local/showcase/ringworld-at-noon.igl`, `ringworld-at-midnight.igl`,
+`ringworld-at-the-rim-wall.igl` and `ringworld-from-space.igl`.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

@@ -1118,6 +1118,96 @@ public class TestMediumClauses
     }
 
     [TestMethod]
+    public void TestAnOpenTubeIsSeenFromWithinThroughTheMediumItStandsIn()
+    {
+        // A glowing tube of radius six, open at its ends, round an eye on its axis in a box of haze, looked at
+        // square on.  An open tube has no inside -- what is within it is outside it -- so its inner face is seen
+        // through the six of haze between, as its outer face is from beyond.  Until 2026-11-05 a tube left open was
+        // taken for a solid, a ray meeting it from within as leaving it: the haze was not charged, and the air over
+        // the Ringworld's far side, the band round its star, was never seen.
+        const string scene = """
+            camera { location [0, 0, 0]  look at [0, 0, 6]  field of view 4 }
+            background Black
+            cube {
+                material { transparency 1  interior { ior 1.0  medium { absorption [0.1, 0.1, 0.1] } } }
+                no shadow
+                scale 30
+            }
+            cylinder {
+                min Y -10  max Y 10  open
+                material { pigment White  emission 1  ambient 0  diffuse 0  specular 0 }
+                scale [6, 1, 6]
+            }
+            """;
+        (Canvas image, string error) = Render(scene);
+
+        Assert.IsNull(error, error);
+        Assert.AreEqual(Math.Exp(-0.6), image.GetPixel(20, 20).Red, 0.01);
+    }
+
+    [TestMethod]
+    public void TestAHollowThingIsFilledOnlyWhereItIsSolid()
+    {
+        // A shell of glowing haze, a ball of ten with a ball of eight taken out of it, looked straight across: from
+        // inside its wall a unit from the hollow, and from outside.  Only the wall glows, so the eye sees the haze
+        // over the lengths of wall the look crosses -- a unit and two inside, two and two from outside -- and none of
+        // the hollow.  Until 2026-11-05 a look leaving the wall into the hollow, by the face of the ball taken out,
+        // was taken to go INTO that ball, the hollow was counted full of haze, and the air over the Ringworld's far
+        // side glowed as if all of the Ring lay between.
+        const string shell = """
+            difference {
+                sphere { scale 10 }
+                sphere { scale 8 }
+                material { transparency 1  interior { ior 1.0  medium { emission 0.1 } } }
+                no shadow
+            }
+            background Black
+            """;
+
+        double SeenFrom(double z)
+        {
+            (Canvas image, string error) = Render(
+                $"camera {{ location [0, 0, {z}]  look at [0, 0, 12]  field of view 2 }}\n" + shell);
+
+            Assert.IsNull(error, error);
+
+            return image.GetPixel(20, 20).Red;
+        }
+
+        Assert.AreEqual(0.3, SeenFrom(-9), 0.005, "from inside the wall");
+        Assert.AreEqual(0.4, SeenFrom(-20), 0.005, "from outside");
+    }
+
+    [TestMethod]
+    public void TestAHollowThingsShapeIsReadInItsOwnSpace()
+    {
+        // The same shell, glowing only in the outer half of its wall -- a shape read from how far a place is from the
+        // shell's middle, in the shell's own space -- looked straight across from outside: a unit of glow on the way in
+        // and a unit on the way out.  Until 2026-11-05 the shape was read in the space of whichever ball the look met
+        // the medium's edge by, a tenth or an eighth the size, where nothing is nine from the middle: the shell came
+        // out dark, and the Ringworld's air, read in a ball 72 km smaller than itself, e^9 too thick.
+        (Canvas image, string error) = Render("""
+            camera { location [0, 0, -20]  look at [0, 0, 12]  field of view 2 }
+            background Black
+            difference {
+                sphere { scale 10 }
+                sphere { scale 8 }
+                material {
+                    transparency 1
+                    interior {
+                        ior 1.0
+                        medium { emission 0.1  density function { smoothstep(8.9, 9.1, sqrt(x * x + y * y + z * z)) } }
+                    }
+                }
+                no shadow
+            }
+            """);
+
+        Assert.IsNull(error, error);
+        Assert.AreEqual(0.2, image.GetPixel(20, 20).Red, 0.01);
+    }
+
+    [TestMethod]
     public void TestALightReadByDensityNeedsADensityThatVaries()
     {
         // A medium of one density has one value of its shape everywhere, so its light read by its density could only

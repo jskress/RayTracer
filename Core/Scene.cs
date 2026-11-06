@@ -207,11 +207,12 @@ public partial class Scene : NamedThing, IDisposable
 
     /// <summary>
     /// This method reports whether a hit is a ray leaving the insides of what it met, which it crossed to get
-    /// there: met from inside, and not a sheet, which has no insides however it is met.
+    /// there: met from inside, and neither a sheet nor a tube left open at an end, which have no insides however
+    /// they are met (see ExtrudedSurface.IsOpen).
     /// </summary>
     private static bool LeavesItsInsides(Intersection hit)
     {
-        return hit.Inside && !hit.Surface.IsASheet;
+        return hit.Inside && !hit.Surface.IsASheet && hit.Surface is not ExtrudedSurface { IsOpen: true };
     }
 
     /// <summary>
@@ -1342,7 +1343,8 @@ public partial class Scene : NamedThing, IDisposable
             {
                 color = ThroughMedium(
                     material.Interior.Medium, color, RayThatReached(intersection),
-                    intersection.Distance, intersection.Surface, intersection.Portals);
+                    intersection.Distance, IntersectionExtensions.FilledThrough(intersection.Surface),
+                    intersection.Portals);
             }
         }
 

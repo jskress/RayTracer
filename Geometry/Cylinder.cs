@@ -53,10 +53,19 @@ public class Cylinder : ExtrudedSurface
         // direction is merely short, which is exactly what carrying a world ray into the space of
         // a scaled-up cylinder produces: at a scale of 100 the wall was lost for every ray within
         // 5.7 degrees of the axis, so a pipe or a well seen near end-on showed only its caps.
+        //
+        // **Judged against the whole direction, it is still wrong for a cylinder scaled more across
+        // than along**, since that shrinks a ray's sideways part and leaves its part along the axis
+        // whole: scaled [5e8, 1, 5e8], a ray square to the axis in the world came within a millionth
+        // of it here, and the Ringworld's floor went missing from inside.  A cylinder cut to length
+        // needs no such judgement at all -- a ray that truly runs along the axis finds its crossings
+        // impossibly far along it, which the length turns away -- so only a cylinder running on for
+        // ever is judged, and any other refuses nothing but a direction of exactly none across.
         double directionSquared = ray.Direction.Dot(ray.Direction);
         double directionY = ray.Direction.Y;
+        bool endless = double.IsInfinity(MinimumY) || double.IsInfinity(MaximumY);
 
-        if (!a.IsNegligibleSquaredBeside(directionSquared))
+        if (endless ? !a.IsNegligibleSquaredBeside(directionSquared) : a > 0)
         {
             a *= 2;
             b = -b;
@@ -78,7 +87,9 @@ public class Cylinder : ExtrudedSurface
                 intersections.Add(new Intersection(this, t1));
         }
 
-        if (Closed && !(directionY * directionY).IsNegligibleSquaredBeside(directionSquared))
+        // The same holds for the caps, scaled the other way: a long thin rod shrinks a ray's part along
+        // it, and a cap is a finite disc, so a ray nearly level with it meets its plane far outside it.
+        if (Closed && directionY != 0)
             AddCappedIntersections(ray, intersections);
     }
 

@@ -1,0 +1,193 @@
+// The Ringworld at noon: from a hilltop over a river valley, looking spinward down it, where the Arch rises out of
+// the haze and climbs into the sky, and Fist-of-God stands up out of the air beside it.
+//
+// A showcase rather than a demonstration.  The Ring -- its floor and its air, the rim walls, the shadow squares and
+// the star -- and Fist-of-God come from the `ringworld` library, the trees from `trees` and the river's water from
+// `water`; the land is here.
+//
+// **The Arch is the rest of the world.**  The Ring runs on from here spinward and curves up toward the star until it
+// meets itself overhead, so the floor ahead rises out of the haze as a band narrowing as it climbs: four degrees wide
+// five degrees up, a third of a degree at the zenith.  It is lit as this valley is, by a star always overhead, and
+// broken where the shadow squares between the Ring and the star lay night across it: the dark gaps in it are other
+// places' nights, nine hours in thirty.  It is pale because it is seen through the air twice, ours and its own.
+//
+// **It is always noon.**  The star never moves; the squares do.  So the light here falls straight down, every tree
+// stands in its own shadow, and the hills are lit only as far as they face up.
+//
+// **Fist-of-God is six thousand kilometers off and a thousand miles high.**  Its foot is lost in the haze, but most
+// of it stands above the air, so it is seen as clearly as the Arch is, and as pale, the sky behind it being black.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.15
+    angles are degrees
+    info {
+        title 'The Ringworld at Noon'
+        author 'J. Stephen Kress'
+        description 'The Arch rising out of the haze over a river valley on the Ringworld, and Fist-of-God beside it.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'ringworld' { Ringworld, FistOfGod }
+import 'trees' { Oak, Pine }
+import 'water' { Water, LakeWater }
+
+// On a hilltop above a broad valley, looking spinward down it: the Arch always rises straight ahead.
+camera {
+    location [-900, 112, 0]
+    look at [-900, 112 + 1000 * tan(7°), 1000]
+    field of view 64
+}
+
+// Beyond the air is space.
+background Black
+
+// The Ring, at noon here, turned so that the oval Great Ocean lies fifty degrees round it, twenty-five up the Arch.
+object Ringworld(0, 0.02, 130)
+object FistOfGod() { translate [-6000000 * sin(19°), -250, 6000000 * cos(19°)] }
+
+// The star overhead, a shade warmer than white, and the blue of the sky to light what it does not.
+distant light { direction [0, -1, 0]  color [1.0, 0.97, 0.92] }
+sky light {
+    pigment linear Y gradient { [0, [0.55, 0.62, 0.75], 1, [0.18, 0.28, 0.5]] }
+    samples 24
+}
+
+// -- The land ------------------------------------------------------------------------------------------------
+
+// The valley's middle line, wandering a little as it goes, and how far a place is from it.
+function ValleyLine(z) -> number { return 300 * sin(z / 1700 + 0.6) }
+function FromTheRiver(x, z) -> number { return abs(x - ValleyLine(z)) }
+
+// The valley's sides rise eighty meters over two kilometers and roll, the river sunk down its middle under water
+// half a meter up, and the hill the camera stands on.
+function NearLand(x, z) -> number {
+    return 4 + 85 * smoothstep(120, 2200, FromTheRiver(x, z))
+         + smoothstep(60, 400, FromTheRiver(x, z)) * (14 * (noise(x / 700, 0.3, z / 700) - 0.5)
+             + 4 * (noise(x / 160, 1.7, z / 160) - 0.5) + 1.2 * (noise(x / 40, 2.9, z / 40) - 0.5))
+         - 8 * (1 - smoothstep(40, 80, FromTheRiver(x, z)))
+         + 55 * exp(-((x + 900) * (x + 900) + (z + 150) * (z + 150)) / 360000)
+}
+
+// Beyond the near land the valley goes on, and the hills beside it rise higher -- only past the near land's edge,
+// so that inside it they lie under it.
+function FarLand(x, z) -> number {
+    return 4 + 85 * smoothstep(300, 2600, FromTheRiver(x, z)) - 8 * (1 - smoothstep(60, 200, FromTheRiver(x, z)))
+         + smoothstep(2600, 7000, max(abs(x), abs(z - 2500))) *
+           (220 * noise(x / 16000, 4.1, z / 16000) + 70 * noise(x / 5000, 5.3, z / 5000))
+}
+
+// Grass: patches of greener and drier some meters across over broader swathes of both.
+Grassland = material {
+    pigment layer {
+        bozo {
+            turbulence { amplitude 0.5  octaves 3 }
+            [0, color [0.12, 0.17, 0.06, 0.55], 0.4, color [0.20, 0.25, 0.09, 0], 0.6, color [0.24, 0.27, 0.11, 0],
+             1, color [0.33, 0.31, 0.16, 0.55]]
+            scale 9
+        },
+        bozo {
+            turbulence { amplitude 0.5  octaves 4 }
+            [0, [0.16, 0.22, 0.08], 0.5, [0.22, 0.27, 0.10], 0.8, [0.30, 0.31, 0.14], 1, [0.26, 0.28, 0.12]]
+            scale 40
+        }
+    }
+    diffuse 0.85  specular 0.03
+}
+
+// Far off, woods are a darker green laid on the land rather than trees.
+FarCountry = material {
+    pigment bozo {
+        turbulence { amplitude 0.6  octaves 5 }
+        [0, [0.20, 0.25, 0.10], 0.55, [0.22, 0.27, 0.11], 0.6, [0.07, 0.12, 0.05], 1, [0.06, 0.10, 0.04]]
+        scale 2500
+    }
+    diffuse 0.85  specular 0.03
+}
+
+heightfield {
+    function { NearLand(6000 * (x - 0.5), 6000 * (z - 0.5) + 2500) }
+    samples 1536
+    smooth
+    material Grassland
+    named 'ground'
+    translate [-0.5, 0, -0.5]
+    scale [6000, 1, 6000]
+    translate Z 2500
+}
+
+heightfield {
+    function { FarLand(150000 * (x - 0.5), 150000 * (z - 0.5) + 60000) - 3 }
+    samples 2048
+    smooth
+    material FarCountry
+    translate [-0.5, 0, -0.5]
+    scale [150000, 1, 150000]
+    translate Z 60000
+}
+
+// And beyond that, out to six hundred kilometers, low rolling country, so that the Ring's own floor -- its land
+// laid out as it is seen from the far side, clouds a continent across -- is never what the haze is laid over.
+heightfield {
+    function { 40 * noise(1200000 * x / 30000, 7.7, 1200000 * z / 30000) }
+    samples 1024
+    smooth
+    material FarCountry
+    translate [-0.5, 0, -0.5]
+    scale [1200000, 1, 1200000]
+    translate [0, -45, 500000]
+}
+
+// The river: one sheet of water at its level, the land standing out of it everywhere but down the valley.
+object Water(150000, 150000, 'calm') { material LakeWater  translate [0, 0.5, 60000] }
+
+// -- The trees -----------------------------------------------------------------------------------------------
+
+// A few on the hill, the nearest off to the left.
+Hilltop = path {
+    move to -1500, 60  line to -1150, 60  line to -1100, 600  line to -1600, 700  close
+}
+
+field {
+    of Oak(17, 'summer', 1), Oak(14, 'summer', 2)
+    within Hilltop
+    spacing 30  jitter 0.9
+    turned 360  sized 0.8 to 1.2
+    over 'ground'
+    sink 1
+}
+
+// And a few close by on the right, to stand the view in.
+Near = path {
+    move to -840, 70  line to -700, 70  line to -660, 260  line to -820, 300  close
+}
+
+field {
+    of Oak(15, 'summer', 1), Oak(12, 'summer', 2)
+    within Near
+    spacing 28  jitter 0.9
+    turned 360  sized 0.85 to 1.2
+    over 'ground'
+    sink 1
+}
+
+// And woods in clumps down the valley.
+Woods = path {
+    move to -2800, 300  line to 2800, 300  line to 2800, 5400  line to -2800, 5400  close
+}
+
+field {
+    of Oak(16, 'summer', 1), Oak(13, 'summer', 2), Pine(20, 'summer', 1)
+    within Woods
+    spacing 14  jitter 0.9
+    turned 360  sized 0.8 to 1.25
+    patches bozo { scale 900 } from 0.62 to 0.7
+    over 'ground'
+    above 1.5
+    sink 1
+}

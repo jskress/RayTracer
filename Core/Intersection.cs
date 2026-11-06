@@ -194,6 +194,13 @@ public class Intersection : IComparable<Intersection>
     /// all over.  Four thousand times the rounding is ample; and it passes the millionth only past 1,100 km from
     /// the middle, so a scene of any ordinary size sets off exactly as it always did.
     /// </para>
+    /// <para>
+    /// **And a share of how far the place may be from the surface's own middle**, where it was found (see
+    /// <see cref="Surface.ReachInTheWorld"/>): the Ringworld's air, a band 150 million kilometers round its star,
+    /// was found to some hundredths of a millimeter at a place a few kilometers from the world's middle, a ray
+    /// leaving the top of the air met it again by chance, and a mountain seen past it came out in rings.  That too
+    /// passes the millionth only for a surface more than 1,100 km across.
+    /// </para>
     /// </summary>
     private const double FarShare = 1.0 / (1L << 40);
 
@@ -299,7 +306,9 @@ public class Intersection : IComparable<Intersection>
 
         SelfOffset = Math.Max(
             Surface.SelfOffsetAt(TimeIndex, Portals),
-            Math.Max(Math.Abs(Point.X), Math.Max(Math.Abs(Point.Y), Math.Abs(Point.Z))) * FarShare);
+            Math.Max(
+                Math.Max(Math.Abs(Point.X), Math.Max(Math.Abs(Point.Y), Math.Abs(Point.Z))),
+                Surface.ReachInTheWorld) * FarShare);
 
         Vector adjustment = Normal * SelfOffset;
 

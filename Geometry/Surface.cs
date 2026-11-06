@@ -557,6 +557,62 @@ public abstract class Surface : NamedThing
     internal virtual double SelfOffsetAt(int timeIndex, Portals portals) => DoubleExtensions.Epsilon * SelfOffsetScale;
 
     /// <summary>
+    /// This property holds how far, in the world, a place on this surface may lie from its own space's origin along any
+    /// of its own axes: as far as its own box reaches along each, stretched as its space is along that one.  Nought for
+    /// a surface that runs on for ever or has no box.  Worked out once, when first asked, which is while rendering: threads that ask at once
+    /// each work out the same number, and a double is written whole.
+    /// <para>
+    /// **A crossing is found in the surface's own space, and rounded there.**  Its coordinates there are known only to
+    /// a share of themselves, and carried out to the world that is a share of this -- so a surface scaled up a hundred
+    /// and fifty million kilometers, the Ringworld's air, is found only to some hundredths of a millimeter wherever
+    /// in the world the crossing lies, and a ray set off from it by less began, as often as not, behind it.  See
+    /// <see cref="Intersection.SelfOffset"/>.
+    /// </para>
+    /// </summary>
+    internal double ReachInTheWorld
+    {
+        get
+        {
+            double reach = _reachInTheWorld;
+
+            if (double.IsNaN(reach))
+                _reachInTheWorld = reach = MeasureTheReach();
+
+            return reach;
+        }
+    }
+
+    private double _reachInTheWorld = double.NaN;
+
+    private double MeasureTheReach()
+    {
+        if (BoundingBox is not { IsEmpty: false } box)
+            return 0;
+
+        // Each axis by its own stretch: a height field's heights in its own units are not stretched as its width is,
+        // and taken by the greatest stretch, a field twelve kilometers wide with heights to 891 reached 10,700 km.
+        double x = ReachAlong(box.Minimum.X, box.Maximum.X, new Vector(1, 0, 0));
+        double y = ReachAlong(box.Minimum.Y, box.Maximum.Y, new Vector(0, 1, 0));
+        double z = ReachAlong(box.Minimum.Z, box.Maximum.Z, new Vector(0, 0, 1));
+
+        return double.IsNaN(x + y + z) ? 0 : Math.Max(x, Math.Max(y, z));
+    }
+
+    /// <summary>
+    /// This method returns how far along one of its own axes a surface's box reaches from its origin, in the world, or
+    /// not a number for a box that runs to the end of the numbers there -- which is how a surface with no end on that
+    /// axis draws one (text's outline does), and stands for no box at all.
+    /// </summary>
+    private double ReachAlong(double low, double high, Vector axis)
+    {
+        double most = Math.Max(Math.Abs(low), Math.Abs(high));
+
+        return double.IsInfinity(most) || most > 1e100
+            ? double.NaN
+            : most * DirectionToWorld(axis).Magnitude;
+    }
+
+    /// <summary>
     /// This method returns how far above the place a ray met it a ray leaving this surface, on the side it faces,
     /// should set off, in the world and over and above the usual nudge: nothing, unless the surface is shaded as
     /// something rounder than it is (see <see cref="SmoothTriangle.RiseAt"/>).

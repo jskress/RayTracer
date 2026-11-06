@@ -1,0 +1,471 @@
+// The Ringworld: Larry Niven's ring round a star, in meters.
+//
+//     import 'ringworld' { Ringworld, RingArchLights, SpillMountains, FistOfGod }
+//
+//     object Ringworld()                 // here at noon, halfway across the Ring
+//     object Ringworld(0, 0.5)           // here at midnight, under a shadow square
+//     object RingArchLights(0.5)         // and the Arch's light, for a night
+//
+// | `Ringworld` | The whole of it: the floor and its air, the rim walls, the shadow squares and the star. |
+// | `RingFloor`, `RingAir`, `RingWalls`, `ShadowSquares`, `RingSun` | Its pieces, for a scene that wants less. |
+// | `RingArchLights` | The light the Arch gives at night, as a row of lamps along it. |
+// | `SpillMountains`, `SpillMountain` | A row of the mountains along the foot of a rim wall, and one of them. |
+// | `FistOfGod` | The mountain a thousand miles high, punched up from beneath, named 'fist'. |
+//
+// `Ringworld(across, day, around)`: `across` is how far the origin stands from the middle of the Ring's width
+// toward +X; `day` is the share of a day past noon there, nought noon and a half midnight; `around` is how far
+// spinward the origin is of the oval Great Ocean, in degrees.
+
+// -- Where things stand --------------------------------------------------------------------------------------
+//
+// **The origin is a place on the Ring's floor, and the star is straight up from it.**  A scene is set somewhere on
+// the floor, and that is where a camera wants to be near, so that is where the numbers are small: everything a
+// scene builds about itself (land, trees, a lake) it builds about the origin as on any other ground.  The Ring
+// runs on from the origin spinward along +Z and antispinward along -Z, curving up toward the star until it meets
+// itself overhead, and its width runs along X.  The star is at `[0, RingRadius, 0]`, the Ring's axis is the line
+// through it along X, and a place `a` degrees spinward round the Ring is `[x, R - R cos a, R sin a]` -- before
+// `Ringworld` lowers it all by `RingFloorDrop`, so a scene's own land, standing on nought, covers the floor.
+//
+// -- Where the numbers come from -----------------------------------------------------------------------------
+//
+// The Ring is described in Larry Niven's *Ringworld* (1970) and its sequels; where those are silent, the Ring-
+// world role-playing game Chaosium published under license in 1984 fills in the rest, and the figures are its.
+//
+// - **The Ring** is 95 million miles from its star in radius and 997,000 miles wide, spinning at 770 miles a
+//   second for a gravity of 0.99 g, with walls 1,000 miles high along both edges to hold the air in.
+// - **The star** is a yellow dwarf a little smaller and cooler than the Sun, G3 verging on G2.
+// - **The shadow squares** are twenty, each 1.6 million by 4.18 million kilometers and 9.66 million kilometers
+//   from the next, in a ring of their own close about the star, joined by wire; they shade the Ring for nine of
+//   its thirty-hour days, which is the share of their ring they fill.
+//
+// -- What is here for the library and not for you ----------------------------------------------------------
+//
+// Everything beginning with `Ring`, `Fist` or `Spill` that the table does not name is a figure or the machinery; a
+// scene may use the figures.
+
+// -- The figures -------------------------------------------------------------------------------------------
+
+// The Ring's radius and width, and the height of its rim walls.
+RingRadius = 152888000000
+RingWidth = 1604500000
+RingWallHeight = 1609344
+
+// The star's radius: a G3 dwarf's, a little under the Sun's.
+RingSunRadius = 675000000
+
+// The shadow squares: how many, how long and how tall each is, and the radius of the ring they stand in, which
+// is twenty of them and twenty gaps between them laid end to end.
+RingSquares = 20
+RingSquareLength = 4180000000
+RingSquareHeight = 1600000000
+RingSquareOrbit = 20 * (4180000000 + 9660000000) / (2 * π)
+
+// How deep the air would be if it were as dense all the way up as it is at the floor: eight kilometers, as the
+// Earth's is.  The air the library builds is as much as that, thinning upward (see `RingAir`).
+RingAirDepth = 8000
+
+// How far under the origin the Ring's own floor runs, so that a scene's land, standing on nought, covers it.
+RingFloorDrop = 250
+
+// -- Day and night -------------------------------------------------------------------------------------------
+
+// **A place's night is the shadow of the square between it and the star.**  Seen from the Ring, a square's edges
+// are straight lines across the star's disc, so how much of the star a place sees is how much of a disc lies to
+// one side of a line: `RingCovered(t)` is the share of a disc beyond a line `t` of its radius from its middle.
+function RingCovered(t) -> number {
+    return (t * sqrt(1 - t * t) + asin(t)) / π + 0.5
+}
+
+// A square's shadow, in shares of the spacing from one square to the next: the shadow's middle is at a half,
+// its edges lie square under the square's ends (the star's middle, a square's end and the place it shades are in
+// one line), and the edge is soft over the band of the Ring from which the star's disc is part hidden.
+RingNightHalf = RingSquareLength / (2 * RingSquareOrbit) * RingSquares / (2 * π)
+RingDusk = RingSunRadius * (RingRadius - RingSquareOrbit) / (RingSquareOrbit * RingRadius) * RingSquares / (2 * π)
+
+// How much light a place in the Ring's night still has, lit only by the rest of the Ring overhead.
+RingNightLight = 0.002
+
+// Night, as a black laid over whatever is beneath it: clear where the star is whole, all but black where it is
+// hidden.  It is read about the Y axis, which is the Ring's own axis in the pieces' own spaces, and `day` is the
+// share of a day past noon at the origin: nought is noon, a half is midnight.
+primitive RingNight(day = 0) -> pigment {
+    edge = 0.5 - RingNightHalf
+    out = 0.5 + RingNightHalf
+    w = RingDusk
+    dark = 1 - RingNightLight
+    return radial {
+        frequency RingSquares
+        phase day
+        [0, color [0, 0, 0, 0],
+         edge - w, color [0, 0, 0, 0],
+         edge - 0.75 * w, color [0, 0, 0, dark * RingCovered(-0.75)],
+         edge - 0.5 * w, color [0, 0, 0, dark * RingCovered(-0.5)],
+         edge - 0.25 * w, color [0, 0, 0, dark * RingCovered(-0.25)],
+         edge, color [0, 0, 0, dark * 0.5],
+         edge + 0.25 * w, color [0, 0, 0, dark * RingCovered(0.25)],
+         edge + 0.5 * w, color [0, 0, 0, dark * RingCovered(0.5)],
+         edge + 0.75 * w, color [0, 0, 0, dark * RingCovered(0.75)],
+         edge + w, color [0, 0, 0, dark],
+         out - w, color [0, 0, 0, dark],
+         out - 0.75 * w, color [0, 0, 0, dark * RingCovered(0.75)],
+         out - 0.5 * w, color [0, 0, 0, dark * RingCovered(0.5)],
+         out - 0.25 * w, color [0, 0, 0, dark * RingCovered(0.25)],
+         out, color [0, 0, 0, dark * 0.5],
+         out + 0.25 * w, color [0, 0, 0, dark * RingCovered(-0.25)],
+         out + 0.5 * w, color [0, 0, 0, dark * RingCovered(-0.5)],
+         out + 0.75 * w, color [0, 0, 0, dark * RingCovered(-0.75)],
+         out + w, color [0, 0, 0, 0],
+         1, color [0, 0, 0, 0]]
+    }
+}
+
+// -- The floor -------------------------------------------------------------------------------------------------
+
+// Scrith, what the Ring is built of: the floor under the land and the walls, milky gray and translucent as the
+// Ringworld wiki has it (the role-playing game calls the walls black), with a little sheen.  It takes almost no
+// ambient light, so where nothing lights it -- the Ring's underside seen from space -- it stays dark.
+RingScrith = material { pigment [0.50, 0.51, 0.54]  ambient 0.01  diffuse 0.8  specular 0.2  shininess 40 }
+
+// The deep water of the two Great Oceans.
+RingOceanDeep = color [0.015, 0.045, 0.11]
+
+// A Great Ocean of one oval, `long` meters along the Ring and `wide` across, its shores ragged, standing
+// `a` degrees round the floor's own Y axis.
+primitive RingOcean(long, wide, a) -> pigment {
+    r = RingRadius
+    return spherical {
+        turbulence { amplitude 0.18  octaves 4 }
+        [0, color [0, 0, 0, 0], 0.03, color [0, 0, 0, 0], 0.06, color [0.03, 0.10, 0.17], 0.2, RingOceanDeep,
+         1, RingOceanDeep]
+        scale [long / (2 * r), wide / (2 * r), long / (2 * r)]
+        translate [0, 0, 1]
+        rotate Y a
+    }
+}
+
+// The land as it is seen from far off, `around` degrees round the Ring from where the Great Ocean lies: seas,
+// plains, forest and desert under scattered cloud, more than half of it water, and the two Great Oceans half a turn
+// apart, one an oval and the other a ragged four-pointed star.  It is laid in the floor's own space, where the Ring
+// is a unit about the Y axis, so every size here is a share of the radius.
+primitive RingLand(around = 0) -> pigment {
+    r = RingRadius
+    return layer {
+        // Cloud, in heaps and streamers, about two parts in five of the sky.
+        bozo {
+            turbulence { amplitude 0.6  octaves 4 }
+            [0, color [1, 1, 1, 0], 0.5, color [1, 1, 1, 0], 0.62, color [0.92, 0.93, 0.95, 0.7],
+             0.75, color [0.97, 0.97, 0.98, 0.92], 1, color [1, 1, 1, 0.96]]
+            scale [2.5e7 / r, 1e7 / r, 2.5e7 / r]
+        },
+        // The oval Great Ocean, and a quarter turn round, the star: two long seas crossed.
+        RingOcean(2.6e9, 1.1e9, 90 - around),
+        RingOcean(2.4e9, 0.35e9, 270 - around),
+        RingOcean(0.45e9, 1.2e9, 270 - around),
+        // Seas and land.
+        bozo {
+            turbulence { amplitude 0.7  octaves 5 }
+            [0, [0.02, 0.06, 0.13], 0.44, [0.03, 0.09, 0.17], 0.48, [0.06, 0.15, 0.21],
+             0.5, [0.12, 0.17, 0.08], 0.6, [0.06, 0.12, 0.05], 0.7, [0.10, 0.15, 0.06], 0.8, [0.22, 0.20, 0.11],
+             0.9, [0.38, 0.32, 0.21], 1, [0.30, 0.28, 0.22]]
+            scale 1.2e8 / r
+        }
+    }
+}
+
+// How thick the scrith of the floor is, under the land.
+RingFloorThickness = 30
+
+// The floor: an open band round the star, lit by it, over the underside of the scrith it is built on.  The land is
+// not lit by the scene's lights but glows with the light the star gives it -- the star is always overhead, so the
+// light falling on the Ring is the same everywhere it is not in shadow, and the shadow is the night laid over it --
+// and a glow shows on both faces of a sheet, so the underside, bare scrith, is a second band a floor's thickness out.
+// Neither casts anything on a scene's own land.
+primitive RingFloor(day = 0, around = 0) -> group {
+    r = RingRadius
+    return group {
+        cylinder {
+            min Y -RingWidth / (2 * r)
+            max Y RingWidth / (2 * r)
+            open
+            material {
+                pigment layer { RingNight(day), RingLand(around) }
+                ambient 0  diffuse 0  specular 0  emission 0.9
+            }
+            scale r
+        }
+        cylinder {
+            min Y -RingWidth / (2 * r)
+            max Y RingWidth / (2 * r)
+            open
+            material RingScrith
+            scale r + RingFloorThickness
+        }
+        no shadow
+        rotate Z 90
+        translate [0, r, 0]
+    }
+}
+
+// -- The air ---------------------------------------------------------------------------------------------------
+
+// How much of the light straight up the whole of the air takes out, red, green and blue: a clear day's.
+RingAirRed = 0.08
+RingAirGreen = 0.12
+RingAirBlue = 0.24
+
+// What the air takes out of the light crossing it, for each meter of it at the floor's density, and what it settles
+// at over a long way, which is the sky at the horizon: its own light is the second times the first, by day, and
+// the night laid over it in the dark.
+RingAirAbsorption = color [RingAirRed, RingAirGreen, RingAirBlue] / RingAirDepth
+RingAirGlow = color [0.78, 0.86, 1.0] * 0.48
+
+// How high the air reaches: past this there is next to none of it (a ten-thousandth of the floor's density).
+RingAirTop = 9 * RingAirDepth
+
+// The density of the air at a place in the air's own space, where the floor is a unit about the Y axis: falling by
+// e every eight kilometers up from the floor, as the Earth's does.  (A single expression, as a density must be.)
+function RingAirDensity(x, z) -> number {
+    return exp(-(1 - sqrt(x * x + z * z)) * RingRadius / RingAirDepth)
+}
+
+// **The air thins as it rises**, by half every five and a half kilometers, so seen from above it has no top but
+// fades into the black, and a mountain rising through it is hazed less and less as it climbs.  Its density is
+// worked out place by place along each look through it, so it is walked rather than answered exactly -- which is
+// why it is one layer: an even air in layers, answered exactly, made a look at the Arch cross seven faces before
+// the far floor, past the four a ray is followed through, and the Arch came back black.  It runs from ten meters
+// over the floor, so that from outside the Ring nothing of it lies in front of the underside, to where there is
+// next to none of it, out to a kilometer short of each wall.
+primitive RingAir(day = 0) -> difference {
+    r = RingRadius
+    half = (RingWidth / 2 - 1000) / r
+    return difference {
+        cylinder { min Y -half  max Y half  scale 1 - 10 / r }
+        cylinder { min Y -2 * half  max Y 2 * half  scale 1 - RingAirTop / r }
+        material {
+            transparency 1
+            ambient 0  diffuse 0  specular 0
+            interior {
+                ior 1
+                medium {
+                    absorption RingAirAbsorption
+                    emission pigment layer { RingNight(day), color RingAirGlow * RingAirAbsorption }
+                    density function { RingAirDensity(x, z) }
+                }
+            }
+        }
+        no shadow
+        scale r
+        rotate Z 90
+        translate [0, r, 0]
+    }
+}
+
+// -- The rim walls ---------------------------------------------------------------------------------------------
+
+// The two walls, a thousand miles high along the Ring's two edges.
+primitive RingWalls() -> group {
+    r = RingRadius
+    return group {
+        for side in [-1, 1] by 2 {
+            disc {
+                center [side * RingWidth / 2, r, 0]
+                normal [1, 0, 0]
+                radius r
+                inner radius r - RingWallHeight
+                material RingScrith
+                no shadow
+            }
+        }
+    }
+}
+
+// -- The shadow squares and the star ---------------------------------------------------------------------------
+
+// The squares' black: they drink the light, which is where the Ring's power comes from.
+RingSquareBlack = material { pigment [0.02, 0.02, 0.022]  diffuse 0.5  specular 0.2  shininess 60 }
+
+// The twenty squares, standing so that `day` is the share of a day past noon at the origin.  Each faces the star,
+// its length along the way the Ring runs, its height along the Ring's axis.
+primitive ShadowSquares(day = 0) -> group {
+    r = RingRadius
+    return group {
+        for k in [0, RingSquares - 1] {
+            parallelogram {
+                at [-RingSquareHeight / 2, r - RingSquareOrbit, -RingSquareLength / 2]
+                sides [RingSquareHeight, 0, 0], [0, 0, RingSquareLength]
+                material RingSquareBlack
+                translate [0, -r, 0]
+                rotate X -(0.5 - day + k) * 360 / RingSquares
+                translate [0, r, 0]
+            }
+        }
+    }
+}
+
+// The star: a ball glowing white with a little warmth, standing at the Ring's middle and casting nothing.
+primitive RingSun(brightness = 40) -> sphere {
+    return sphere {
+        material { pigment [1, 0.96, 0.88]  ambient 0  diffuse 0  specular 0  emission brightness }
+        no shadow
+        scale RingSunRadius
+        translate [0, RingRadius, 0]
+    }
+}
+
+// -- The night -------------------------------------------------------------------------------------------------
+
+// How much of the star a place on the Ring sees, at `v`, its place in a square's spacing as `RingNight` reads it:
+// the same shadow, worked out rather than mapped.
+function RingSunShare(v) -> number {
+    return 1 - (1 - RingNightLight) * min(RingCovered(clamp((v - 0.5 + RingNightHalf) / RingDusk, -1, 1)),
+                                         RingCovered(clamp((0.5 + RingNightHalf - v) / RingDusk, -1, 1)))
+}
+
+// The light of the Arch on the land at night, as `count` lamps along it, from one horizon over the zenith to the
+// other.  **The Arch lights the night evenly by height**: a strip of it `a` degrees up is as wide as the Ring over
+// its distance, which falls as the sine of `a`, and its light reaches a level place by that same sine, so every
+// degree of the Arch lights the ground alike -- and in all, about a thousandth of the star's light.  Each lamp is
+// the strip about it: as bright as the land and air of the Ring there (`shine`), lit as far as the star is
+// unhidden there at `day` (see `RingNight`), dimmed by the air between, and set so that its light on a level
+// place is its strip's.  They stand ten thousand kilometers off, which is as good as infinitely far.
+primitive RingArchLights(day = 0.5, count = 24, shine = [0.30, 0.34, 0.42]) -> group {
+    step = 180 / count
+    return group {
+        for k in [0, count - 1] {
+            point light {
+                location [0, 1e7 * sin((k + 0.5) * step * 1°), 1e7 * cos((k + 0.5) * step * 1°)]
+                color color shine * RingSunShare(mod(2 * (k + 0.5) * step / (360 / RingSquares) + day, 1))
+                      * (RingWidth / (2 * RingRadius)) * (step * 1°) / sin((k + 0.5) * step * 1°)
+                      * color [exp(-RingAirRed / sin((k + 0.5) * step * 1°)), exp(-RingAirGreen / sin((k + 0.5) * step * 1°)),
+                               exp(-RingAirBlue / sin((k + 0.5) * step * 1°))]
+            }
+        }
+    }
+}
+
+// -- Fist-of-God -----------------------------------------------------------------------------------------------
+
+// **A mountain a thousand miles high, punched up from beneath.**  Something struck the Ring's underside hard enough
+// to push the floor up a thousand miles before the scrith tore and let the fireball through, so the mountain is a
+// spike with hollow flanks and a hole for a summit: its top, above the air, is the torn floor itself.  Its shape,
+// on a unit square, as a share of its height: the flanks fall away as the cube of the distance from the middle,
+// roughened by ridges, and the summit is a crater a twentieth of the mountain across, its floor three tenths down.
+// (Single expressions all the way down, as a height field's function must be.)
+function FistRidges(dx, dz) -> number {
+    return 1 + 0.28 * (noise(dx * 9, 1.3, dz * 9) - 0.5) + 0.12 * (noise(dx * 40, 2.1, dz * 40) - 0.5)
+             + 0.05 * (noise(dx * 160, 3.7, dz * 160) - 0.5)
+}
+function FistHole(u, dx, dz) -> number {
+    return 0.3 * pow(max(0, 1 - u / (0.045 + 0.012 * noise(dx * 90, 4.4, dz * 90))), 1.5)
+}
+function FistAt(u, dx, dz) -> number {
+    return max(0, pow(max(0, 1 - u), 2) * FistRidges(dx, dz) - FistHole(u, dx, dz))
+}
+function FistShape(x, z) -> number {
+    return FistAt(2 * sqrt((x - 0.5) * (x - 0.5) + (z - 0.5) * (z - 0.5)), x - 0.5, z - 0.5)
+}
+
+// What it is made of, by height: land at its foot, snow over that while there is air, then bare rock where there is
+// none, and at the summit the torn scrith, pale and glassy.
+RingFistOf = material {
+    pigment linear Y gradient {
+        [0, [0.16, 0.19, 0.09], 0.003, [0.22, 0.21, 0.15], 0.0045, [0.80, 0.82, 0.86], 0.008, [0.50, 0.50, 0.52],
+         0.012, [0.24, 0.22, 0.19], 0.6, [0.21, 0.19, 0.17], 0.8, [0.30, 0.30, 0.32], 0.86, [0.56, 0.58, 0.62],
+         1, [0.56, 0.58, 0.62]]
+    }
+    diffuse 0.85  specular 0.05
+}
+
+// Fist-of-God, `height` meters high and `wide` across its foot, standing on the origin.
+primitive FistOfGod(height = 1609344, wide = 3200000) -> heightfield {
+    return heightfield {
+        function { FistShape(x, z) }
+        samples 2048
+        smooth
+        material RingFistOf
+        named 'fist'
+        translate [-0.5, 0, -0.5]
+        scale [wide, height, wide]
+    }
+}
+
+// -- The spill mountains ---------------------------------------------------------------------------------------
+
+// **The Ring's soil runs downhill to the sea, and is pumped up the rim walls and let fall again.**  The spill
+// mountains are where it lands: half-cones some fifty kilometers high leaning against the foot of each wall, at
+// regular spaces along it, their tops far above the air.  The books give their height and their shape and that they
+// are evenly spaced, not how far apart, so that is a scene's to choose.  A spill mountain's shape on a unit square,
+// as a share of its height, the wall along x = 0: a cone round the middle of the wall's foot, its flanks fluted by
+// the falls of soil down them.
+function SpillFlutes(dx, dz) -> number {
+    return 1 + 0.22 * (noise(dx * 7, 1.1, dz * 7) - 0.5) + 0.14 * (noise(dx * 30, 2.3, dz * 30) - 0.5)
+             + 0.06 * (noise(dx * 120, 3.5, dz * 120) - 0.5)
+}
+function SpillAt(u, dx, dz) -> number {
+    return pow(max(0, 1 - u), 1.35) * SpillFlutes(dx, dz)
+}
+function SpillShape(x, z) -> number {
+    return SpillAt(sqrt(x * x + 4 * (z - 0.5) * (z - 0.5)), x, z - 0.5)
+}
+
+// What one is made of, by height as a share of it: grown over at the foot, where there is air and it has lain long
+// enough, then bare spoil the colors of the soil it was.  (Snow on its lower flanks, where there is air enough for
+// it, made a white collar round the foot: the flanks there are so gentle that a few kilometers of height is a broad
+// ring.)
+RingSpillOf = material {
+    pigment linear Y gradient {
+        [0, [0.17, 0.21, 0.10], 0.04, [0.22, 0.23, 0.14], 0.08, [0.30, 0.27, 0.19], 0.2, [0.36, 0.31, 0.24],
+         0.6, [0.40, 0.35, 0.27], 1, [0.44, 0.39, 0.32]]
+    }
+    diffuse 0.85  specular 0.03
+}
+
+// One spill mountain, `height` meters high and twice and a half that out from the wall, its foot against the wall
+// along the X = 0 side, standing out toward +X and centered on Z = 0.  It is given back in a group, which is what
+// lets a row of them be the one shape in every place rather than two million triangles apiece.
+primitive SpillMountain(height = 48000) -> group {
+    return group {
+        heightfield {
+            function { SpillShape(x, z) }
+            samples 1024
+            smooth
+            material RingSpillOf
+            translate [0, 0, -0.5]
+            scale [2.5 * height, height, 5 * height]
+        }
+    }
+}
+
+// A row of `count` spill mountains along the foot of the wall on the +X side (`side` 1) or the -X side (-1), the
+// first `first` meters spinward of the origin and the rest every `spacing` meters after it, round the Ring's curve
+// -- in the same frame as `Ringworld(across)`, which they take too.
+primitive SpillMountains(across = 0, side = 1, first = 0, count = 8, spacing = 1500000, height = 48000) -> group {
+    r = RingRadius
+    return group {
+        for k in [0, count - 1] {
+            object SpillMountain(height) {
+                scale [-side, 1, 1]
+                translate [side * RingWidth / 2, 0, 0]
+                translate [0, -r, 0]
+                rotate X -toDegrees((first + k * spacing) / r)
+                translate [0, r, 0]
+            }
+        }
+        translate [-across, -RingFloorDrop, 0]
+    }
+}
+
+// -- The whole -------------------------------------------------------------------------------------------------
+
+// The Ring with the origin on its floor `across` meters from the middle of its width toward +X, at `day`, the
+// share of a day past noon there, and `around` degrees spinward of the Great Ocean.
+primitive Ringworld(across = 0, day = 0, around = 0) -> group {
+    return group {
+        object RingFloor(day, around)
+        object RingAir(day)
+        object RingWalls()
+        object ShadowSquares(day)
+        object RingSun()
+        translate [-across, -RingFloorDrop, 0]
+    }
+}
