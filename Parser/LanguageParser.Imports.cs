@@ -28,9 +28,11 @@ public partial class LanguageParser
     /// the other ninety-eight.
     /// </para>
     /// </summary>
-    private void HandleImports()
+    /// <returns><c>true</c>, if there was an import to take, or <c>false</c>, if not.</returns>
+    private bool HandleImports()
     {
         Clause clause = LanguageDsl.ParseClause(CurrentParser, "importClause");
+        bool taken = clause != null;
 
         while (clause != null)
         {
@@ -46,6 +48,8 @@ public partial class LanguageParser
 
             clause = LanguageDsl.ParseClause(CurrentParser, "importClause");
         }
+
+        return taken;
     }
 
     /// <summary>
@@ -139,11 +143,11 @@ public partial class LanguageParser
                     continue;
                 }
 
-                HandleIncludes();
-
-                // A library may import another, and this is the line that lets it.  Without it an
+                // A library may import another, and the imports here are what let it.  Without them an
                 // `import` inside a library reaches the general clause set, which does not hold one,
-                // and the author is told they have written an "unsupported object type".
+                // and the author is told they have written an "unsupported object type" -- as an include
+                // written after an import was, while each was taken once in a fixed order.  Taking either
+                // goes round again, to look for more of both.
                 //
                 // What the nested import does with what it finds falls out of the machinery already
                 // here rather than needing anything new.  Its own `ImportInstruction` is added to
@@ -152,9 +156,7 @@ public partial class LanguageParser
                 // primitives are pruned from the parser's table on the way out unless the outer library
                 // asked for them, which is right: a call of a primitive is *read* rather than looked up
                 // later, so by then the outer library's own primitives already hold what they need.
-                HandleImports();
-
-                if (CurrentParser.IsAtEnd())
+                if (HandleIncludes() || HandleImports())
                     continue;
 
                 _dispatcher.Dispatch(LanguageDsl.ParseNextClause(CurrentParser));

@@ -67,7 +67,10 @@ entries, so multiple `.igl` files can be composed; a file already being read is 
 include cycle).  Each entry's parser has its OWN Lex `FailureTracker` (`CurrentFailureTracker`), which a message about
 unexpected input is built from: shared until 2026-11-02, a library read to its end left its furthest failure standing
 for the scene's mistake -- the library's expectations, at a line of the library, reported against the scene (and past
-the scene's end, `ShowError` fell over with an IndexOutOfRangeException).  `import 'library' { Names }` reads a library (definitions and imports only, see
+the scene's end, `ShowError` fell over with an IndexOutOfRangeException).  Includes and imports come in any order: the
+parse loop (and a library's, in `ImportFrom`) goes round again after taking either (`HandleIncludes`/`HandleImports`
+say whether they took one); taken once each, includes first, an include after an import reached the general clauses
+and was refused as "an unsupported object type" (until 2026-11-07).  `import 'library' { Names }` reads a library (definitions and imports only, see
 `InstructionContext.HoldsOnlyDefinitions`) from `~/.rayTracer/Libraries`.  Values go over whole; functions and
 primitives only when asked for.  An imported value is a recipe made among the SCENE's names (so a scene may add to
 it), so every call written in a library -- a primitive call of any kind, a function call -- is stamped with the
@@ -710,6 +713,21 @@ flag.  `GunSmoke(long, reach, high)` is white powder smoke (scattering 1.6, abso
 +Z; its density function must be ONE expression.  `gallery/Local/showcase/the-enterprise-and-the-tripoli.igl` (2 h 54
 min at 1920x1080).  Foam laid as decals on a second `Water` 3 cm up (the same waves: width/depth only bound a swells)
 doubled the render and read as stickers; it was dropped.
+
+The `vessels` library's `CarrierEnterprise(planes)` is USS Enterprise (CVN-65) as in 2004, after her 1979-82 refit
+(the user's choices, 2026-11-07: the refit island, a full deck park, her picture underway from the air): meters, +X,
+waterline y = 0, middle at x = 0, flight deck at y = 19.  Hull lofted from fifteen stations (`CvnStation*`, flat
+sided amidships, a raked, flared bow, a broad transom); her deck a plan (`CvnDeckPlan`) digitized from the November
+2003 overhead photograph (NH 031111-N-6259P-004) scaled to 342.3 x 78.4 m; under its overhang a 3 m slab and a skirt
+sloping 3 in 10 down to her side, cut away under her four elevators (hangar openings dark panels on her side); a
+catwalk ring 1.8 m out (the plan offset, mitered) with life rafts as a field `along` the plan; deck markings, the
+"65" and the Battle E as decals (block numerals drawn as paths, no font); island windows as decals per face
+(`CvnWindowBand`).  `planes` parks CVW-1 from the `aircraft` library's `Hornet`, `Tomcat`, `Hawkeye`, `Prowler`,
+`Viking`, `Seahawk` (folded by their first number; the Tomcat's is its sweep, 75 to park), which `vessels` imports.
+`CarrierEnterpriseWake(along, across, turn)` is a sea blend read by `linear X gradient` through `warp { X {
+CvnWake(x, z) } }` -- side foam, stern wake, Kelvin arms, broken by noise -- in her frame, so it is placed as she is.
+`gallery/Local/showcase/the-enterprise-underway.igl` writes its own seven-train sea: from a helicopter's height the
+`water` library's five trains beat into a quilted moire (2 h 34 min at 1920x1080).
 
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with

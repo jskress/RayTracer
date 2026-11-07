@@ -82,14 +82,13 @@ public partial class LanguageParser
         {
             while (!IsAtEnd())
             {
-                HandleIncludes();
-                HandleImports();
-                HandleIncludeEnd();
-
-                // An include or an import may have been the last thing in the file, and nothing is then left to
-                // read a clause from: asked anyway, it stopped the render with a null reference.
-                if (IsAtEnd())
-                    break;
+                // Includes and imports may come in any order and any number before the next clause, so taking
+                // either sends the loop round again to look for more, and to see whether that was the last thing
+                // in the file (asked for a clause anyway, the render stopped with a null reference).  Taken once
+                // each in a fixed order, an include written after an import was handed to the clauses, which
+                // said it was an unsupported object type.
+                if (HandleIncludes() || HandleImports())
+                    continue;
 
                 _dispatcher.Dispatch(LanguageDsl.ParseNextClause(CurrentParser));
                 HandleIncludeEnd();
@@ -186,9 +185,11 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to handle any include statement we may be staring at.
     /// </summary>
-    private void HandleIncludes()
+    /// <returns><c>true</c>, if there was an include to take, or <c>false</c>, if not.</returns>
+    private bool HandleIncludes()
     {
         Clause includeClause = LanguageDsl.ParseClause(CurrentParser, "includeClause");
+        bool taken = includeClause != null;
 
         while (includeClause != null)
         {
@@ -219,6 +220,8 @@ public partial class LanguageParser
 
             includeClause = LanguageDsl.ParseClause(CurrentParser, "includeClause");
         }
+
+        return taken;
     }
 
     /// <summary>

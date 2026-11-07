@@ -1,0 +1,47 @@
+// USS Enterprise (CVN-65) at speed in the Atlantic in June 2004, between deployments, Carrier Air Wing One parked on
+// her deck with no flying: Hornets and Tomcats in two rows across her bow, Prowlers, Vikings and Hawkeyes along her
+// starboard side either side of her island, and her landing area clear.  The view is the Navy photographers' own,
+// from a helicopter off her starboard bow, low, with the sun high over the camera's shoulder.
+//
+// She and her aircraft come from the `vessels` and `aircraft` libraries, drawn from Navy photographs of her in 2003
+// and 2004; her wake is a pattern on the sea in her own frame.  The sea is written here rather than taken from the
+// `water` library: seven wave trains of unrelated lengths and headings, since from this height the library's five
+// beat into a quilted pattern no open ocean has.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.15
+    angles are degrees
+    info {
+        title 'The Enterprise Underway'
+        author 'J. Stephen Kress'
+        description 'USS Enterprise (CVN-65) at speed in the Atlantic in June 2004, her air wing parked on her deck.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'vessels' { CarrierEnterprise, CarrierEnterpriseWake }
+
+camera { location [360, 70, -290]  look at [-23.5, 6, 32.5]  field of view 46  exposure 1.35 }
+
+// A summer morning in the Atlantic: the sun high over the camera's shoulder, on her starboard beam.
+background physical sky { sun elevation 55  sun azimuth 20  turbidity 4.5  brightness 3 }
+sky light { samples 24 }
+
+swells {
+    width 400000  depth 400000
+    wave { steepness 0.100  wavelength 34.0  direction [0.96, 0, 0.28]   phase 0.3 }
+    wave { steepness 0.090  wavelength 21.7  direction [0.62, 0, 0.78]   phase 1.9 }
+    wave { steepness 0.085  wavelength 14.3  direction [0.95, 0, -0.31]  phase 4.1 }
+    wave { steepness 0.080  wavelength 9.4   direction [0.34, 0, 0.94]   phase 2.6 }
+    wave { steepness 0.070  wavelength 6.1   direction [0.81, 0, -0.59]  phase 5.3 }
+    wave { steepness 0.060  wavelength 3.9   direction [0.99, 0, 0.12]   phase 0.8 }
+    wave { steepness 0.050  wavelength 2.6   direction [0.50, 0, -0.87]  phase 3.7 }
+    material CarrierEnterpriseWake()
+}
+
+object CarrierEnterprise()
