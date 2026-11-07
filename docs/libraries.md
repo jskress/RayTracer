@@ -1063,6 +1063,77 @@ parallel middle body with a blunt bow on one end and a long fine run to the scre
 a cylinder between two unequal ellipsoids, each sized to meet the cylinder at full girth so the joins do
 not show as rings.
 
+#### Sailing Ships
+
+```
+import 'sailing-ships' { SchoonerEnterprise, PolaccaTripoli, GunSmoke }
+
+object SchoonerEnterprise(-28) { rotate X -7 }
+object PolaccaTripoli(-25)     { rotate X -4  translate [24, 0, -30] }
+object GunSmoke(28, 34, 17)    { rotate Y 180  translate Z -3.4 }
+```
+
+| | |
+| --- | --- |
+| `SchoonerEnterprise` | The United States schooner *Enterprise* as she was in 1801: a twelve-gun topsail schooner, built at Baltimore in 1799. |
+| `PolaccaTripoli` | The Tripolitan corsair *Tripoli* as *Enterprise* left her on 1 August 1801: fourteen guns, her mizzen shot away and her side holed. |
+| `GunSmoke` | The bank of white powder smoke a broadside leaves, drifting downwind off a ship's side. |
+
+**Each of these is one particular ship**, not a kind of one: the [vessels](#vessels) are the ones to reach
+for when a harbor wants filling.  They are in **meters**, they **face `+X`** and they float with their
+**waterline at `y = 0`**, as the vessels do, so a ship dropped at the origin floats on a
+[`Water`](#water) surface laid there.  `+Z` is her port side.
+
+**The first number is her trim**: how far, in degrees, her booms and yards are swung off her centerline.
+Positive swings them to port, which is where they go with the wind on her starboard side; negative, to
+starboard.  Her sails belly to the same side, her headsails are sheeted to it and her colors stream that
+way, so one number says where the wind is.  The second, `belly`, is how full her sails are drawn: one is a
+working breeze, nought hangs them flat.  **She stands upright**: a ship sailing heels to leeward, and how
+far is the scene's to say, with a `rotate X` (negative heels her to starboard).
+
+**Neither ship's plans survive.**  *Enterprise*'s dimensions are her builder's: 84 ft 7 in on deck, 60 ft on
+the keel, 22 ft 6 in in the beam, drawing 9 ft 6 in aft.  Her lines are the Baltimore schooners' of her
+day, sharp, low and dragged deep aft, lofted from sixteen stations; her rig, her paint and her ports are
+Antoine Roux's portrait of her, drawn from life in 1806 (the Naval History and Heritage Command's NH 54388):
+both masts raked twelve degrees, a fore yard and a topsail yard on the foremast, gaffs on both, the main
+boom reaching four meters past her taffrail; black topsides with an ochre band her ports are cut in. She
+carries six guns a side, as she did in 1801 (Roux drew her after a rebuilding with seven), her crew at her
+starboard guns, marines in her shrouds, and the fifteen-star ensign of 1795 at her main peak.
+
+*Tripoli* is drawn as the Barbary polaccas were: about *Enterprise*'s size, with a long beak, a sheer rising to a
+high stern and fore and main masts each **one spar**, square-rigged to the truck, which is what made a
+polacca.  She flies the Karamanli flag, green with three white crescents, and her crew in red caps crowds her
+larboard side.  The accounts disagree on whether she had two masts or three; she has three, since what
+they agree on is that *Enterprise* shot her mizzen away, and it lies over her starboard side with its
+lateen yard and sail.
+
+##### The paint and the planks follow the sheer
+
+A ship's paint runs along her sheer, the curve her rail makes from stem to stern; a gradient up a hull is
+level, and a level band on a curved rail runs off it at both ends.  So the band is a
+[decal](materials.md#decals), its outline drawn along the sheer in the side view and projected across her.
+Below the waterline she is coppered, and that is a level line, so it is a blend by height; the two are one
+material on her hull, the decals in the blend's paint.
+
+Her planks follow the sheer too.  Each ship is planked by a [`planks`](pigments-and-patterns.md#planks)
+roughening [warped](pigments-and-patterns.md#warp) so its strakes run with her rail and close in toward her
+ends, which her paint fills but does not hide; her bulwarks are planked along her deck line, her deck laid in
+boards each its own shade with pitch between them, and her spars and fittings grained.
+
+##### Smoke
+
+`GunSmoke(long, reach, high)` is a box `long` meters along a ship's side, reaching `reach` downwind and
+`high` up, filled with a scattering [medium](scene-files.md#scattering): thick at the muzzles along its near
+edge, rising and spreading as it drifts, broken into billows by three scales of noise.  It is built with
+the muzzles along `X` at `z = 0` and drifting toward `+Z`, so turn it to put `+Z` downwind and stand it at
+the ship's side.  `variant` gives another billowing, and `thick` (0.25) how dense it is.  Black powder burns
+to a **white** smoke, nearly all of whose light is scattered rather than stopped, so this is lit by the sun
+and the sky as a cloud is, and a scene with it in wants `medium samples` above the sixteen it gets unless
+told, or it shows as grain.
+
+[`gallery/Local/showcase/the-enterprise-and-the-tripoli.igl`](../gallery/Local/showcase/the-enterprise-and-the-tripoli.igl)
+is the action itself, both ships and both broadsides' smoke.
+
 #### Water
 
 ```

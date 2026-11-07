@@ -87,6 +87,7 @@ public partial class LanguageParser
             "leopard" => (new LeopardPatternResolver(), new LeopardPattern().DiscretePigmentsNeeded),
             "marble" => (new MarblePatternResolver(), new MarblePattern().DiscretePigmentsNeeded),
             "planar" => (new PlanarPatternResolver(), new PlanarPattern().DiscretePigmentsNeeded),
+            "planks" => (ParsePlanksPattern(), new PlanksPattern().DiscretePigmentsNeeded),
             "radial" => (new RadialPatternResolver(), new RadialPattern().DiscretePigmentsNeeded),
             "ripples" => (new RipplesPatternResolver(), new RipplesPattern().DiscretePigmentsNeeded),
             "square" => (new SquarePatternResolver(), new SquarePattern().DiscretePigmentsNeeded),
@@ -168,11 +169,114 @@ public partial class LanguageParser
         // it.  It belongs to no pattern in particular: it stirs the points a pattern is asked
         // about, and a pattern goes on computing exactly what it always did.  Parsing it here
         // rather than in each case above is what makes that true of all of them at once.
+        //
+        // A warp is offered to every pattern for the same reason, and is read beside the turbulence, in either order:
+        // it bends the space before the turbulence stirs it whichever is written first.
         result.Resolver.TurbulenceResolver = ParseOptionalTurbulence();
+
+        if (ParseOptionalWarp() is { } warp)
+        {
+            result.Resolver.WarpResolver = warp;
+
+            if (result.Resolver.TurbulenceResolver is LiteralResolver<Turbulence> { Value: null })
+                result.Resolver.TurbulenceResolver = ParseOptionalTurbulence();
+        }
 
         ParsePatternShaping(result.Resolver);
 
         return result;
+    }
+
+    /// <summary>
+    /// This method reads a warp, if one stands at the current place: <c>warp {</c>, then any of <c>X { ... }</c>,
+    /// <c>Y { ... }</c> and <c>Z { ... }</c>, each a function of the point a coordinate the pattern reads is to be,
+    /// and a close brace.
+    /// </summary>
+    /// <returns>The warp's resolver, or <c>null</c> if no warp stands here.</returns>
+    private WarpResolver ParseOptionalWarp()
+    {
+        Token token = CurrentParser.PeekNextToken();
+
+        if (token is not KeywordToken || token.Text != "warp")
+            return null;
+
+        Token said = token;
+
+        _ = LanguageDsl.ParseClause(CurrentParser, "warpClause");
+
+        WarpResolver resolver = new ();
+        Clause part = LanguageDsl.ParseClause(CurrentParser, "warpEntryClause");
+
+        while (part != null)
+        {
+            FieldExpressionResolver function = new () { Term = part.Term() };
+            string axis = part.Text();
+            bool repeated = axis switch
+            {
+                "X" => resolver.XResolver is not null,
+                "Y" => resolver.YResolver is not null,
+                _ => resolver.ZResolver is not null
+            };
+
+            if (repeated)
+                throw new TokenException($"A warp says what {axis} is once.") { Token = part.Tokens[0] };
+
+            switch (axis)
+            {
+                case "X":
+                    resolver.XResolver = function;
+                    break;
+                case "Y":
+                    resolver.YResolver = function;
+                    break;
+                default:
+                    resolver.ZResolver = function;
+                    break;
+            }
+
+            part = LanguageDsl.ParseClause(CurrentParser, "warpEntryClause");
+        }
+
+        if (resolver.XResolver is null && resolver.YResolver is null && resolver.ZResolver is null)
+            throw new TokenException("A warp must say what at least one of X, Y and Z is.") { Token = said };
+
+        CurrentParser.MatchToken(true, () => "Expecting X, Y, Z or a close brace here.", BounderToken.CloseBrace);
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This method is used to parse out a planks pattern.
+    /// </summary>
+    /// <returns>The parsed planks pattern.</returns>
+    private PlanksPatternResolver ParsePlanksPattern()
+    {
+        PlanksPatternResolver resolver = new ();
+
+        ReadPlankSizesInto(resolver);
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This method reads any plank and seam sizes standing at the current place into the resolver given, and stops at
+    /// the first thing that is not one.  Like a brick's, they may stand before the colors or after them, and are read
+    /// by hand in both places.
+    /// </summary>
+    /// <param name="resolver">The planks resolver to read sizes into.</param>
+    private void ReadPlankSizesInto(PlanksPatternResolver resolver)
+    {
+        Clause clause = LanguageDsl.ParseClause(CurrentParser, "plankSizeClause");
+
+        while (clause != null)
+        {
+            if (clause.Text() is "plank")
+                resolver.PlankSizeResolver = new TermResolver<Vector> { Term = clause.Term() };
+            else
+                resolver.SeamSizeResolver = new TermResolver<double> { Term = clause.Term() };
+
+            clause = LanguageDsl.ParseClause(CurrentParser, "plankSizeClause");
+        }
     }
 
     /// <summary>

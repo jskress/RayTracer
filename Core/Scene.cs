@@ -2392,10 +2392,11 @@ public partial class Scene : NamedThing, IDisposable
             intersection.Material = material;
         }
 
-        // A blend of materials is settled where the ray met the surface, and the hit keeps what it settled on.
+        // A blend of materials is settled where the ray met the surface, and the hit keeps what it settled on, its
+        // decals laid where the blend was written; see Material.AnchoredAs.
         if (material.Blend is { } blend)
         {
-            material = blend.At(intersection, Shading);
+            material = blend.At(intersection, Shading).AnchoredAs(material.Anchor);
             intersection.Material = material;
         }
 

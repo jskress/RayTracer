@@ -27,6 +27,11 @@ public abstract class PatternResolver<TValue> : ObjectResolver<TValue>, IPattern
     public Resolver<Turbulence> TurbulenceResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how this pattern's space is bent, if it is.
+    /// </summary>
+    public Resolver<Warp> WarpResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for what this pattern's value is multiplied by before it
     /// is shaped.
     /// </summary>
@@ -58,6 +63,7 @@ public abstract class PatternResolver<TValue> : ObjectResolver<TValue>, IPattern
     protected override void SetProperties(RenderContext context, Variables variables, TValue value)
     {
         TurbulenceResolver.AssignTo(value, target => target.Turbulence, context, variables);
+        WarpResolver.AssignTo(value, target => target.Warp, context, variables);
         FrequencyResolver.AssignTo(value, target => target.Frequency, context, variables);
         PhaseResolver.AssignTo(value, target => target.Phase, context, variables);
         WaveResolver.AssignTo(value, target => target.Wave, context, variables);

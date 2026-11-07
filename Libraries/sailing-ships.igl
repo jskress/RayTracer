@@ -1,0 +1,1204 @@
+// Ships of the age of sail, each one a particular ship.
+//
+//     import 'sailing-ships' { SchoonerEnterprise, PolaccaTripoli, GunSmoke }
+//
+//     object SchoonerEnterprise(-28) { rotate X -7 }
+//     object PolaccaTripoli(-25)     { rotate X -4  translate [24, 0, -30] }
+//     object GunSmoke(28, 34, 17)    { rotate Y 180  translate Z -3.4 }
+//
+// | `SchoonerEnterprise` | The United States schooner Enterprise as she was in 1801: twelve guns, a topsail schooner. |
+// | `PolaccaTripoli` | The Tripolitan corsair Tripoli as Enterprise left her on 1 August 1801: fourteen guns, her mizzen shot away. |
+// | `GunSmoke` | The bank of powder smoke a broadside leaves, drifting downwind off a ship's side. |
+//
+// **These are in meters, face `+X`, and float with their waterline at `y = 0`**, as the [vessels](#vessels)
+// do: a ship dropped at the origin floats on a [`Water`](#water) surface laid at the origin.  `+Z` is the
+// ship's port side.
+//
+// **The first number is her trim**: how far her booms and yards are swung off her centerline, to port when
+// it is positive (the wind on her starboard side) and to starboard when negative; her sails, headsails and
+// colors all go with it.  The second, `belly`, is how full her sails are drawn.  She stands upright: how far
+// she heels is the scene's `rotate X` to say.
+//
+// Everything beginning with `Ent`, `Pol` or `Ship` is the machinery.
+
+import 'cloth' { Flag }
+
+// -- The schooner Enterprise ------------------------------------------------------------------------
+//
+// Built by Henry Spencer at Baltimore in 1799: 84 ft 7 in on deck, 60 ft on the keel, 22 ft 6 in in the
+// beam, 10 ft depth of hold, drawing 9 ft 6 in aft.  No draught of her survives; her lines here are those
+// of the Baltimore schooners of her day, sharp, low and dragged deep aft, and her rig, paint and ports are
+// Antoine Roux's portrait of her, drawn from life in 1806.
+
+// The height of her rail at a place along her, from aft to forward: her sheer, lowest a little abaft the
+// middle and rising 0.34 m to the taffrail and 0.64 m to the stem.  Her deck at the side lies 1.05 m under it.
+function EntRail(x) -> number { return 2.34 + 0.0029 * (x + 2) * (x + 2) }
+function EntDeck(x) -> number { return 1.29 + 0.0029 * (x + 2) * (x + 2) }
+
+// Her stations, each normalized: the rail at the top (y = 1), the rabbet at the keel at the bottom
+// (y = 0), and her greatest half-breadth at x = 1.  Drawn from the port rail across the top, down the
+// starboard side and up the port side, in eight segments apiece so that the same places run the
+// length of her.
+EntMid = path {
+    move to -0.962, 1
+    line to 0.962, 1
+    curve 0.985, 0.92, 1.0, 0.82 to 1.0, 0.72
+    curve 1.0, 0.55, 0.975, 0.38 to 0.88, 0.27
+    curve 0.72, 0.14, 0.30, 0.035 to 0.045, 0
+    line to -0.045, 0
+    curve -0.30, 0.035, -0.72, 0.14 to -0.88, 0.27
+    curve -0.975, 0.38, -1.0, 0.55 to -1.0, 0.72
+    curve -1.0, 0.82, -0.985, 0.92 to -0.962, 1
+}
+
+EntEntrance = path {
+    move to -0.97, 1
+    line to 0.97, 1
+    curve 0.99, 0.93, 1.0, 0.86 to 1.0, 0.78
+    curve 1.0, 0.62, 0.93, 0.49 to 0.78, 0.40
+    curve 0.50, 0.22, 0.20, 0.05 to 0.045, 0
+    line to -0.045, 0
+    curve -0.20, 0.05, -0.50, 0.22 to -0.78, 0.40
+    curve -0.93, 0.49, -1.0, 0.62 to -1.0, 0.78
+    curve -1.0, 0.86, -0.99, 0.93 to -0.97, 1
+}
+
+EntBow = path {
+    move to -1.0, 1
+    line to 1.0, 1
+    curve 0.995, 0.95, 0.98, 0.88 to 0.96, 0.80
+    curve 0.93, 0.68, 0.80, 0.55 to 0.62, 0.45
+    curve 0.40, 0.28, 0.15, 0.08 to 0.045, 0
+    line to -0.045, 0
+    curve -0.15, 0.08, -0.40, 0.28 to -0.62, 0.45
+    curve -0.80, 0.55, -0.93, 0.68 to -0.96, 0.80
+    curve -0.98, 0.88, -0.995, 0.95 to -1.0, 1
+}
+
+// The run: the hollow, wineglass sections the Baltimore builders drew aft, deep and narrow at the keel.
+EntRun = path {
+    move to -0.95, 1
+    line to 0.95, 1
+    curve 0.98, 0.90, 1.0, 0.80 to 1.0, 0.70
+    curve 1.0, 0.58, 0.93, 0.50 to 0.80, 0.45
+    curve 0.45, 0.30, 0.12, 0.10 to 0.045, 0
+    line to -0.045, 0
+    curve -0.12, 0.10, -0.45, 0.30 to -0.80, 0.45
+    curve -0.93, 0.50, -1.0, 0.58 to -1.0, 0.70
+    curve -1.0, 0.80, -0.98, 0.90 to -0.95, 1
+}
+
+// The counter, over the sternpost, where she is wide and shallow.
+EntCounter = path {
+    move to -0.97, 1
+    line to 0.97, 1
+    curve 0.99, 0.90, 1.0, 0.78 to 1.0, 0.65
+    curve 1.0, 0.45, 0.97, 0.28 to 0.85, 0.20
+    curve 0.60, 0.05, 0.20, 0.0 to 0.045, 0
+    line to -0.045, 0
+    curve -0.20, 0.0, -0.60, 0.05 to -0.85, 0.20
+    curve -0.97, 0.28, -1.0, 0.45 to -1.0, 0.65
+    curve -1.0, 0.78, -0.99, 0.90 to -0.97, 1
+}
+
+// What lies inside her bulwarks: her deck, cambered 0.12 m in a beam two units high, and straight sides
+// standing well clear of her rail.
+EntWell = path {
+    move to -1, 0
+    curve -0.33, 0.08, 0.33, 0.08 to 1, 0
+    line to 1, 1
+    line to -1, 1
+    close
+}
+
+// Her keel, stem and sternpost in profile, 0.3 m thick.
+EntBackbone = path {
+    move to -10.15, -2.9
+    line to 8.4, -1.9
+    curve 10.9, -1.88, 12.85, 0.0 to 13.05, 2.99
+    line to 12.70, 2.99
+    curve 12.30, 0.9, 10.6, -1.55 to 8.4, -1.6
+    line to -9.75, -2.6
+    line to -11.6, 0.6
+    line to -11.98, 0.55
+    close
+}
+
+// -- What she is made of ----------------------------------------------------------------------------
+
+// Black topsides, with the broad ochre band her ports are cut in, following her sheer, and a thin ochre
+// line at her wale.  Coppered below the waterline.
+EntBlack = material {
+    pigment [0.030, 0.030, 0.032]
+    specular 0.25  shininess 30
+    decal {
+        path {
+            move to -13.5, 2.5735  quad 0, 1.673 to 13.5, 2.8867
+            line to 13.5, 2.1667  quad 0, 0.953 to -13.5, 1.8535
+            close
+        }
+        color [0.70, 0.53, 0.24]  planar  min Y -5  max Y 5  fade from 70 to 85  rotate X -90
+    }
+    decal {
+        path {
+            move to -13.5, 1.4335  quad 0, 0.533 to 13.5, 1.7467
+            line to 13.5, 1.6867  quad 0, 0.473 to -13.5, 1.3735
+            close
+        }
+        color [0.70, 0.53, 0.24]  planar  min Y -5  max Y 5  fade from 70 to 85  rotate X -90
+    }
+}
+
+// Her copper has been at sea two years: browned, and not the new metal's pink.
+EntCopper = material { metal [0.46, 0.27, 0.18] edge [0.78, 0.52, 0.38]  roughness 0.55 }
+
+// Her planking, which shows through her paint: strakes two tenths of a meter wide and seven long, butts
+// staggered, running with her sheer and closing in by a quarter toward her ends, as planks taper into a
+// stem and a counter.  It is a roughening, so it is the blend's first material's, and a copy of her copper
+// carries it so that her keel and stem, painted the same way, are not planked too.  Her hull is lofted
+// along its own Z and turned onto her length, so the planks are turned back to lie along her X.
+EntHullCopper = material EntCopper {
+    normal planks {
+        plank size [7, 0.2, 1000]  seam size 0.04
+        warp { Y { (y - EntRail(x)) / (1 - 0.25 * (x / 13) * (x / 13)) + 0.1 } }
+        depth 0.05  rotate Y -90
+    }
+}
+
+EntHullPaint = material blend linear Y gradient {
+    [0, EntHullCopper, 0.4995, EntHullCopper, 0.5005, EntBlack]
+    scale [1, 20, 1]
+    translate Y -9.75
+}
+
+// The same for her keel, stem, rudder and head, which are profiles extruded across her and turned on their
+// sides: their own Z is her height.  They carry no band.
+EntTimberBlack = material { pigment [0.030, 0.030, 0.032]  specular 0.25  shininess 30 }
+
+EntProfilePaint = material blend linear Z gradient {
+    [0, EntCopper, 0.4995, EntCopper, 0.5005, EntTimberBlack]
+    scale [1, 1, 20]
+    translate Z -9.75
+}
+
+// Her deck, scrubbed pine laid fore and aft in boards fourteen centimeters wide, each its own shade, the seams
+// payed with pitch; a king plank down her middle.  Read in her own frame, as her planking is.
+EntDeckPlanking = material {
+    pigment planks {
+        plank size [7, 1000, 0.14]  seam size 0.016
+        [0, [0.10, 0.08, 0.06], 0.5, [0.63, 0.55, 0.42], 1, [0.54, 0.46, 0.34]]
+        rotate Y -90
+    }
+    specular 0.08  shininess 12
+}
+
+// The insides of her bulwarks, painted red over strakes that run with her deck.  The deck and the bulwarks are
+// one surface, so this roughening is the deck's too, where it finds nothing but the odd seam fore and aft.
+EntRed = material { pigment [0.40, 0.10, 0.07]  specular 0.10  shininess 16 }
+
+EntBulwarkRed = material EntRed {
+    normal planks {
+        plank size [7, 0.2, 1000]  seam size 0.03
+        warp { Y { y - EntDeck(x) } }
+        depth 0.06  rotate Y -90
+    }
+}
+
+EntDeckAndBulwarks = material blend facing { [0.74, EntBulwarkRed, 0.80, EntDeckPlanking] }
+
+// -- Her hull ---------------------------------------------------------------------------------------
+
+// Lofted from sixteen stations, aft to forward, each standing on her rabbet and reaching to her rail;
+// cut square at her raked transom; her deck cut in under her bulwarks; six ports a side.
+primitive EntHull() -> group {
+    return group {
+        difference {
+            intersection {
+                loft {
+                    section { path EntCounter   scale [2.25, EntRail(-13.2) - 1.40, 1]   translate [0, 1.40, -13.2] }
+                    section { path EntCounter   scale [2.50, EntRail(-12.4) - 0.85, 1]   translate [0, 0.85, -12.4] }
+                    section { path EntRun       scale [2.70, EntRail(-11.6) - 0.05, 1]   translate [0, 0.05, -11.6] }
+                    section { path EntRun       scale [2.86, EntRail(-10.6) + 1.68, 1]   translate [0, -1.68, -10.6] }
+                    section { path EntRun       scale [3.00, EntRail(-9.4) + 2.573, 1]   translate [0, -2.573, -9.4] }
+                    section { path EntRun       scale [3.22, EntRail(-7.0) + 2.44, 1]    translate [0, -2.44, -7.0] }
+                    section { path EntMid       scale [3.38, EntRail(-4.0) + 2.28, 1]    translate [0, -2.28, -4.0] }
+                    section { path EntMid       scale [3.43, EntRail(-0.5) + 2.09, 1]    translate [0, -2.09, -0.5] }
+                    section { path EntMid       scale [3.41, EntRail(2.5) + 1.92, 1]     translate [0, -1.92, 2.5] }
+                    section { path EntEntrance  scale [3.22, EntRail(5.2) + 1.775, 1]    translate [0, -1.775, 5.2] }
+                    section { path EntEntrance  scale [2.88, EntRail(7.6) + 1.644, 1]    translate [0, -1.644, 7.6] }
+                    section { path EntBow       scale [2.30, EntRail(9.6) + 1.45, 1]     translate [0, -1.45, 9.6] }
+                    section { path EntBow       scale [1.68, EntRail(10.9) + 0.70, 1]    translate [0, -0.70, 10.9] }
+                    section { path EntBow       scale [1.05, EntRail(11.9) - 0.58, 1]    translate [0, 0.58, 11.9] }
+                    section { path EntBow       scale [0.50, EntRail(12.55) - 1.97, 1]   translate [0, 1.97, 12.55] }
+                    section { path EntBow       scale [0.12, EntRail(12.89) - 2.80, 1]   translate [0, 2.80, 12.89] }
+                    rotate Y 90
+                }
+                // The transom: a plane raking aft from the tuck to the taffrail.
+                cube { scale 50  translate X 50  rotate Z 25.55  translate [-11.8, 0.4, 0]  material EntTimberBlack }
+            }
+            loft {
+                section { path EntWell  scale [2.30, 2, 1]  translate [0, EntDeck(-12.25), -12.25] }
+                section { path EntWell  scale [2.62, 2, 1]  translate [0, EntDeck(-11.0), -11.0] }
+                section { path EntWell  scale [2.93, 2, 1]  translate [0, EntDeck(-8.0), -8.0] }
+                section { path EntWell  scale [3.13, 2, 1]  translate [0, EntDeck(-4.0), -4.0] }
+                section { path EntWell  scale [3.18, 2, 1]  translate [0, EntDeck(-0.5), -0.5] }
+                section { path EntWell  scale [3.16, 2, 1]  translate [0, EntDeck(2.5), 2.5] }
+                section { path EntWell  scale [2.98, 2, 1]  translate [0, EntDeck(5.2), 5.2] }
+                section { path EntWell  scale [2.62, 2, 1]  translate [0, EntDeck(7.6), 7.6] }
+                section { path EntWell  scale [2.03, 2, 1]  translate [0, EntDeck(9.6), 9.6] }
+                section { path EntWell  scale [1.30, 2, 1]  translate [0, EntDeck(10.9), 10.9] }
+                section { path EntWell  scale [0.55, 2, 1]  translate [0, EntDeck(11.9), 11.9] }
+                rotate Y 90
+                material EntDeckAndBulwarks
+            }
+            cube { scale [0.31, 0.25, 4]  translate [9.0, EntDeck(9.0) + 0.57, 0]    material EntRed }
+            cube { scale [0.31, 0.25, 4]  translate [6.0, EntDeck(6.0) + 0.57, 0]    material EntRed }
+            cube { scale [0.31, 0.25, 4]  translate [1.6, EntDeck(1.6) + 0.57, 0]    material EntRed }
+            cube { scale [0.31, 0.25, 4]  translate [-4.6, EntDeck(-4.6) + 0.57, 0]  material EntRed }
+            cube { scale [0.31, 0.25, 4]  translate [-8.2, EntDeck(-8.2) + 0.57, 0]  material EntRed }
+            cube { scale [0.31, 0.25, 4]  translate [-10.6, EntDeck(-10.6) + 0.57, 0] material EntRed }
+        }
+        extrusion { path EntBackbone  min Y -0.15  max Y 0.15  rotate X -90  material EntProfilePaint }
+        extrusion { path EntRudder  min Y -0.11  max Y 0.11  rotate X -90  material EntProfilePaint }
+        extrusion { path EntKnee  min Y -0.13  max Y 0.13  rotate X -90  material EntProfilePaint }
+        material EntHullPaint
+    }
+}
+
+
+// -- Her fittings --------------------------------------------------------------------------------
+
+ShipIron = material { pigment [0.055, 0.055, 0.06]  specular 0.35  shininess 40 }
+// Oak for her fittings, faintly figured.
+ShipTimber = material {
+    pigment bozo { turbulence 0.5  [0, [0.32, 0.22, 0.13], 1, [0.39, 0.27, 0.16]]  scale 0.15 }
+    specular 0.10  shininess 16
+}
+EntBoatPaint = material { pigment [0.80, 0.78, 0.72]  specular 0.20  shininess 30 }
+
+// A six-pounder on its truck carriage, run out: its muzzle at the origin, its bore along +Z, the deck
+// 0.55 m under its axis.
+ShipGunBarrel = path {
+    move to 0, -0.14
+    line to 0.05, -0.14  line to 0.06, -0.06  line to 0.16, 0
+    line to 0.16, 0.62  line to 0.145, 0.64  line to 0.138, 1.02  line to 0.125, 1.04
+    line to 0.112, 1.80  line to 0.13, 1.86  line to 0.13, 2.0  line to 0.046, 2.0  line to 0.046, 1.7  line to 0, 1.7
+}
+
+primitive ShipGun() -> group {
+    return group {
+        lathe { path ShipGunBarrel  rotate X 90  translate Z -2.0  material ShipIron }
+        cylinder { min Y -0.26  max Y 0.26  scale [0.05, 1, 0.05]  rotate Z 90  translate Z -1.38  material ShipIron }
+        cube { scale [0.05, 0.22, 0.62]  translate [0.21, -0.30, -1.15]  material EntRed }
+        cube { scale [0.05, 0.22, 0.62]  translate [-0.21, -0.30, -1.15]  material EntRed }
+        cylinder { min Y -0.32  max Y 0.32  scale [0.15, 1, 0.15]  rotate Z 90  translate [0, -0.40, -0.68]  material EntRed }
+        cylinder { min Y -0.32  max Y 0.32  scale [0.15, 1, 0.15]  rotate Z 90  translate [0, -0.40, -1.58]  material EntRed }
+    }
+}
+
+// A gun at each port, both sides, its muzzle a quarter meter outside her side there.
+primitive EntGuns() -> group {
+    return group {
+        object ShipGun() { translate [9.0, EntDeck(9.0) + 0.55, 2.70] }
+        object ShipGun() { translate [6.0, EntDeck(6.0) + 0.55, 3.25] }
+        object ShipGun() { translate [1.6, EntDeck(1.6) + 0.55, 3.53] }
+        object ShipGun() { translate [-4.6, EntDeck(-4.6) + 0.55, 3.46] }
+        object ShipGun() { translate [-8.2, EntDeck(-8.2) + 0.55, 3.21] }
+        object ShipGun() { translate [-10.6, EntDeck(-10.6) + 0.55, 2.97] }
+        object ShipGun() { rotate Y 180  translate [9.0, EntDeck(9.0) + 0.55, -2.70] }
+        object ShipGun() { rotate Y 180  translate [6.0, EntDeck(6.0) + 0.55, -3.25] }
+        object ShipGun() { rotate Y 180  translate [1.6, EntDeck(1.6) + 0.55, -3.53] }
+        object ShipGun() { rotate Y 180  translate [-4.6, EntDeck(-4.6) + 0.55, -3.46] }
+        object ShipGun() { rotate Y 180  translate [-8.2, EntDeck(-8.2) + 0.55, -3.21] }
+        object ShipGun() { rotate Y 180  translate [-10.6, EntDeck(-10.6) + 0.55, -2.97] }
+    }
+}
+
+// Her rudder, hung on the sternpost's after edge, its head coming up through her counter to the tiller.
+EntRudder = path {
+    move to -10.15, -2.85  line to -11.98, 0.55  line to -12.40, 0.62  line to -11.0, -2.85  close
+}
+
+// The knee of her head, carried forward of the stem under the bowsprit to a scrolled billet head.
+EntKnee = path {
+    move to 12.35, 0.1
+    curve 13.0, 0.5, 13.75, 1.4 to 14.15, 2.45
+    curve 14.35, 2.95, 14.45, 3.15 to 14.2, 3.2
+    line to 13.3, 3.2
+    line to 12.8, 2.95
+    curve 12.75, 1.9, 12.6, 0.9 to 12.35, 0.1
+}
+
+// An anchor, its ring at the origin and its shank hanging down -Y: the stock across the top, the arms
+// at the crown.
+primitive ShipAnchor() -> group {
+    return group {
+        cylinder { min Y -2.1  max Y 0  scale [0.06, 1, 0.06]  material ShipIron }
+        cylinder { min Y -1.0  max Y 1.0  scale [0.08, 1, 0.08]  rotate X 90  translate Y -0.25  material ShipTimber }
+        cylinder { min Y 0  max Y 0.9  scale [0.055, 1, 0.055]  rotate Z 50  translate Y -2.1  material ShipIron }
+        cylinder { min Y 0  max Y 0.9  scale [0.055, 1, 0.055]  rotate Z -50  translate Y -2.1  material ShipIron }
+        cube { scale [0.18, 0.03, 0.14]  rotate Z 50  translate [-0.62, -1.55, 0]  material ShipIron }
+        cube { scale [0.18, 0.03, 0.14]  rotate Z -50  translate [0.62, -1.55, 0]  material ShipIron }
+    }
+}
+
+// A boat for a schooner of war: a cutter of six and a half meters, stowed on chocks over the main hatch.
+primitive EntBoat() -> group {
+    return group {
+        loft {
+            section { path EntCounter  scale [0.62, 0.66, 1]  translate [0, 0.12, -3.2] }
+            section { path EntRun      scale [0.86, 0.76, 1]  translate [0, 0.02, -2.0] }
+            section { path EntMid      scale [0.95, 0.80, 1]  translate [0, 0, 0] }
+            section { path EntEntrance scale [0.86, 0.82, 1]  translate [0, 0.01, 1.8] }
+            section { path EntBow      scale [0.40, 0.84, 1]  translate [0, 0.06, 2.9] }
+            section { path EntBow      scale [0.06, 0.86, 1]  translate [0, 0.10, 3.3] }
+            rotate Y 90
+            material EntBoatPaint
+        }
+    }
+}
+
+// Her deck: hatches, the windlass at the bow with its bitts, the companion and skylight aft, the tiller,
+// and the boat.
+primitive EntDeckFittings() -> group {
+    return group {
+        cube { scale [0.55, 0.18, 0.55]  translate [8.4, EntDeck(8.4) + 0.12, 0]   material ShipTimber }
+        cube { scale [0.8, 0.18, 0.7]    translate [0.0, EntDeck(0.0) + 0.12, 0]   material ShipTimber }
+        cube { scale [0.5, 0.35, 0.45]   translate [-8.9, EntDeck(-8.9) + 0.25, 0] material ShipTimber }
+        cube { scale [0.45, 0.22, 0.6]   translate [-6.9, EntDeck(-6.9) + 0.15, 0] material ShipTimber }
+        cylinder { min Y -1.2  max Y 1.2  scale [0.24, 1, 0.24]  rotate X 90  translate [10.6, EntDeck(10.6) + 0.42, 0]  material ShipTimber }
+        cube { scale [0.14, 0.45, 0.14]  translate [10.6, EntDeck(10.6) + 0.4, 1.3]   material ShipTimber }
+        cube { scale [0.14, 0.45, 0.14]  translate [10.6, EntDeck(10.6) + 0.4, -1.3]  material ShipTimber }
+        cylinder { min Y 0  max Y 1.0  scale [0.13, 1, 0.13]  translate [-12.15, EntDeck(-12.15) - 0.3, 0]  material ShipTimber }
+        cylinder { min Y 0  max Y 2.8  scale [0.06, 1, 0.06]  rotate Z -86  translate [-12.15, EntDeck(-12.15) + 0.62, 0]  material ShipTimber }
+        cylinder { min Y 0  max Y 1.1  scale [0.11, 1, 0.11]  translate [8.0, EntDeck(8.0), 0.9]  material ShipIron }
+        object EntBoat() { translate [0.2, EntDeck(0.2) + 0.38, 0] }
+        cube { scale [0.12, 0.2, 0.8]  translate [-1.6, EntDeck(-1.6) + 0.15, 0]  material ShipTimber }
+        cube { scale [0.12, 0.2, 0.8]  translate [2.0, EntDeck(2.0) + 0.15, 0]  material ShipTimber }
+    }
+}
+
+// -- Her people ----------------------------------------------------------------------------------
+
+ShipSkin = material { pigment [0.70, 0.50, 0.38]  specular 0.08  shininess 12 }
+ShipSlops = material { pigment [0.82, 0.80, 0.74]  specular 0.04  shininess 8 }
+ShipHat = material { pigment [0.07, 0.065, 0.06]  specular 0.10  shininess 16 }
+
+// A man's coat: a blue jacket (1) or a red shirt (2).
+primitive ShipCoat(dress) -> material {
+    if (dress == 2) {
+        return material { pigment [0.62, 0.20, 0.16]  specular 0.04  shininess 8 }
+    }
+    else {
+        return material { pigment [0.10, 0.12, 0.20]  specular 0.06  shininess 10 }
+    }
+}
+
+// A man standing on y = 0 facing +X, 1.72 m tall: white trousers, his coat by `dress`, a round hat, and bent
+// `lean` degrees at the hips toward his work.
+primitive ShipHand(dress = 1, lean = 0) -> group {
+    return group {
+        cylinder { min Y 0  max Y 0.86  scale [0.075, 1, 0.075]  translate Z 0.1   material ShipSlops }
+        cylinder { min Y 0  max Y 0.86  scale [0.075, 1, 0.075]  translate Z -0.1  material ShipSlops }
+        group {
+            superellipsoid { east 0.6  north 0.8  scale [0.13, 0.32, 0.21]  translate Y 0.3 }
+            cylinder { min Y -0.55  max Y 0  scale [0.055, 1, 0.055]  rotate X -12  translate [0, 0.56, 0.25] }
+            cylinder { min Y -0.55  max Y 0  scale [0.055, 1, 0.055]  rotate X 12  translate [0, 0.56, -0.25] }
+            sphere { scale [0.10, 0.12, 0.10]  translate Y 0.75  material ShipSkin }
+            cylinder { min Y 0  max Y 0.09  scale [0.16, 1, 0.16]  translate Y 0.82  material ShipHat }
+            cylinder { min Y 0  max Y 0.12  scale [0.09, 1, 0.09]  translate Y 0.84  material ShipHat }
+            material ShipCoat(dress)
+            rotate Z 0 - lean
+            translate Y 0.86
+        }
+    }
+}
+
+// A marine: a blue coat crossed with white belts, his musket at his shoulder, aimed along +X.
+primitive ShipMarine() -> group {
+    return group {
+        object ShipHand(1, 8)
+        group {
+            cube { scale [0.135, 0.025, 0.215]  rotate X 38  translate Y 0.33  material ShipSlops }
+            cube { scale [0.135, 0.025, 0.215]  rotate X -38  translate Y 0.33  material ShipSlops }
+            cylinder { min Y 0  max Y 1.45  scale [0.014, 1, 0.014]  rotate Z -86  translate [-0.35, 0.55, -0.12]  material ShipTimber }
+            rotate Z -8
+            translate Y 0.86
+        }
+    }
+}
+
+// Her crew at quarters, fighting her starboard guns -- four at each -- with the officers and the helmsman
+// aft, and marines in the starboard shrouds and at her rail, all facing the enemy to starboard.
+primitive EntGunCrew(x, hb) -> group {
+    return group {
+        object ShipHand(1, 22) { rotate Y 90  translate [x + 0.75, EntDeck(x), 0.6 - hb] }
+        object ShipHand(2, 22) { rotate Y 90  translate [x - 0.75, EntDeck(x), 0.6 - hb] }
+        object ShipHand(1, 8)  { rotate Y 90  translate [x + 0.45, EntDeck(x), 2.6 - hb] }
+        object ShipHand(2, 32) { rotate Y 75  translate [x - 0.6, EntDeck(x), 2.3 - hb] }
+    }
+}
+
+primitive EntCrew() -> group {
+    return group {
+        object EntGunCrew(9.0, 2.45)
+        object EntGunCrew(6.0, 3.0)
+        object EntGunCrew(1.6, 3.28)
+        object EntGunCrew(-4.6, 3.21)
+        object EntGunCrew(-8.2, 2.96)
+        object EntGunCrew(-10.6, 2.72)
+        object ShipHand(1, 0)  { rotate Y 120  translate [-11.2, EntDeck(-11.2), 0.7] }
+        object ShipHand(1, 0)  { rotate Y 95   translate [-10.6, EntDeck(-10.6), -0.5] }
+        object ShipHand(2, 10) { rotate Y 180  translate [-9.6, EntDeck(-9.6), 0.25] }
+        object ShipMarine() { rotate Y 90  translate [-6.06, 5.0, -2.5] }
+        object ShipMarine() { rotate Y 90  translate [-5.93, 6.5, -2.05] }
+        object ShipMarine() { rotate Y 90  translate [3.72, 5.5, -2.45] }
+        object ShipMarine() { rotate Y 90  translate [-1.0, EntDeck(-1.0), -2.75] }
+        object ShipMarine() { rotate Y 90  translate [-2.1, EntDeck(-2.1), -2.75] }
+        object ShipMarine() { rotate Y 90  translate [3.1, EntDeck(3.1), -2.8] }
+        object ShipMarine() { rotate Y 90  translate [4.3, EntDeck(4.3), -2.75] }
+    }
+}
+
+// -- Her colors ----------------------------------------------------------------------------------
+
+// The flag of 1795 to 1818: fifteen stripes and fifteen stars, flown at the main peak, four meters on the
+// fly.  The stripes are the cloth; the canton and its stars are painted over it.
+EntEnsign = material {
+    pigment linear Y gradient {
+        banded [0, [0.62, 0.07, 0.09], 0.0667, [0.92, 0.90, 0.86], 0.1333, [0.62, 0.07, 0.09], 0.2, [0.92, 0.90, 0.86],
+                0.2667, [0.62, 0.07, 0.09], 0.3333, [0.92, 0.90, 0.86], 0.4, [0.62, 0.07, 0.09], 0.4667, [0.92, 0.90, 0.86],
+                0.5333, [0.62, 0.07, 0.09], 0.6, [0.92, 0.90, 0.86], 0.6667, [0.62, 0.07, 0.09], 0.7333, [0.92, 0.90, 0.86],
+                0.8, [0.62, 0.07, 0.09], 0.8667, [0.92, 0.90, 0.86], 0.9333, [0.62, 0.07, 0.09]]
+        scale [1, 2.4, 1]
+    }
+    specular 0.04  shininess 8  ambient 0.12
+    decal {
+        path { move to 0, 1.12  line to 1.68, 1.12  line to 1.68, 2.4  line to 0, 2.4  close }
+        color [0.10, 0.12, 0.33]  planar  min Y -3  max Y 3  no fade  rotate X -90
+    }
+    decal {
+        path {
+            move to 0.2100, 2.3570  line to 0.1909, 2.2983  line to 0.1292, 2.2983  line to 0.1791, 2.2620  line to 0.1600, 2.2032  line to 0.2100, 2.2395  line to 0.2600, 2.2032  line to 0.2409, 2.2620  line to 0.2908, 2.2983  line to 0.2291, 2.2983  close
+            move to 0.6300, 2.3570  line to 0.6109, 2.2983  line to 0.5492, 2.2983  line to 0.5991, 2.2620  line to 0.5800, 2.2032  line to 0.6300, 2.2395  line to 0.6800, 2.2032  line to 0.6609, 2.2620  line to 0.7108, 2.2983  line to 0.6491, 2.2983  close
+            move to 1.0500, 2.3570  line to 1.0309, 2.2983  line to 0.9692, 2.2983  line to 1.0191, 2.2620  line to 1.0000, 2.2032  line to 1.0500, 2.2395  line to 1.1000, 2.2032  line to 1.0809, 2.2620  line to 1.1308, 2.2983  line to 1.0691, 2.2983  close
+            move to 0.6300, 2.1010  line to 0.6109, 2.0423  line to 0.5492, 2.0423  line to 0.5991, 2.0060  line to 0.5800, 1.9472  line to 0.6300, 1.9835  line to 0.6800, 1.9472  line to 0.6609, 2.0060  line to 0.7108, 2.0423  line to 0.6491, 2.0423  close
+            move to 1.0500, 2.1010  line to 1.0309, 2.0423  line to 0.9692, 2.0423  line to 1.0191, 2.0060  line to 1.0000, 1.9472  line to 1.0500, 1.9835  line to 1.1000, 1.9472  line to 1.0809, 2.0060  line to 1.1308, 2.0423  line to 1.0691, 2.0423  close
+            move to 1.4700, 2.1010  line to 1.4509, 2.0423  line to 1.3892, 2.0423  line to 1.4391, 2.0060  line to 1.4200, 1.9472  line to 1.4700, 1.9835  line to 1.5200, 1.9472  line to 1.5009, 2.0060  line to 1.5508, 2.0423  line to 1.4891, 2.0423  close
+            move to 0.2100, 1.8450  line to 0.1909, 1.7863  line to 0.1292, 1.7863  line to 0.1791, 1.7500  line to 0.1600, 1.6912  line to 0.2100, 1.7275  line to 0.2600, 1.6912  line to 0.2409, 1.7500  line to 0.2908, 1.7863  line to 0.2291, 1.7863  close
+            move to 0.6300, 1.8450  line to 0.6109, 1.7863  line to 0.5492, 1.7863  line to 0.5991, 1.7500  line to 0.5800, 1.6912  line to 0.6300, 1.7275  line to 0.6800, 1.6912  line to 0.6609, 1.7500  line to 0.7108, 1.7863  line to 0.6491, 1.7863  close
+            move to 1.0500, 1.8450  line to 1.0309, 1.7863  line to 0.9692, 1.7863  line to 1.0191, 1.7500  line to 1.0000, 1.6912  line to 1.0500, 1.7275  line to 1.1000, 1.6912  line to 1.0809, 1.7500  line to 1.1308, 1.7863  line to 1.0691, 1.7863  close
+            move to 0.6300, 1.5890  line to 0.6109, 1.5303  line to 0.5492, 1.5303  line to 0.5991, 1.4940  line to 0.5800, 1.4352  line to 0.6300, 1.4715  line to 0.6800, 1.4352  line to 0.6609, 1.4940  line to 0.7108, 1.5303  line to 0.6491, 1.5303  close
+            move to 1.0500, 1.5890  line to 1.0309, 1.5303  line to 0.9692, 1.5303  line to 1.0191, 1.4940  line to 1.0000, 1.4352  line to 1.0500, 1.4715  line to 1.1000, 1.4352  line to 1.0809, 1.4940  line to 1.1308, 1.5303  line to 1.0691, 1.5303  close
+            move to 1.4700, 1.5890  line to 1.4509, 1.5303  line to 1.3892, 1.5303  line to 1.4391, 1.4940  line to 1.4200, 1.4352  line to 1.4700, 1.4715  line to 1.5200, 1.4352  line to 1.5009, 1.4940  line to 1.5508, 1.5303  line to 1.4891, 1.5303  close
+            move to 0.2100, 1.3330  line to 0.1909, 1.2743  line to 0.1292, 1.2743  line to 0.1791, 1.2380  line to 0.1600, 1.1792  line to 0.2100, 1.2155  line to 0.2600, 1.1792  line to 0.2409, 1.2380  line to 0.2908, 1.2743  line to 0.2291, 1.2743  close
+            move to 0.6300, 1.3330  line to 0.6109, 1.2743  line to 0.5492, 1.2743  line to 0.5991, 1.2380  line to 0.5800, 1.1792  line to 0.6300, 1.2155  line to 0.6800, 1.1792  line to 0.6609, 1.2380  line to 0.7108, 1.2743  line to 0.6491, 1.2743  close
+            move to 1.0500, 1.3330  line to 1.0309, 1.2743  line to 0.9692, 1.2743  line to 1.0191, 1.2380  line to 1.0000, 1.1792  line to 1.0500, 1.2155  line to 1.1000, 1.1792  line to 1.0809, 1.2380  line to 1.1308, 1.2743  line to 1.0691, 1.2743  close
+        }
+        color [0.92, 0.90, 0.86]  planar  min Y -3  max Y 3  no fade  rotate X -90
+    }
+}
+
+// The commission pennant at the main topmast head: a blue hoist, and a long fly red over white.
+EntPennant = material {
+    pigment linear Y gradient { banded [0, [0.92, 0.90, 0.86], 0.5, [0.62, 0.07, 0.09]]  scale [1, 0.36, 1] }
+    specular 0.04  shininess 8  ambient 0.12
+    decal {
+        path { move to 0, 0  line to 0.9, 0  line to 0.9, 0.36  line to 0, 0.36  close }
+        color [0.10, 0.12, 0.33]  planar  min Y -3  max Y 3  no fade  rotate X -90
+    }
+}
+
+// -- Spars and sails ------------------------------------------------------------------------------
+
+// Her spars, oiled pine with their mastheads and yardarms blacked.
+// Oiled pine, its grain streaking along the spar: read in a spar's own space, where its length is Y and its
+// round is one across.
+ShipSpar = material {
+    pigment bozo {
+        turbulence 0.4
+        [0, [0.44, 0.33, 0.20], 0.5, [0.52, 0.40, 0.25], 1, [0.47, 0.35, 0.22]]
+        scale [0.18, 2.5, 0.18]
+    }
+    specular 0.20  shininess 30
+}
+ShipBlackedSpar = material { pigment [0.05, 0.045, 0.04]  specular 0.20  shininess 30 }
+
+// Sailcloth: flax canvas, weathered to a warm off-white.  A sail encloses nothing, so the sun behind
+// one lights the face toward the eye, as it does the real thing.
+ShipCanvas = material { pigment [0.86, 0.82, 0.71]  specular 0.04  shininess 8  ambient 0.12 }
+
+// The same cloth made up of bolts 60 cm wide, their seams showing as fine darker lines: running up and
+// down a sail whose panels stand along Y and lie across X, or across one whose panels lie across Z.
+ShipCanvasAlongX = material {
+    pigment linear X gradient { [0, [0.70, 0.66, 0.56], 0.035, [0.86, 0.82, 0.71], 0.965, [0.86, 0.82, 0.71], 1, [0.70, 0.66, 0.56]]  scale 0.6 }
+    specular 0.04  shininess 8  ambient 0.12
+}
+
+ShipCanvasAlongZ = material {
+    pigment linear Z gradient { [0, [0.70, 0.66, 0.56], 0.035, [0.86, 0.82, 0.71], 0.965, [0.86, 0.82, 0.71], 1, [0.70, 0.66, 0.56]]  scale 0.6 }
+    specular 0.04  shininess 8  ambient 0.12
+}
+
+// A sail between four corners -- the head's two (a at the luff, b at the leech) and the foot's two (c at
+// the leech, d at the luff) -- bellied by the vector n at its middle, falling away to nothing at its edges.
+// A triangular sail gives its head twice.  `cloth` is what it is made of.
+primitive ShipSail(ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz, nx, ny, nz, cloth) -> parametric {
+    return parametric {
+        u [0, 1]
+        v [0, 1]
+
+        X { (1 - v) * ((1 - u) * dx + u * cx) + v * ((1 - u) * ax + u * bx) + nx * sin(3.14159265 * u) * sin(3.14159265 * v) }
+        Y { (1 - v) * ((1 - u) * dy + u * cy) + v * ((1 - u) * ay + u * by) + ny * sin(3.14159265 * u) * sin(3.14159265 * v) }
+        Z { (1 - v) * ((1 - u) * dz + u * cz) + v * ((1 - u) * az + u * bz) + nz * sin(3.14159265 * u) * sin(3.14159265 * v) }
+
+        material cloth
+    }
+}
+
+// A spar along +Y from its heel at the origin, `long` and `r` in radius.
+primitive ShipPole(long, r) -> cylinder {
+    return cylinder { min Y 0  max Y long  scale [r, 1, r] }
+}
+
+// A spar lying along Z, centered on the origin.
+primitive ShipYard(long, r) -> cylinder {
+    return cylinder { min Y -0.5 * long  max Y 0.5 * long  scale [r, 1, r]  rotate X 90 }
+}
+
+// -- The Enterprise's rig ---------------------------------------------------------------------------
+//
+// From Roux: both masts raked about twelve degrees, the foremast stepped 6.5 m abaft the stem head and the
+// mainmast a little abaft her middle; a fore yard and a topsail yard on the foremast, and gaffs on both,
+// the main boom reaching four meters past her taffrail.  Each mast is built in its own frame, its heel on
+// the deck at the origin and its length up +Y, then raked and stepped.
+//
+// `trim` is how far her booms and yards are swung off her centerline, to port when it is positive (the
+// wind on her starboard side) and to starboard when negative; `belly` how deep her sails are drawn.
+
+primitive EntForemast(trim, belly) -> group {
+    side = trim >= 0 ? 1 : -1
+    return group {
+        // The lower mast, its head, the crosstrees and the topmast in its doublings, forward of the head.
+        object ShipPole(14.8, 0.19)  { translate Y -0.5  material ShipSpar }
+        object ShipPole(1.8, 0.17)   { translate Y 13.2  material ShipBlackedSpar }
+        cube { scale [0.45, 0.06, 1.25]  translate [0.12, 13.2, 0]  material ShipBlackedSpar }
+        object ShipPole(10.0, 0.12)  { translate [0.36, 11.6, 0]  material ShipSpar }
+        cube { scale [0.42, 0.1, 0.2]  translate [0.18, 15.0, 0]  material ShipBlackedSpar }
+
+        // The fore yard, its course furled along it, and the topsail yard hoisted: both braced by the trim.
+        group {
+            object ShipYard(12.0, 0.12)  { translate [0.42, 13.0, 0]  material ShipSpar }
+            object ShipYard(10.8, 0.22)  { scale [1, 1.4, 1]  translate [0.42, 12.78, 0]  material ShipCanvas }
+            object ShipYard(9.0, 0.09)   { translate [0.48, 19.6, 0]  material ShipSpar }
+            // The fore topsail, from its yard down to the fore yard's arms, bellied forward.
+            object ShipSail(0.48, 19.45, 4.3,  0.48, 19.45, -4.3,  0.42, 13.15, -5.6,  0.42, 13.15, 5.6,  1.6 * belly, 0, 0,  ShipCanvasAlongZ)
+            rotate Y 0 - trim * 0.8
+        }
+
+        // The fore gaff and the foresail, loose-footed, its clew forward of the mainmast.
+        group {
+            cylinder { min Y 0  max Y 6.0  scale [0.09, 1, 0.09]  rotate Z 50  translate [-0.25, 12.4, 0]  material ShipSpar }
+            object ShipSail(-0.3, 12.3, 0,  -4.8, 16.1, 0,  -7.4, 2.6, 0,  -0.3, 1.2, 0,  0, 0, 2.2 * belly * side,  ShipCanvasAlongX)
+            rotate Y trim * 0.7
+        }
+    }
+}
+
+primitive EntMainmast(trim, belly) -> group {
+    side = trim >= 0 ? 1 : -1
+    return group {
+        object ShipPole(15.0, 0.20)  { translate Y -0.5  material ShipSpar }
+        object ShipPole(1.8, 0.18)   { translate Y 12.8  material ShipBlackedSpar }
+        cube { scale [0.45, 0.06, 1.3]  translate [0.12, 12.8, 0]  material ShipBlackedSpar }
+        object ShipPole(9.8, 0.12)   { translate [0.36, 11.2, 0]  material ShipSpar }
+        cube { scale [0.42, 0.1, 0.2]  translate [0.18, 14.6, 0]  material ShipBlackedSpar }
+
+        group {
+            // The main boom and the main gaff.
+            cylinder { min Y 0  max Y 13.5  scale [0.13, 1, 0.13]  rotate Z 76  translate [-0.25, 1.4, 0]  material ShipSpar }
+            cylinder { min Y 0  max Y 7.0  scale [0.10, 1, 0.10]  rotate Z 52  translate [-0.25, 12.0, 0]  material ShipSpar }
+            // The mainsail, and the gaff topsail above it, from the topmast's head to the gaff's peak.
+            object ShipSail(-0.3, 11.9, 0,  -5.7, 16.2, 0,  -12.9, 4.6, 0,  -0.3, 1.6, 0,  0, 0, 2.8 * belly * side,  ShipCanvasAlongX)
+            object ShipSail(0.25, 20.4, 0,  0.25, 20.4, 0,  -5.5, 16.5, 0,  -0.2, 12.4, 0,  0, 0, 1.0 * belly * side,  ShipCanvasAlongX)
+            rotate Y trim
+        }
+    }
+}
+
+// -- Rope ---------------------------------------------------------------------------------------------
+
+// Standing rigging is tarred hemp, near black; running rigging is hemp left as it is.
+ShipTar = material { pigment [0.07, 0.055, 0.045] }
+ShipHemp = material { pigment [0.46, 0.38, 0.27] }
+
+// A rope from one place to another, as fine as it is: a strand, so that a line a pixel wide or less is a
+// whole faint line and not a row of dots.
+primitive ShipRope(x0, y0, z0, x1, y1, z1, wide) -> strand {
+    return strand {
+        width wide at [x0, y0, z0]
+        width wide at [x1, y1, z1]
+        material ShipTar
+    }
+}
+
+primitive ShipLine(x0, y0, z0, x1, y1, z1, wide) -> strand {
+    return strand {
+        width wide at [x0, y0, z0]
+        width wide at [x1, y1, z1]
+        material ShipHemp
+    }
+}
+
+// One ratline at height `h` across three shrouds, which run from their deadeyes at (ax, ay), (bx, by) and
+// (cx, cy), `zb` out from the centerline, up to the masthead at (tx, ty, tz).
+primitive ShipRatline(tx, ty, tz, ax, ay, bx, by, cx, cy, zb, h) -> strand {
+    ta = (h - ay) / (ty - ay)
+    tb = (h - by) / (ty - by)
+    tc = (h - cy) / (ty - cy)
+    return strand {
+        width 0.02 at [ax + ta * (tx - ax), h, zb + ta * (tz - zb)]
+        width 0.02 at [bx + tb * (tx - bx), h, zb + tb * (tz - zb)]
+        width 0.02 at [cx + tc * (tx - cx), h, zb + tc * (tz - zb)]
+        material ShipTar
+    }
+}
+
+// Three shrouds on one side of a mast, and the ratlines across them every 38 cm, from just over the rail
+// to a meter and a half under the masthead.
+primitive ShipShrouds(tx, ty, ax, ay, bx, by, cx, cy, zb) -> group {
+    tz = zb > 0 ? 0.2 : -0.2
+    count = floor((ty - 1.6 - ay - 0.55) / 0.38)
+    return group {
+        object ShipRope(tx, ty, tz, ax, ay, zb, 0.045)
+        object ShipRope(tx, ty, tz, bx, by, zb, 0.045)
+        object ShipRope(tx, ty, tz, cx, cy, zb, 0.045)
+        for k in [0, count] {
+            object ShipRatline(tx, ty, tz, ax, ay, bx, by, cx, cy, zb, ay + 0.55 + k * 0.38)
+        }
+    }
+}
+
+// -- The Enterprise, rigged -------------------------------------------------------------------------
+
+// Where a place on either mast, written in that mast's own frame, stands in hers.
+function EntForeX(lx, ly) -> number { return 6.5 + lx * 0.98163 - ly * 0.19081 }
+function EntForeY(lx, ly) -> number { return 1.4995 + lx * 0.19081 + ly * 0.98163 }
+function EntMainX(lx, ly) -> number { return -2.7 + lx * 0.97815 - ly * 0.20791 }
+function EntMainY(lx, ly) -> number { return 1.2914 + lx * 0.20791 + ly * 0.97815 }
+
+// Her standing rigging.  The bowsprit runs from her stem head at (13.0, 3.15) at 17 degrees: a place `s`
+// along it is (13.0 + 0.9563 s, 3.15 + 0.2924 s).
+primitive EntStandingRigging() -> group {
+    return group {
+        // The fore shrouds and the main shrouds, both sides, to their channels.
+        object ShipShrouds(4.02, 14.26,  4.3, 2.205,  3.6, 2.181,  2.9, 2.16,  3.70)
+        object ShipShrouds(4.02, 14.26,  4.3, 2.205,  3.6, 2.181,  2.9, 2.16,  -3.70)
+        object ShipShrouds(-5.32, 13.62,  -5.6, 2.128,  -6.3, 2.144,  -7.0, 2.163,  3.62)
+        object ShipShrouds(-5.32, 13.62,  -5.6, 2.128,  -6.3, 2.144,  -7.0, 2.163,  -3.62)
+
+        // The fore topmast's and main topmast's shrouds to the crosstrees' ends, and their backstays to the rail.
+        object ShipRope(EntForeX(0.36, 19.4), EntForeY(0.36, 19.4), 0.1,  EntForeX(0.12, 13.2), EntForeY(0.12, 13.2), 1.25,  0.03)
+        object ShipRope(EntForeX(0.36, 19.4), EntForeY(0.36, 19.4), -0.1,  EntForeX(0.12, 13.2), EntForeY(0.12, 13.2), -1.25,  0.03)
+        object ShipRope(EntMainX(0.36, 19.4), EntMainY(0.36, 19.4), 0.1,  EntMainX(0.12, 12.8), EntMainY(0.12, 12.8), 1.3,  0.03)
+        object ShipRope(EntMainX(0.36, 19.4), EntMainY(0.36, 19.4), -0.1,  EntMainX(0.12, 12.8), EntMainY(0.12, 12.8), -1.3,  0.03)
+        object ShipRope(EntForeX(0.36, 19.6), EntForeY(0.36, 19.6), 0.1,  1.9, 2.15, 3.55,  0.035)
+        object ShipRope(EntForeX(0.36, 19.6), EntForeY(0.36, 19.6), -0.1,  1.9, 2.15, -3.55,  0.035)
+        object ShipRope(EntMainX(0.36, 20.2), EntMainY(0.36, 20.2), 0.1,  -8.1, 2.19, 3.45,  0.035)
+        object ShipRope(EntMainX(0.36, 20.2), EntMainY(0.36, 20.2), -0.1,  -8.1, 2.19, -3.45,  0.035)
+
+        // The stays: the forestay to the bowsprit's heel outboard, the fore topmast stay to its cap, the flying
+        // jib stay to the jib boom's end, and the main's two stays forward to the foremast.
+        object ShipRope(EntForeX(0.15, 13.05), EntForeY(0.15, 13.05), 0,  13.55, 3.52, 0,  0.055)
+        object ShipRope(EntForeX(0.46, 19.2), EntForeY(0.46, 19.2), 0,  18.90, 5.10, 0,  0.04)
+        object ShipRope(EntForeX(0.46, 21.1), EntForeY(0.46, 21.1), 0,  23.45, 6.59, 0,  0.03)
+        object ShipRope(EntMainX(0.15, 12.7), EntMainY(0.15, 12.7), 0,  EntForeX(-0.15, 13.1), EntForeY(-0.15, 13.1), 0,  0.045)
+        object ShipRope(EntMainX(0.46, 19.8), EntMainY(0.46, 19.8), 0,  EntForeX(0.36, 15.0), EntForeY(0.36, 15.0), 0,  0.03)
+
+        // The bobstay from the bowsprit's cap down to her stem, and the bowsprit's shrouds to her bows.
+        object ShipRope(19.0, 4.85, 0,  12.15, 0.45, 0,  0.05)
+        object ShipRope(18.0, 4.65, 0,  11.6, 1.9, 1.15,  0.04)
+        object ShipRope(18.0, 4.65, 0,  11.6, 1.9, -1.15,  0.04)
+    }
+}
+
+// The headsails, on their stays: the fore staysail, the jib and the flying jib, each hoisted about three
+// quarters of the way up its stay, sheeted aft toward the foremast on the lee side and bellied out to it.
+primitive EntHeadsails(trim, belly) -> group {
+    side = trim >= 0 ? 1 : -1
+    lee = min(1, abs(trim) / 25)
+    return group {
+        object ShipSail(6.79, 11.31, 0,  6.79, 11.31, 0,  8.0, 3.5, side * 1.0 * lee,  13.4, 3.62, 0,
+                        0, 0, side * 0.8 * belly,  ShipCanvasAlongX)
+        object ShipSail(7.97, 15.83, 0,  7.97, 15.83, 0,  9.8, 4.6, side * 1.8 * lee,  18.6, 5.18, 0,
+                        0, 0, side * 1.0 * belly,  ShipCanvasAlongX)
+        object ShipSail(9.49, 17.27, 0,  9.49, 17.27, 0,  13.2, 6.2, side * 2.0 * lee,  23.2, 6.66, 0,
+                        0, 0, side * 0.8 * belly,  ShipCanvasAlongX)
+    }
+}
+
+
+// Where a place on either mast's swung spars, written in that mast's own frame before it is swung `t`
+// degrees about the mast, stands in hers.
+function EntForeTX(lx, ly, lz, t) -> number { return 6.5 + (lx * cos(t * 0.0174533) + lz * sin(t * 0.0174533)) * 0.98163 - ly * 0.19081 }
+function EntForeTY(lx, ly, lz, t) -> number { return 1.4995 + (lx * cos(t * 0.0174533) + lz * sin(t * 0.0174533)) * 0.19081 + ly * 0.98163 }
+function EntMainTX(lx, ly, lz, t) -> number { return -2.7 + (lx * cos(t * 0.0174533) + lz * sin(t * 0.0174533)) * 0.97815 - ly * 0.20791 }
+function EntMainTY(lx, ly, lz, t) -> number { return 1.2914 + (lx * cos(t * 0.0174533) + lz * sin(t * 0.0174533)) * 0.20791 + ly * 0.97815 }
+function EntTZ(lx, lz, t) -> number { return lz * cos(t * 0.0174533) - lx * sin(t * 0.0174533) }
+
+// Her running rigging, as much of it as reads from off the ship: the sheets, the main boom's topping lift,
+// and the braces of both yards led aft to the mainmast.
+primitive EntRunningRigging(trim) -> group {
+    side = trim >= 0 ? 1 : -1
+    lee = min(1, abs(trim) / 25)
+    f = trim * 0.7
+    y = 0 - trim * 0.8
+    return group {
+        object ShipLine(EntMainTX(-12.7, 4.45, 0, trim), EntMainTY(-12.7, 4.45, 0, trim), EntTZ(-12.7, 0, trim),  -12.3, 2.72, side * 0.9,  0.035)
+        object ShipLine(EntMainX(0.1, 14.4), EntMainY(0.1, 14.4), 0,  EntMainTX(-13.1, 4.62, 0, trim), EntMainTY(-13.1, 4.62, 0, trim), EntTZ(-13.1, 0, trim),  0.025)
+        object ShipLine(EntForeTX(-7.4, 2.6, 0, f), EntForeTY(-7.4, 2.6, 0, f), EntTZ(-7.4, 0, f),  -0.6, 2.38, side * 2.9,  0.03)
+        object ShipLine(8.0, 3.5, side * 1.0 * lee,  7.2, 2.45, side * 2.85,  0.025)
+        object ShipLine(9.8, 4.6, side * 1.8 * lee,  5.6, 2.42, side * 3.1,  0.025)
+        object ShipLine(13.2, 6.2, side * 2.0 * lee,  8.2, 2.5, side * 2.6,  0.025)
+        object ShipLine(EntForeTX(0.42, 13.0, 6.0, y), EntForeTY(0.42, 13.0, 6.0, y), EntTZ(0.42, 6.0, y),  EntMainX(0, 10.8), EntMainY(0, 10.8), 0.3,  0.025)
+        object ShipLine(EntForeTX(0.42, 13.0, -6.0, y), EntForeTY(0.42, 13.0, -6.0, y), EntTZ(0.42, -6.0, y),  EntMainX(0, 10.8), EntMainY(0, 10.8), -0.3,  0.025)
+        object ShipLine(EntForeTX(0.48, 19.6, 4.5, y), EntForeTY(0.48, 19.6, 4.5, y), EntTZ(0.48, 4.5, y),  EntMainX(0.36, 17.0), EntMainY(0.36, 17.0), 0.15,  0.02)
+        object ShipLine(EntForeTX(0.48, 19.6, -4.5, y), EntForeTY(0.48, 19.6, -4.5, y), EntTZ(0.48, -4.5, y),  EntMainX(0.36, 17.0), EntMainY(0.36, 17.0), -0.15,  0.02)
+    }
+}
+
+// Her colors: the ensign at the main peak and the pennant at the main topmast head, both streaming to
+// leeward, a little aft.
+primitive EntColors(trim) -> group {
+    side = trim >= 0 ? 1 : -1
+    return group {
+        object Flag(4.0, 2.4, 'wind', 1) {
+            material EntEnsign
+            rotate Y -113 * side
+            translate [EntMainTX(-5.85, 16.4, 0, trim), EntMainTY(-5.85, 16.4, 0, trim) - 2.4, EntTZ(-5.85, 0, trim)]
+        }
+        object Flag(6.5, 0.36, 'wind', 2) {
+            material EntPennant
+            rotate Y -105 * side
+            translate [EntMainX(0.36, 21.0), EntMainY(0.36, 21.0) - 0.36, 0]
+        }
+    }
+}
+
+primitive SchoonerEnterprise(trim = 25, belly = 1) -> group {
+    return group {
+        object EntHull()
+        object EntForemast(trim, belly)  { rotate Z 11  translate [6.5, EntDeck(6.5), 0] }
+        object EntMainmast(trim, belly)  { rotate Z 12  translate [-2.7, EntDeck(-2.7), 0] }
+
+        // The bowsprit, steeved 17 degrees over the stem head, and the jib boom along its top.
+        group {
+            cylinder { min Y -3.0  max Y 6.5  scale [0.20, 1, 0.20]  material ShipSpar }
+            cylinder { min Y 3.5  max Y 11.0  scale [0.10, 1, 0.10]  translate X -0.24  material ShipSpar }
+            rotate Z -73
+            translate [13.0, 3.15, 0]
+        }
+
+        // The channels the shrouds are set up to, outside her rail.
+        cube { scale [1.1, 0.05, 0.25]  translate [3.6, 2.13, 3.45]   material EntBlack }
+        cube { scale [1.1, 0.05, 0.25]  translate [3.6, 2.13, -3.45]  material EntBlack }
+        cube { scale [1.1, 0.05, 0.25]  translate [-6.3, 2.09, 3.37]  material EntBlack }
+        cube { scale [1.1, 0.05, 0.25]  translate [-6.3, 2.09, -3.37] material EntBlack }
+
+        object EntStandingRigging()
+        object EntHeadsails(trim, belly)
+        object EntRunningRigging(trim)
+        object EntGuns()
+        object EntDeckFittings()
+        object EntColors(trim)
+        object EntCrew()
+
+        // Her anchors, catted at the bow.
+        cube { scale [0.12, 0.12, 0.55]  rotate Y 25  translate [11.15, 2.85, 1.85]  material ShipTimber }
+        cube { scale [0.12, 0.12, 0.55]  rotate Y -25  translate [11.15, 2.85, -1.85]  material ShipTimber }
+        object ShipAnchor() { rotate Z 12  translate [11.35, 2.75, 2.25] }
+        object ShipAnchor() { rotate Z 12  translate [11.35, 2.75, -2.25] }
+    }
+}
+
+// -- The polacca Tripoli ------------------------------------------------------------------------------
+//
+// A corsair of fourteen guns and eighty men, met by Enterprise west of Malta on 1 August 1801 and shot to
+// pieces in three hours.  No drawing of her survives either: she is built as the Barbary polaccas were drawn,
+// about Enterprise's size, with a long beak, a sheer rising to a high stern, and single-pole fore and main
+// masts square-rigged to their trucks.  Her mizzen is gone, as the reports have it -- shot through, its mast,
+// lateen yard and sail over her starboard side -- and her side is holed along her waterline.
+
+function PolRail(x) -> number { return 2.25 + 0.0055 * (x + 1) * (x + 1) }
+function PolDeck(x) -> number { return 1.25 + 0.0055 * (x + 1) * (x + 1) }
+
+// Black topsides with a red band along her ports and a yellow line under it; her bottom paid with white stuff.
+PolBlack = material {
+    pigment [0.06, 0.045, 0.035]
+    specular 0.2  shininess 24
+    decal {
+        path {
+            move to -14.5, 3.1024  quad 0, 0.9492 to 14.5, 3.4214
+            line to 14.5, 2.7214  quad 0, 0.2492 to -14.5, 2.4024
+            close
+        }
+        color [0.50, 0.09, 0.06]  planar  min Y -6  max Y 6  fade from 70 to 85  rotate X -90
+    }
+    decal {
+        path {
+            move to -14.5, 2.0324  quad 0, -0.1208 to 14.5, 2.3514
+            line to 14.5, 2.2714  quad 0, -0.2008 to -14.5, 1.9524
+            close
+        }
+        color [0.74, 0.58, 0.16]  planar  min Y -6  max Y 6  fade from 70 to 85  rotate X -90
+    }
+    // Enterprise's shot, between wind and water on her larboard side.
+    decal {
+        path {
+            move to -7.773, 0.317  line to -7.774, 0.364  line to -7.803, 0.379  line to -7.840, 0.383  line to -7.889, 0.382  line to -7.918, 0.362  line to -7.925, 0.317  line to -7.922, 0.272  line to -7.874, 0.251  line to -7.840, 0.227  line to -7.800, 0.259  line to -7.783, 0.270  close
+            move to 9.076, 0.085  line to 9.060, 0.132  line to 9.032, 0.171  line to 8.993, 0.161  line to 8.955, 0.155  line to 8.922, 0.134  line to 8.911, 0.085  line to 8.924, 0.046  line to 8.938, 0.012  line to 8.993, -0.003  line to 9.035, 0.001  line to 9.082, 0.031  close
+            move to 4.134, 0.085  line to 4.094, 0.138  line to 4.083, 0.187  line to 4.023, 0.203  line to 3.978, 0.188  line to 3.945, 0.137  line to 3.915, 0.085  line to 3.924, 0.041  line to 3.964, -0.009  line to 4.023, -0.008  line to 4.073, -0.004  line to 4.115, 0.024  close
+            move to -7.131, 0.226  line to -7.137, 0.278  line to -7.182, 0.294  line to -7.224, 0.307  line to -7.266, 0.313  line to -7.304, 0.263  line to -7.301, 0.226  line to -7.295, 0.176  line to -7.276, 0.148  line to -7.224, 0.123  line to -7.175, 0.161  line to -7.155, 0.183  close
+            move to -1.717, 0.331  line to -1.736, 0.368  line to -1.751, 0.404  line to -1.787, 0.407  line to -1.827, 0.381  line to -1.842, 0.365  line to -1.867, 0.331  line to -1.850, 0.298  line to -1.828, 0.279  line to -1.787, 0.251  line to -1.753, 0.261  line to -1.724, 0.302  close
+            move to -5.212, 0.530  line to -5.217, 0.572  line to -5.248, 0.603  line to -5.289, 0.612  line to -5.326, 0.598  line to -5.355, 0.573  line to -5.355, 0.530  line to -5.344, 0.493  line to -5.328, 0.463  line to -5.289, 0.449  line to -5.257, 0.470  line to -5.218, 0.499  close
+            move to 6.942, 0.159  line to 6.917, 0.197  line to 6.900, 0.223  line to 6.862, 0.242  line to 6.821, 0.221  line to 6.802, 0.196  line to 6.803, 0.159  line to 6.788, 0.120  line to 6.820, 0.101  line to 6.862, 0.083  line to 6.902, 0.084  line to 6.928, 0.124  close
+            move to 7.860, 0.261  line to 7.852, 0.302  line to 7.816, 0.360  line to 7.773, 0.373  line to 7.724, 0.345  line to 7.699, 0.305  line to 7.671, 0.261  line to 7.690, 0.206  line to 7.716, 0.157  line to 7.773, 0.178  line to 7.831, 0.190  line to 7.849, 0.205  close
+            move to -6.906, 0.749  line to -6.928, 0.788  line to -6.941, 0.806  line to -6.983, 0.820  line to -7.021, 0.818  line to -7.048, 0.790  line to -7.054, 0.749  line to -7.047, 0.719  line to -7.015, 0.694  line to -6.983, 0.686  line to -6.953, 0.679  line to -6.923, 0.715  close
+            move to 5.431, 0.471  line to 5.421, 0.514  line to 5.399, 0.536  line to 5.360, 0.558  line to 5.321, 0.532  line to 5.292, 0.507  line to 5.268, 0.471  line to 5.287, 0.437  line to 5.313, 0.394  line to 5.360, 0.402  line to 5.397, 0.389  line to 5.427, 0.429  close
+            move to 9.937, 1.950  line to 9.912, 1.997  line to 9.886, 2.014  line to 9.849, 2.052  line to 9.811, 2.011  line to 9.788, 1.997  line to 9.765, 1.950  line to 9.780, 1.907  line to 9.797, 1.864  line to 9.849, 1.874  line to 9.888, 1.884  line to 9.914, 1.907  close
+            move to -5.968, 2.359  line to -5.974, 2.405  line to -6.019, 2.449  line to -6.065, 2.466  line to -6.105, 2.433  line to -6.146, 2.407  line to -6.157, 2.359  line to -6.134, 2.320  line to -6.115, 2.294  line to -6.065, 2.271  line to -6.018, 2.278  line to -5.976, 2.320  close
+            move to 4.578, 2.165  line to 4.577, 2.223  line to 4.541, 2.269  line to 4.483, 2.265  line to 4.438, 2.250  line to 4.406, 2.220  line to 4.366, 2.165  line to 4.398, 2.117  line to 4.424, 2.085  line to 4.483, 2.038  line to 4.548, 2.058  line to 4.588, 2.108  close
+            move to 4.515, 2.202  line to 4.514, 2.237  line to 4.483, 2.263  line to 4.446, 2.283  line to 4.404, 2.263  line to 4.384, 2.247  line to 4.371, 2.202  line to 4.376, 2.158  line to 4.407, 2.141  line to 4.446, 2.110  line to 4.484, 2.137  line to 4.520, 2.160  close
+        }
+        color [0.015, 0.012, 0.01]  planar  min Y -6  max Y 0  fade from 70 to 85  rotate X -90
+    }
+}
+
+PolStuff = material { pigment [0.46, 0.44, 0.38]  specular 0.08  shininess 10 }
+
+// Her planking, as Enterprise's: strakes running with her steeper sheer and closing in toward her ends,
+// carried by a copy of her stuff, the blend's first material.
+PolHullStuff = material PolStuff {
+    normal planks {
+        plank size [6.5, 0.21, 1000]  seam size 0.04
+        warp { Y { (y - PolRail(x)) / (1 - 0.25 * (x / 13.5) * (x / 13.5)) + 0.105 } }
+        depth 0.05  rotate Y -90
+    }
+}
+
+PolHullPaint = material blend linear Y gradient {
+    [0, PolHullStuff, 0.4995, PolHullStuff, 0.5005, PolBlack]
+    scale [1, 20, 1]
+    translate Y -9.8
+}
+
+PolTimberBlack = material { pigment [0.06, 0.045, 0.035]  specular 0.2  shininess 24 }
+
+PolProfilePaint = material blend linear Z gradient {
+    [0, PolStuff, 0.4995, PolStuff, 0.5005, PolTimberBlack]
+    scale [1, 1, 20]
+    translate Z -9.8
+}
+
+// Her deck as Enterprise's, her bulwarks' strakes running with her own deck.
+PolBulwarkRed = material EntRed {
+    normal planks {
+        plank size [6.5, 0.2, 1000]  seam size 0.03
+        warp { Y { y - PolDeck(x) } }
+        depth 0.06  rotate Y -90
+    }
+}
+
+PolDeckAndBulwarks = material blend facing { [0.74, PolBulwarkRed, 0.80, EntDeckPlanking] }
+
+// The sides and front of her poop, planked as her own sides are, read in its own unit cube.
+PolPoopSides = material PolBlack {
+    normal planks { plank size [5, 0.2, 1000]  seam size 0.03  depth 0.06  scale [0.41667, 1.17647, 0.36364] }
+}
+
+// The top of her poop, a slab 4.8 m by 5.6 m read in its own unit cube: the boards made back into meters.
+PolPoopDeck = material {
+    pigment planks {
+        plank size [5, 1000, 0.14]  seam size 0.016
+        [0, [0.10, 0.08, 0.06], 0.5, [0.63, 0.55, 0.42], 1, [0.54, 0.46, 0.34]]
+        scale [0.41667, 25, 0.35714]
+    }
+    specular 0.08  shininess 12
+}
+
+PolBackbone = path {
+    move to -10.65, -3.0
+    line to 10.5, -2.4
+    curve 12.3, -2.38, 13.6, -0.6 to 13.95, 3.45
+    line to 13.6, 3.45
+    curve 13.3, 0.4, 12.0, -2.05 to 10.5, -2.1
+    line to -10.3, -2.7
+    line to -12.0, 1.1
+    line to -12.4, 1.05
+    close
+}
+
+// Her beak, a long pointed knee carried far forward of her stem.
+PolBeak = path {
+    move to 13.3, 0.4
+    curve 14.4, 1.0, 15.9, 2.1 to 16.9, 2.75
+    line to 16.5, 2.98
+    curve 15.4, 3.2, 14.6, 3.35 to 13.9, 3.4
+    curve 13.75, 2.4, 13.6, 1.4 to 13.3, 0.4
+}
+
+PolRudder = path {
+    move to -10.65, -2.95  line to -12.4, 1.05  line to -12.85, 1.1  line to -11.5, -2.95  close
+}
+
+primitive PolHull() -> group {
+    return group {
+        difference {
+            intersection {
+                loft {
+                    section { path EntCounter   scale [2.60, PolRail(-13.8) - 1.6, 1]   translate [0, 1.6, -13.8] }
+                    section { path EntCounter   scale [2.90, PolRail(-12.9) - 1.0, 1]   translate [0, 1.0, -12.9] }
+                    section { path EntRun       scale [3.10, PolRail(-12.0) - 0.55, 1]  translate [0, 0.55, -12.0] }
+                    section { path EntRun       scale [3.30, PolRail(-11.0) + 1.82, 1]  translate [0, -1.82, -11.0] }
+                    section { path EntRun       scale [3.50, PolRail(-9.5) + 2.67, 1]   translate [0, -2.67, -9.5] }
+                    section { path EntMid       scale [3.72, PolRail(-6.0) + 2.57, 1]   translate [0, -2.57, -6.0] }
+                    section { path EntMid       scale [3.80, PolRail(-2.0) + 2.456, 1]  translate [0, -2.456, -2.0] }
+                    section { path EntMid       scale [3.80, PolRail(2.0) + 2.34, 1]    translate [0, -2.34, 2.0] }
+                    section { path EntEntrance  scale [3.60, PolRail(5.5) + 2.24, 1]    translate [0, -2.24, 5.5] }
+                    section { path EntEntrance  scale [3.10, PolRail(8.5) + 2.157, 1]   translate [0, -2.157, 8.5] }
+                    section { path EntBow       scale [2.40, PolRail(10.6) + 2.05, 1]   translate [0, -2.05, 10.6] }
+                    section { path EntBow       scale [1.70, PolRail(11.9) + 1.45, 1]   translate [0, -1.45, 11.9] }
+                    section { path EntBow       scale [1.00, PolRail(12.9) + 0.2, 1]    translate [0, -0.2, 12.9] }
+                    section { path EntBow       scale [0.50, PolRail(13.5) - 1.3, 1]    translate [0, 1.3, 13.5] }
+                    section { path EntBow       scale [0.12, PolRail(13.75) - 2.9, 1]   translate [0, 2.9, 13.75] }
+                    rotate Y 90
+                }
+                cube { scale 50  translate X 50  rotate Z 27  translate [-12.2, 1.0, 0]  material PolTimberBlack }
+            }
+            loft {
+                section { path EntWell  scale [2.55, 2.5, 1]  translate [0, PolDeck(-12.6), -12.6] }
+                section { path EntWell  scale [2.95, 2.5, 1]  translate [0, PolDeck(-11.0), -11.0] }
+                section { path EntWell  scale [3.30, 2.5, 1]  translate [0, PolDeck(-8.0), -8.0] }
+                section { path EntWell  scale [3.50, 2.5, 1]  translate [0, PolDeck(-4.0), -4.0] }
+                section { path EntWell  scale [3.53, 2.5, 1]  translate [0, PolDeck(0.0), 0.0] }
+                section { path EntWell  scale [3.42, 2.5, 1]  translate [0, PolDeck(4.0), 4.0] }
+                section { path EntWell  scale [3.10, 2.5, 1]  translate [0, PolDeck(6.5), 6.5] }
+                section { path EntWell  scale [2.75, 2.5, 1]  translate [0, PolDeck(8.5), 8.5] }
+                section { path EntWell  scale [2.15, 2.5, 1]  translate [0, PolDeck(10.6), 10.6] }
+                section { path EntWell  scale [1.45, 2.5, 1]  translate [0, PolDeck(11.9), 11.9] }
+                section { path EntWell  scale [0.6, 2.5, 1]   translate [0, PolDeck(12.9), 12.9] }
+                rotate Y 90
+                material PolDeckAndBulwarks
+            }
+            cube { scale [0.3, 0.24, 5]  translate [10.4, PolDeck(10.4) + 0.56, 0]  material EntRed }
+            cube { scale [0.3, 0.24, 5]  translate [4.8, PolDeck(4.8) + 0.56, 0]   material EntRed }
+            cube { scale [0.3, 0.24, 5]  translate [2.0, PolDeck(2.0) + 0.56, 0]   material EntRed }
+            cube { scale [0.3, 0.24, 5]  translate [-2.2, PolDeck(-2.2) + 0.56, 0] material EntRed }
+            cube { scale [0.3, 0.24, 5]  translate [-4.5, PolDeck(-4.5) + 0.56, 0] material EntRed }
+            cube { scale [0.3, 0.24, 5]  translate [-7.5, PolDeck(-7.5) + 0.56, 0] material EntRed }
+            cube { scale [0.3, 0.24, 5]  translate [-11.0, PolDeck(-11.0) + 0.56, 0] material EntRed }
+        }
+        extrusion { path PolBackbone  min Y -0.16  max Y 0.16  rotate X -90  material PolProfilePaint }
+        extrusion { path PolRudder  min Y -0.12  max Y 0.12  rotate X -90  material PolProfilePaint }
+        extrusion { path PolBeak  min Y -0.16  max Y 0.16  rotate X -90  material PolProfilePaint }
+        material PolHullPaint
+    }
+}
+
+// Her guns, run out on both sides; her larboard battery is the one fighting.
+primitive PolGuns() -> group {
+    return group {
+        object ShipGun() { translate [10.4, PolDeck(10.4) + 0.55, 2.70] }
+        object ShipGun() { translate [4.8, PolDeck(4.8) + 0.55, 3.77] }
+        object ShipGun() { translate [2.0, PolDeck(2.0) + 0.55, 3.91] }
+        object ShipGun() { translate [-2.2, PolDeck(-2.2) + 0.55, 3.91] }
+        object ShipGun() { translate [-4.5, PolDeck(-4.5) + 0.55, 3.87] }
+        object ShipGun() { translate [-7.5, PolDeck(-7.5) + 0.55, 3.70] }
+        object ShipGun() { translate [-11.0, PolDeck(-11.0) + 0.55, 3.38] }
+        object ShipGun() { rotate Y 180  translate [10.4, PolDeck(10.4) + 0.55, -2.70] }
+        object ShipGun() { rotate Y 180  translate [4.8, PolDeck(4.8) + 0.55, -3.77] }
+        object ShipGun() { rotate Y 180  translate [2.0, PolDeck(2.0) + 0.55, -3.91] }
+        object ShipGun() { rotate Y 180  translate [-2.2, PolDeck(-2.2) + 0.55, -3.91] }
+        object ShipGun() { rotate Y 180  translate [-4.5, PolDeck(-4.5) + 0.55, -3.87] }
+        object ShipGun() { rotate Y 180  translate [-7.5, PolDeck(-7.5) + 0.55, -3.70] }
+        object ShipGun() { rotate Y 180  translate [-11.0, PolDeck(-11.0) + 0.55, -3.38] }
+    }
+}
+
+// The flag of Tripoli under the Karamanli: green, with three white crescents.
+PolFlag = material {
+    pigment [0.08, 0.36, 0.14]
+    specular 0.04  shininess 8  ambient 0.12
+    decal {
+        path {
+            move to 1.1659, 1.6427  line to 1.1129, 1.6784  line to 1.0542, 1.7036  line to 0.9918, 1.7174  line to 0.9279, 1.7193  line to 0.8648, 1.7092  line to 0.8048, 1.6874  line to 0.7498, 1.6548  line to 0.7019, 1.6125  line to 0.6628, 1.5620  line to 0.6338, 1.5050  line to 0.6160, 1.4436  line to 0.6100, 1.3800  line to 0.6160, 1.3164  line to 0.6338, 1.2550  line to 0.6628, 1.1980  line to 0.7019, 1.1475  line to 0.7498, 1.1052  line to 0.8048, 1.0726  line to 0.8648, 1.0508  line to 0.9279, 1.0407  line to 0.9918, 1.0426  line to 1.0542, 1.0564  line to 1.1129, 1.0816  line to 1.1659, 1.1173  line to 1.1230, 1.1058  line to 1.0789, 1.1013  line to 1.0345, 1.1038  line to 0.9912, 1.1133  line to 0.9499, 1.1296  line to 0.9117, 1.1522  line to 0.8776, 1.1806  line to 0.8484, 1.2140  line to 0.8249, 1.2517  line to 0.8076, 1.2926  line to 0.7971, 1.3357  line to 0.7936, 1.3800  line to 0.7971, 1.4243  line to 0.8076, 1.4674  line to 0.8249, 1.5083  line to 0.8484, 1.5460  line to 0.8776, 1.5794  line to 0.9117, 1.6078  line to 0.9499, 1.6304  line to 0.9912, 1.6467  line to 1.0345, 1.6562  line to 1.0789, 1.6587  line to 1.1230, 1.6542  close
+            move to 1.8341, 1.1173  line to 1.8871, 1.0816  line to 1.9458, 1.0564  line to 2.0082, 1.0426  line to 2.0721, 1.0407  line to 2.1352, 1.0508  line to 2.1952, 1.0726  line to 2.2502, 1.1052  line to 2.2981, 1.1475  line to 2.3372, 1.1980  line to 2.3662, 1.2550  line to 2.3840, 1.3164  line to 2.3900, 1.3800  line to 2.3840, 1.4436  line to 2.3662, 1.5050  line to 2.3372, 1.5620  line to 2.2981, 1.6125  line to 2.2502, 1.6548  line to 2.1952, 1.6874  line to 2.1352, 1.7092  line to 2.0721, 1.7193  line to 2.0082, 1.7174  line to 1.9458, 1.7036  line to 1.8871, 1.6784  line to 1.8341, 1.6427  line to 1.8770, 1.6542  line to 1.9211, 1.6587  line to 1.9655, 1.6562  line to 2.0088, 1.6467  line to 2.0501, 1.6304  line to 2.0883, 1.6078  line to 2.1224, 1.5794  line to 2.1516, 1.5460  line to 2.1751, 1.5083  line to 2.1924, 1.4674  line to 2.2029, 1.4243  line to 2.2064, 1.3800  line to 2.2029, 1.3357  line to 2.1924, 1.2926  line to 2.1751, 1.2517  line to 2.1516, 1.2140  line to 2.1224, 1.1806  line to 2.0883, 1.1522  line to 2.0501, 1.1296  line to 2.0088, 1.1133  line to 1.9655, 1.1038  line to 1.9211, 1.1013  line to 1.8770, 1.1058  close
+            move to 1.2373, 0.8359  line to 1.2016, 0.7829  line to 1.1764, 0.7242  line to 1.1626, 0.6618  line to 1.1607, 0.5979  line to 1.1708, 0.5348  line to 1.1926, 0.4748  line to 1.2252, 0.4198  line to 1.2675, 0.3719  line to 1.3180, 0.3328  line to 1.3750, 0.3038  line to 1.4364, 0.2860  line to 1.5000, 0.2800  line to 1.5636, 0.2860  line to 1.6250, 0.3038  line to 1.6820, 0.3328  line to 1.7325, 0.3719  line to 1.7748, 0.4198  line to 1.8074, 0.4748  line to 1.8292, 0.5348  line to 1.8393, 0.5979  line to 1.8374, 0.6618  line to 1.8236, 0.7242  line to 1.7984, 0.7829  line to 1.7627, 0.8359  line to 1.7742, 0.7930  line to 1.7787, 0.7489  line to 1.7762, 0.7045  line to 1.7667, 0.6612  line to 1.7504, 0.6199  line to 1.7278, 0.5817  line to 1.6994, 0.5476  line to 1.6660, 0.5184  line to 1.6283, 0.4949  line to 1.5874, 0.4776  line to 1.5443, 0.4671  line to 1.5000, 0.4636  line to 1.4557, 0.4671  line to 1.4126, 0.4776  line to 1.3717, 0.4949  line to 1.3340, 0.5184  line to 1.3006, 0.5476  line to 1.2722, 0.5817  line to 1.2496, 0.6199  line to 1.2333, 0.6612  line to 1.2238, 0.7045  line to 1.2213, 0.7489  line to 1.2258, 0.7930  close
+        }
+        color [0.92, 0.90, 0.86]  planar  min Y -3  max Y 3  no fade  rotate X -90
+    }
+}
+
+// A corsair of her crew: loose white clothes and a red cap, standing on y = 0 facing +X, bent `lean`
+// degrees toward his work; a musket at his shoulder or a sword raised by `arms` (1 or 2).
+PolShirt = material { pigment [0.80, 0.77, 0.70]  specular 0.04  shininess 8 }
+PolSash = material { pigment [0.55, 0.12, 0.10]  specular 0.04  shininess 8 }
+PolCap = material { pigment [0.62, 0.10, 0.08]  specular 0.08  shininess 12 }
+
+primitive ShipCorsair(lean = 0, arms = 1) -> group {
+    return group {
+        cylinder { min Y 0  max Y 0.86  scale [0.09, 1, 0.09]  translate Z 0.1   material PolShirt }
+        cylinder { min Y 0  max Y 0.86  scale [0.09, 1, 0.09]  translate Z -0.1  material PolShirt }
+        group {
+            superellipsoid { east 0.6  north 0.8  scale [0.14, 0.33, 0.22]  translate Y 0.3  material PolShirt }
+            cylinder { min Y -0.06  max Y 0.06  scale [0.16, 1, 0.23]  translate Y 0.05  material PolSash }
+            cylinder { min Y -0.55  max Y 0  scale [0.055, 1, 0.055]  rotate X -12  translate [0, 0.56, 0.25]  material PolShirt }
+            cylinder { min Y -0.55  max Y 0  scale [0.055, 1, 0.055]  rotate X (arms == 2 ? 150 : 12)  translate [0, 0.56, -0.25]  material PolShirt }
+            sphere { scale [0.10, 0.12, 0.10]  translate Y 0.75  material ShipSkin }
+            cylinder { min Y 0  max Y 0.16  scale [0.095, 1, 0.095]  translate Y 0.8  material PolCap }
+            cylinder { min Y 0  max Y 1.4  scale [0.014, 1, 0.014]  rotate Z -84  translate [-0.35, 0.55, -0.12]  material ShipTimber }
+            rotate Z 0 - lean
+            translate Y 0.86
+        }
+    }
+}
+
+// Where a place on either of her masts, written in that mast's own frame, stands in hers: the foremast
+// stepped at 8 m and raked four degrees forward, the mainmast at -0.5 m and raked two aft.
+function PolForeX(lx, ly) -> number { return 8.0 + lx * 0.99756 + ly * 0.06976 }
+function PolForeY(lx, ly) -> number { return 1.6955 - lx * 0.06976 + ly * 0.99756 }
+function PolMainX(lx, ly) -> number { return -0.5 + lx * 0.99939 - ly * 0.03490 }
+function PolMainY(lx, ly) -> number { return 1.2514 + lx * 0.03490 + ly * 0.99939 }
+
+// A pole mast, one spar from the deck to its truck, square-rigged: a course, a topsail and a topgallant,
+// their yards braced by the trim.  `course` 0 has the course furled on its yard.
+primitive PolPoleMast(high, cy, cl, ty, tl, gy, gl, course, trim, belly) -> group {
+    return group {
+        cylinder { min Y -0.5  max Y high  scale [0.21, 1, 0.21]  material ShipSpar }
+        cylinder { min Y high - 3  max Y high + 0.4  scale [0.13, 1, 0.13]  material ShipBlackedSpar }
+        group {
+            object ShipYard(cl, 0.13)  { translate [0.32, cy, 0]  material ShipSpar }
+            object ShipYard(tl, 0.10)  { translate [0.30, ty, 0]  material ShipSpar }
+            object ShipYard(gl, 0.07)  { translate [0.28, gy, 0]  material ShipSpar }
+            object ShipSail(0.30, ty - 0.12, 0.47 * tl,  0.30, ty - 0.12, -0.47 * tl,  0.32, cy + 0.15, -0.47 * cl,  0.32, cy + 0.15, 0.47 * cl,
+                            1.5 * belly, 0, 0,  ShipCanvasAlongZ)
+            object ShipSail(0.28, gy - 0.1, 0.47 * gl,  0.28, gy - 0.1, -0.47 * gl,  0.30, ty + 0.12, -0.47 * tl,  0.30, ty + 0.12, 0.47 * tl,
+                            0.9 * belly, 0, 0,  ShipCanvasAlongZ)
+            object ShipSail(0.32, cy - 0.15, 0.47 * cl,  0.32, cy - 0.15, -0.47 * cl,  0.6 + 0.8 * belly, 3.6 + (1 - course) * (cy - 4.2), -0.5 * cl,  0.6 + 0.8 * belly, 3.6 + (1 - course) * (cy - 4.2), 0.5 * cl,
+                            (1.7 * course + 0.05) * belly, 0, 0,  ShipCanvasAlongZ)
+            rotate Y 0 - trim * 0.8
+        }
+    }
+}
+
+primitive PolaccaTripoli(trim = -25, belly = 1) -> group {
+    side = trim >= 0 ? 1 : -1
+    return group {
+        object PolHull()
+        object PolGuns()
+
+        // Her poop, raised over the after third of her deck, with a rail along it.
+        cube { scale [2.4, 0.85, 2.75]  translate [-10.9, PolDeck(-10.9) + 0.85, 0]  material PolPoopSides }
+        cube { scale [2.4, 0.04, 2.8]   translate [-10.9, PolDeck(-10.9) + 1.72, 0]  material PolPoopDeck }
+
+        // Her fore and main, poles to their trucks.
+        object PolPoleMast(21.0, 10.5, 13.0, 15.5, 9.6, 19.4, 6.4, 1, trim, belly)  { rotate Z -4  translate [8.0, PolDeck(8.0), 0] }
+        object PolPoleMast(24.5, 11.5, 14.5, 17.5, 10.8, 21.8, 7.2, 0, trim, belly)  { rotate Z 2  translate [-0.5, PolDeck(-0.5), 0] }
+
+        // Her bowsprit, steeved 22 degrees off the beak's root, and a jib to the foremast.
+        cylinder { min Y -2.0  max Y 8.5  scale [0.2, 1, 0.2]  rotate Z -68  translate [13.8, 3.5, 0]  material ShipSpar }
+        object ShipSail(PolForeX(0.2, 17.0), PolForeY(0.2, 17.0), 0,  PolForeX(0.2, 17.0), PolForeY(0.2, 17.0), 0,
+                        11.2, 4.2, side * 1.6,  20.8, 6.4, 0,  0, 0, side * 0.9 * belly,  ShipCanvasAlongX)
+
+        // The stump of her mizzen, splintered three meters up, and the mast over her starboard side with its
+        // lateen yard and the sail, half in the sea.
+        cylinder { min Y 0  max Y 2.5  scale [0.19, 1, 0.19]  translate [-9.0, PolDeck(-9.0), 0]  material ShipSpar }
+        conic { min Y -0.6  max Y 0  scale [0.19, 0.9, 0.19]  rotate X 180  rotate Z 14  translate [-9.0, PolDeck(-9.0) + 2.5, 0.02]  material ShipSpar }
+        group {
+            cylinder { min Y 0  max Y 15  scale [0.17, 1, 0.17]  rotate X -104  rotate Y 8  translate [-9.4, PolDeck(-9.4) + 2.4, -0.3]  material ShipSpar }
+            cylinder { min Y -8  max Y 9  scale [0.11, 1, 0.11]  rotate Z 70  rotate X 12  translate [-9.6, 0.15, -7.5]  material ShipSpar }
+            object ShipSail(-1.2, 0.5, -6.0,  -1.2, 0.5, -6.0,  -14.0, 0.05, -10.0,  -4.0, 0.3, -12.5,  0, 0.4, 0,  ShipCanvasAlongX)
+        }
+
+        // Her standing rigging, fore and main.
+        object ShipShrouds(8.70, 11.67,  8.9, 2.52,  8.2, 2.52,  7.5, 2.50,  3.45)
+        object ShipShrouds(8.70, 11.67,  8.9, 2.52,  8.2, 2.52,  7.5, 2.50,  -3.45)
+        object ShipShrouds(-0.884, 12.24,  -0.9, 2.05,  -1.6, 2.05,  -2.3, 2.06,  4.0)
+        object ShipShrouds(-0.884, 12.24,  -0.9, 2.05,  -1.6, 2.05,  -2.3, 2.06,  -4.0)
+        object ShipRope(PolForeX(0.2, 20.5), PolForeY(0.2, 20.5), 0,  21.5, 6.65, 0,  0.04)
+        object ShipRope(PolForeX(0.2, 16.0), PolForeY(0.2, 16.0), 0,  16.4, 3.05, 0,  0.05)
+        object ShipRope(PolMainX(0.2, 23.5), PolMainY(0.2, 23.5), 0,  PolForeX(0, 16.0), PolForeY(0, 16.0), 0,  0.04)
+        object ShipRope(PolMainX(0.2, 13.0), PolMainY(0.2, 13.0), 0,  PolForeX(0, 4.0), PolForeY(0, 4.0), 0,  0.05)
+        object ShipRope(PolMainX(0, 23.0), PolMainY(0, 23.0), 0.1,  -4.5, 2.25, 3.9,  0.035)
+        object ShipRope(PolMainX(0, 23.0), PolMainY(0, 23.0), -0.1,  -4.5, 2.25, -3.9,  0.035)
+        object ShipRope(PolForeX(0, 20.0), PolForeY(0, 20.0), 0.1,  5.2, 2.5, 3.8,  0.035)
+        object ShipRope(PolForeX(0, 20.0), PolForeY(0, 20.0), -0.1,  5.2, 2.5, -3.8,  0.035)
+
+        // Her colors at the main truck, streaming to leeward.
+        object Flag(3.0, 2.0, 'wind', 3) {
+            material PolFlag
+            rotate Y -110 * side
+            translate [PolMainX(0, 24.6), PolMainY(0, 24.6) - 2.0, 0]
+        }
+
+        // Her people, crowding her larboard side to board, muskets and swords up, and at her guns.
+        object ShipCorsair(10, 1) { rotate Y -90  translate [3.4, PolDeck(3.4), 2.6] }
+        object ShipCorsair(5, 2)  { rotate Y -95  translate [2.6, PolDeck(2.6), 2.9] }
+        object ShipCorsair(12, 1) { rotate Y -85  translate [1.4, PolDeck(1.4), 2.7] }
+        object ShipCorsair(0, 2)  { rotate Y -90  translate [0.6, PolDeck(0.6), 3.0] }
+        object ShipCorsair(8, 1)  { rotate Y -100  translate [-0.9, PolDeck(-0.9), 2.5] }
+        object ShipCorsair(4, 2)  { rotate Y -80  translate [-1.6, PolDeck(-1.6), 2.9] }
+        object ShipCorsair(10, 1) { rotate Y -90  translate [-3.2, PolDeck(-3.2), 2.8] }
+        object ShipCorsair(6, 2)  { rotate Y -90  translate [-5.8, PolDeck(-5.8), 2.9] }
+        object ShipCorsair(14, 1) { rotate Y -95  translate [-6.6, PolDeck(-6.6), 2.6] }
+        object ShipCorsair(2, 2)  { rotate Y -88  translate [-8.6, PolDeck(-8.6), 2.4] }
+        object ShipCorsair(25, 1) { rotate Y -90  translate [5.6, PolDeck(5.6), 1.8] }
+        object ShipCorsair(25, 1) { rotate Y -90  translate [-10.0, PolDeck(-10.0), 1.6] }
+        object ShipCorsair(0, 1)  { rotate Y 180  translate [-11.6, PolDeck(-11.6), 0.2] }
+        object ShipCorsair(9, 2)  { rotate Y -90  translate [1.9, PolDeck(1.9), 1.5] }
+        object ShipCorsair(9, 1)  { rotate Y -90  translate [-2.6, PolDeck(-2.6), 1.6] }
+    }
+}
+
+// -- Powder smoke -------------------------------------------------------------------------------------
+
+// Smoke at a place in a bank `long` along a ship's side, `reach` downwind of her guns and `high`: thick at the
+// muzzles, rising and spreading as it drifts, thinning toward its far end and its two ends, and broken into
+// billows by two scales of noise.  Negative where there is none.  One expression, as a density must be.
+function ShipSmoke(px, py, pz, long, reach, high, ox, oz) -> number {
+    return 1.2 * (1 - abs(py - 1.4 - 0.42 * high * pz / reach) / (1.6 + 0.42 * high * pz / reach))
+           - 1.1 * (pz / reach) * (pz / reach) - 4 * max(0, abs(px) / (0.5 * long) - 0.8)
+           + 1.1 * (noise(px / 5.0 + ox, py / 4.2 - 2 * pz / reach, pz / 5.0 + oz)
+                    + 0.5 * noise(px / 2.2 + 3.1 + ox, py / 2.0, pz / 2.2 + 1.3 + oz)
+                    + 0.25 * noise(px / 0.9 + 7.3 + ox, py / 0.9 + 2.2, pz / 0.9 + 5.1 + oz) - 0.875)
+}
+
+// The smoke of a broadside: black powder burns to a white smoke, dense and billowing, that scatters nearly all
+// the light it stops.  Built from the muzzles at its near edge, running along X, rising up +Y and drifting down +Z;
+// turn it so +Z is downwind.
+primitive GunSmoke(long, reach, high, variant = 1, thick = 0.25) -> group {
+    ox = random(variant, 61) * 40
+    oz = random(variant, 62) * 40
+    return group {
+        cube {
+            material {
+                pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                interior {
+                    ior 1.0
+                    medium {
+                        absorption [0.06, 0.06, 0.065]
+                        scattering [1.6, 1.6, 1.62]
+                        density function {
+                            max(0, ShipSmoke(x * 0.5 * long, (y + 1) * 0.5 * high, (z + 1) * 0.5 * reach,
+                                             long, reach, high, ox, oz))
+                        }
+                        density thick
+                    }
+                }
+            }
+            no shadow
+            scale [0.5 * long, 0.5 * high, 0.5 * reach]
+            translate [0, 0.5 * high, 0.5 * reach]
+        }
+    }
+}

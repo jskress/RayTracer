@@ -362,6 +362,8 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `place` | Shape grammar: stands surfaces on the middle of a scope's near face, in its axes. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `planar` | Pattern/image map: value from a plane; also `planar` image mapping, and a decal carried straight onto a surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `plane` | Surface: an infinite flat plane (also a blob component). | [Surfaces](surfaces.md#plane), [Blob](surfaces.md#a-plane-component) |
+| `plank` | Planks: `plank size`, how long a board is and how wide each way. | [Pigments & Patterns](pigments-and-patterns.md#planks) |
+| `planks` | Pattern: boards side by side, butted end to end, each its own shade, with rounded seams. | [Pigments & Patterns](pigments-and-patterns.md#planks) |
 | `point` | A `point light`; also `point at` — a spotlight's aim, and where a point or area light's profile points — and a `focal point`.  Casts a tuple to a point. | [Lights](lights.md#point-lights), [Light Profiles](lights.md#light-profiles), [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `points` | Patch/triangle: the control or corner points.  Grown tree: how many points fill its crown, or are spread over the surface it climbs. | [Surfaces](surfaces.md#patch), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `poly` | Wave shape: the value to a given power, written `poly 3 wave`. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
@@ -417,6 +419,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `scree` | Erosion: crags shedding scree into aprons at their feet, for how long. | [Erosion](advanced-surfaces.md#erosion) |
 | `sdf` | Surface: a shape written as a signed distance function. | [Surfaces](advanced-surfaces.md#signed-distance-surface) |
 | `sea` | Erosion: `sea level`, below which the ground does not wear and water ends. | [Erosion](advanced-surfaces.md#erosion) |
+| `seam` | Planks: `seam size`, how wide a seam between boards is. | [Pigments & Patterns](pigments-and-patterns.md#planks) |
 | `section` | Loft: one cross-section — its `path`, its transforms, and how far along the loft's spline it stands, `at`. | [Loft](advanced-surfaces.md#loft) |
 | `seed` | Fixes the random start of a pattern, light, camera or hair, or the rain an erosion lets fall.  Tiles: `with seed`, the draws a grid is laid by. | [Pigments & Patterns](pigments-and-patterns.md#seeding), [Cameras](cameras.md#depth-of-field), [Lights](lights.md#area-lights), [Erosion](advanced-surfaces.md#erosion), [Tiles](advanced-surfaces.md#tiles) |
 | `serial` | Context: the single-threaded `serial scanner`. | [Context](context.md#scanners) |
@@ -433,7 +436,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `since` | Swarm: when it began throwing, before nought for one already in full flow; a `burst` says `at` instead. | [Swarms](animation.md#swarms) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `sink` | Field: how far a copy is sunk into the ground, dropped or all over. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
-| `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's.  Image map: `shuffled size s`, how far apart its tiles stand.  Glints: how big a facet is.  Tiles: how many cells the grid has across, up and along. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar), [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat), [Glints](materials.md#glints), [Tiles](advanced-surfaces.md#tiles) |
+| `size` | Brick pattern: `brick size`/`mortar size`; planks: `plank size`/`seam size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's.  Image map: `shuffled size s`, how far apart its tiles stand.  Glints: how big a facet is.  Tiles: how many cells the grid has across, up and along. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar), [A picture that does not repeat](pigments-and-patterns.md#a-picture-that-does-not-repeat), [Glints](materials.md#glints), [Tiles](advanced-surfaces.md#tiles) |
 | `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`, and `by <pattern>` to set them by one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals.  Height field: shaded as the smooth surface it stands for.  Keys: `keys smooth` passes through every key without stopping. | [Surfaces](surfaces.md#triangle-and-smooth-triangle), [Height Field](advanced-surfaces.md#height-field), [Keys](animation.md#keys) |
@@ -541,6 +544,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `vignetting` | Camera: how much of what a lens loses toward its corners it loses, and with the aperture open the cat's eye its barrel cuts. | [Vignetting](cameras.md#vignetting) |
 | `vSteps` | Area light: samples across V.  Patch: how finely it may be diced across V. | [Lights](lights.md#area-lights), [Surfaces](surfaces.md#patch) |
 | `warning` | Info: a warning. | [Context](context.md#image-information) |
+| `warp` | Pattern: bends the space a pattern is read in, each coordinate a function of the point. | [Pigments & Patterns](pigments-and-patterns.md#warp) |
 | `wave` | Swells: one train of waves.  Shaping: bends a pattern's value by a wave shape. | [Surfaces](surfaces.md#swells) |
 | `wavelength` | Swells: how far apart a wave train's crests are. | [Surfaces](surfaces.md#swells) |
 | `waves` | Pattern: overlapping wave crests. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |

@@ -401,6 +401,7 @@ public class Material
         _sight = null;
         _looks = null;
         _handedDownTo = null;
+        _anchoredAs = null;
 
         return this;
     }
@@ -593,6 +594,35 @@ public class Material
     /// </para>
     /// </summary>
     public Surface Anchor { get; set; }
+
+    /// <summary>
+    /// This method returns this material anchored where a blend that settled on it was written.  A blend's
+    /// materials are named ones written on no surface, so without this their decals were laid in the space of
+    /// whichever part the ray met -- a band painted along a hull's sheer, on a blend of paint over copper handed
+    /// down from the hull's group, was laid in the lofted planking's own space, along its length, and faded to
+    /// nothing on every face.  Only a material with decals is copied, so nothing else a blend settles on is read
+    /// anywhere new.
+    /// </summary>
+    /// <param name="anchor">The surface the blend was written on, if it was written on one.</param>
+    /// <returns>This material, or a copy of it anchored there.</returns>
+    internal Material AnchoredAs(Surface anchor)
+    {
+        if (anchor is null || Anchor is not null || Decals is not { Count: > 0 })
+            return this;
+
+        LazyInitializer.EnsureInitialized(ref _anchoredAs);
+
+        return _anchoredAs.GetOrAdd(anchor, surface =>
+        {
+            Material copy = ((Material) MemberwiseClone()).Forgetting();
+
+            copy.Anchor = surface;
+
+            return copy;
+        });
+    }
+
+    private ConcurrentDictionary<Surface, Material> _anchoredAs;
 
     /// <summary>
     /// This method carries a point from the world into this material's anchor space, for a point
