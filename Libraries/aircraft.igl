@@ -9,6 +9,7 @@
 // | `Airliner` | Swept wings, two engines on pylons, a fin and a tailplane, and a row of windows. |
 // | `LightPlane` | High wing on a strut, a propeller, and gear that does not go away. |
 // | `Helicopter` | A cabin, a tail boom, a main rotor and a tail rotor, on skids. |
+// | `Hornet`, `Tomcat`, `Hawkeye`, `Prowler`, `Viking`, `Seahawk` | Carrier aircraft of the early 2000s, folded to park or spread to fly. |
 //
 // **The first number is a length**, as it is for the [vehicles](#vehicles) and the
 // [vessels](#vessels), because that is how an airplane is described -- a forty-meter airliner, not
@@ -523,5 +524,631 @@ primitive Helicopter(long = 14, variant = 1) -> group {
             }
             material AircraftMetal
         }
+    }
+}
+
+
+// -- Carrier aircraft -----------------------------------------------------------------------------------
+//
+// Six of the types a carrier carried in the early 2000s, each as the type it is rather than a length and a
+// livery: an `F/A-18C` Hornet, an `F-14A` Tomcat, an `E-2C` Hawkeye, an `EA-6B` Prowler, an `S-3B` Viking and an
+// `SH-60F` Seahawk, all in Navy gray, to their published lengths, spans and heights.  The first number is how
+// they stand: for all but the Tomcat, `1` (unless said) folds them as they are parked and struck below, and `0`
+// spreads them to fly.  The Tomcat's wings swing rather than fold, so hers is the sweep in degrees: 20 spread, 68
+// fully swept in flight, and 75 -- oversweep, past what she flies at, over her tailplanes -- to park her.
+//
+// **What a parked carrier aircraft is, is how it folds**, since from the air that is nearly all of it.  A
+// Hornet's outer wings stand up from a third of the way out; a Prowler's do the same a little further in, and
+// a Viking's go on over her back until they cross.  A Hawkeye's are turned on edge and laid aft along her sides
+// below her dome, so she parks half her own width.  Built flat with their wings out, the deck's rows came out a
+// solid crush of wings.
+//
+// Each is built of thin plates drawn in plan -- a wing, a tailplane, a fin, a leading-edge extension -- on a body
+// of ellipsoids and superellipsoids, because from above or across a flight deck the planform is what tells one
+// type from another.
+
+AircraftNavyGray = material { pigment [0.44, 0.455, 0.47]  specular 0.18  shininess 30 }
+AircraftNavyDark = material { pigment [0.20, 0.21, 0.22]  specular 0.15  shininess 30 }
+AircraftRadome = material { pigment [0.30, 0.31, 0.32]  specular 0.25  shininess 40 }
+AircraftNozzle = material { metal 'iron'  roughness 0.5 }
+AircraftCanopy = material { pigment [0.03, 0.04, 0.05]  specular 0.9  shininess 300  reflective 0.25  fresnel }
+
+// A thin plate: an outline drawn in plan (x along the aircraft, y across it to port), `thick` deep, its middle
+// at `y`.
+primitive AircraftPlate(outline, y, thick) -> extrusion {
+    return extrusion { path outline  min Y (y - thick / 2)  max Y (y + thick / 2) }
+}
+
+// A wheel on a leg: the leg from `high` down to the axle, the tire round it.
+primitive AircraftLeg(x, z, r, high) -> group {
+    return group {
+        cylinder { min Y r  max Y high  scale [0.06, 1, 0.06]  translate [x, 0, z]  material AircraftNavyGray }
+        cylinder { min Y -r * 0.45  max Y r * 0.45  scale [r, 1, r]  rotate X 90  translate [x, r, z]  material AircraftTire }
+    }
+}
+
+// The F/A-18C Hornet: 17.07 m long, 12.31 m across her wingtip rails, 8.38 m folded, 4.66 m high.  Leading-edge
+// extensions run forward along her nose to her cockpit, and her two fins stand canted out twenty degrees.
+HornetLex = path { move to 5.9, 0  line to 5.2, 0.5  line to 1.5, 1.32  line to 0.4, 1.32  line to 0.4, 0  close }
+HornetWingIn = path { move to 1.0, 0  line to -0.99, 2.9  line to -3.15, 2.9  line to -3.0, 0  close }
+HornetWingOut = path { move to 0, 0  line to -0.93, 1.85  line to -2.62, 1.85  line to -2.17, 0  close }
+HornetStab = path { move to -5.3, 0  line to -7.25, 2.1  line to -8.35, 2.1  line to -8.4, 0  close }
+HornetFin = path { move to -3.3, 0  line to -5.2, 2.6  line to -6.4, 2.6  line to -6.25, 0  close }
+
+primitive Hornet(folded = 1) -> group {
+    fold = folded * 92
+    return group {
+        sphere { scale [3.5, 0.52, 0.56]  translate [5.0, 1.95, 0] }
+        sphere { scale [1.0, 0.24, 0.24]  translate [8.0, 1.98, 0]  material AircraftRadome }
+        superellipsoid { east 0.45  north 0.55  scale [5.3, 0.6, 1.3]  translate [-2.0, 1.8, 0] }
+        superellipsoid { east 0.3  north 0.4  scale [1.0, 0.36, 0.38]  translate [2.2, 1.55, 0.95] }
+        superellipsoid { east 0.3  north 0.4  scale [1.0, 0.36, 0.38]  translate [2.2, 1.55, -0.95] }
+        sphere { scale [1.25, 0.42, 0.4]  translate [5.0, 2.36, 0]  material AircraftCanopy }
+        cylinder { min Y -0.55  max Y 0.55  scale [0.44, 1, 0.44]  rotate Z 90  translate [-7.3, 1.78, 0.52]  material AircraftNozzle }
+        cylinder { min Y -0.55  max Y 0.55  scale [0.44, 1, 0.44]  rotate Z 90  translate [-7.3, 1.78, -0.52]  material AircraftNozzle }
+        object AircraftPlate(HornetLex, 2.0, 0.1)
+        object AircraftPlate(HornetLex, 2.0, 0.1) { scale [1, 1, -1] }
+        // Each wing, its outer panel folding up about a hinge along her length.
+        group {
+            object AircraftPlate(HornetWingIn, 0, 0.16)
+            object AircraftPlate(HornetWingOut, 0, 0.12) { rotate X -fold  translate [-0.99, 0, 2.9] }
+            translate [0, 1.85, 1.2]
+        }
+        group {
+            object AircraftPlate(HornetWingIn, 0, 0.16)
+            object AircraftPlate(HornetWingOut, 0, 0.12) { rotate X -fold  translate [-0.99, 0, 2.9] }
+            translate [0, 1.85, 1.2]
+            scale [1, 1, -1]
+        }
+        object AircraftPlate(HornetStab, 1.75, 0.1) { translate Z 1.0 }
+        object AircraftPlate(HornetStab, 1.75, 0.1) { translate Z 1.0  scale [1, 1, -1] }
+        object AircraftPlate(HornetFin, 0, 0.12) { rotate X -70  translate [0, 2.2, 0.85] }
+        object AircraftPlate(HornetFin, 0, 0.12) { rotate X -70  translate [0, 2.2, 0.85]  scale [1, 1, -1] }
+        object AircraftLeg(5.6, 0, 0.3, 1.4)
+        object AircraftLeg(-1.2, 1.55, 0.38, 1.6)
+        object AircraftLeg(-1.2, -1.55, 0.38, 1.6)
+        material AircraftNavyGray
+    }
+}
+
+// The F-14A Tomcat: 19.1 m long and 4.88 m high, her wings pivoting at the edge of the broad glove that carries
+// them, and her engines in two nacelles set wide apart with the flat "pancake" between them.
+TomcatGlove = path {
+    move to 4.6, 0  line to 4.6, 0.75  line to 2.0, 1.5  line to -0.3, 2.62  line to -1.6, 2.62  line to -1.6, 0  close
+}
+TomcatWing = path { move to 0.9, 0  line to -1.65, 7.0  line to -2.75, 7.0  line to -2.4, 0  close }
+TomcatStab = path { move to -5.9, 0  line to -8.6, 2.95  line to -9.6, 2.95  line to -9.5, 0  close }
+TomcatFin = path { move to -4.6, 0  line to -7.3, 3.0  line to -8.4, 3.0  line to -7.9, 0  close }
+
+primitive Tomcat(sweep = 75) -> group {
+    return group {
+        sphere { scale [4.8, 0.62, 0.66]  translate [5.0, 2.15, 0] }
+        sphere { scale [1.0, 0.3, 0.3]  translate [9.0, 2.15, 0]  material AircraftRadome }
+        sphere { scale [1.8, 0.48, 0.48]  translate [4.6, 2.6, 0]  material AircraftCanopy }
+        superellipsoid { east 0.2  north 0.5  scale [4.6, 0.32, 1.0]  translate [-3.2, 2.15, 0] }
+        object AircraftPlate(TomcatGlove, 2.15, 0.22)
+        object AircraftPlate(TomcatGlove, 2.15, 0.22) { scale [1, 1, -1] }
+        superellipsoid { east 0.35  north 0.45  scale [5.7, 0.62, 0.62]  translate [-2.9, 1.85, 1.55] }
+        superellipsoid { east 0.35  north 0.45  scale [5.7, 0.62, 0.62]  translate [-2.9, 1.85, -1.55] }
+        cylinder { min Y -0.5  max Y 0.5  scale [0.52, 1, 0.52]  rotate Z 90  translate [-8.8, 1.85, 1.55]  material AircraftNozzle }
+        cylinder { min Y -0.5  max Y 0.5  scale [0.52, 1, 0.52]  rotate Z 90  translate [-8.8, 1.85, -1.55]  material AircraftNozzle }
+        // Her wings are drawn at twenty degrees, and swung on from there.
+        object AircraftPlate(TomcatWing, 0, 0.16) { rotate Y (20 - sweep)  translate [-0.9, 2.2, 2.62] }
+        object AircraftPlate(TomcatWing, 0, 0.16) { rotate Y (20 - sweep)  translate [-0.9, 2.2, 2.62]  scale [1, 1, -1] }
+        object AircraftPlate(TomcatStab, 1.95, 0.12) { translate Z 2.1 }
+        object AircraftPlate(TomcatStab, 1.95, 0.12) { translate Z 2.1  scale [1, 1, -1] }
+        object AircraftPlate(TomcatFin, 0, 0.14) { rotate X -85  translate [0, 2.35, 1.75] }
+        object AircraftPlate(TomcatFin, 0, 0.14) { rotate X -85  translate [0, 2.35, 1.75]  scale [1, 1, -1] }
+        object AircraftLeg(6.3, 0, 0.3, 1.6)
+        object AircraftLeg(-1.6, 2.5, 0.45, 1.6)
+        object AircraftLeg(-1.6, -2.5, 0.45, 1.6)
+        material AircraftNavyGray
+    }
+}
+
+// The E-2C Hawkeye: 17.56 m long, 24.56 m across, 8.94 m folded, 5.58 m high, her rotodome 7.32 m across.
+//
+// **Her wings fold back, not up.**  Outboard of her engines each panel turns about a skewed hinge so it comes to
+// lie on edge along her side, its leading edge down, its tip aft by her tail -- which is what lets a 24.56 m wing
+// park in under nine.  Here it is the same turn made as two: up on end about her length, then swung aft.
+//
+// The dome carries VAW-123's spiral, which is why the Screwtops are called what they are: from the air it is how
+// a Hawkeye is found among the jets.
+HawkeyeWingIn = path { move to 1.9, 0  line to 1.75, 4.6  line to -1.15, 4.6  line to -1.2, 0  close }
+HawkeyeWingOut = path { move to 0, 0  line to -0.45, 7.7  line to -1.85, 7.7  line to -2.85, 0  close }
+HawkeyeStab = path { move to -6.4, 0  line to -6.9, 3.95  line to -8.3, 3.95  line to -8.4, 0  close }
+HawkeyeFin = path { move to -6.6, 0  line to -7.2, 2.2  line to -8.25, 2.2  line to -8.35, 0  close }
+// The spiral, wound three and a quarter times from the middle out, on a dome of radius one.
+HawkeyeSpiral = path {
+    move to 0.06, 0
+    line to 0.065, 0.008
+    line to 0.068, 0.018
+    line to 0.071, 0.028
+    line to 0.071, 0.04
+    line to 0.07, 0.052
+    line to 0.066, 0.064
+    line to 0.061, 0.076
+    line to 0.054, 0.088
+    line to 0.044, 0.099
+    line to 0.033, 0.109
+    line to 0.02, 0.117
+    line to 0.005, 0.124
+    line to -0.011, 0.129
+    line to -0.029, 0.132
+    line to -0.047, 0.132
+    line to -0.066, 0.13
+    line to -0.085, 0.125
+    line to -0.104, 0.117
+    line to -0.122, 0.106
+    line to -0.139, 0.093
+    line to -0.155, 0.077
+    line to -0.168, 0.058
+    line to -0.18, 0.038
+    line to -0.188, 0.015
+    line to -0.194, -0.01
+    line to -0.197, -0.035
+    line to -0.196, -0.061
+    line to -0.191, -0.088
+    line to -0.183, -0.115
+    line to -0.171, -0.14
+    line to -0.155, -0.165
+    line to -0.136, -0.188
+    line to -0.114, -0.208
+    line to -0.088, -0.226
+    line to -0.06, -0.241
+    line to -0.03, -0.252
+    line to 0.003, -0.259
+    line to 0.036, -0.262
+    line to 0.071, -0.26
+    line to 0.105, -0.254
+    line to 0.139, -0.243
+    line to 0.172, -0.228
+    line to 0.204, -0.208
+    line to 0.233, -0.184
+    line to 0.259, -0.155
+    line to 0.281, -0.123
+    line to 0.3, -0.088
+    line to 0.314, -0.05
+    line to 0.323, -0.01
+    line to 0.327, 0.032
+    line to 0.326, 0.075
+    line to 0.319, 0.118
+    line to 0.306, 0.16
+    line to 0.287, 0.2
+    line to 0.264, 0.239
+    line to 0.234, 0.275
+    line to 0.201, 0.307
+    line to 0.162, 0.334
+    line to 0.12, 0.358
+    line to 0.075, 0.375
+    line to 0.027, 0.387
+    line to -0.023, 0.393
+    line to -0.074, 0.392
+    line to -0.125, 0.384
+    line to -0.175, 0.37
+    line to -0.224, 0.349
+    line to -0.27, 0.322
+    line to -0.312, 0.289
+    line to -0.351, 0.25
+    line to -0.385, 0.206
+    line to -0.413, 0.157
+    line to -0.435, 0.104
+    line to -0.45, 0.049
+    line to -0.458, -0.009
+    line to -0.458, -0.068
+    line to -0.451, -0.127
+    line to -0.436, -0.186
+    line to -0.413, -0.242
+    line to -0.384, -0.296
+    line to -0.346, -0.346
+    line to -0.303, -0.392
+    line to -0.253, -0.432
+    line to -0.198, -0.466
+    line to -0.139, -0.492
+    line to -0.076, -0.511
+    line to -0.01, -0.522
+    line to 0.057, -0.525
+    line to 0.124, -0.518
+    line to 0.191, -0.503
+    line to 0.256, -0.48
+    line to 0.318, -0.447
+    line to 0.376, -0.407
+    line to 0.429, -0.359
+    line to 0.476, -0.305
+    line to 0.516, -0.244
+    line to 0.548, -0.178
+    line to 0.571, -0.108
+    line to 0.586, -0.035
+    line to 0.591, 0.041
+    line to 0.586, 0.117
+    line to 0.572, 0.192
+    line to 0.547, 0.265
+    line to 0.514, 0.336
+    line to 0.471, 0.402
+    line to 0.419, 0.463
+    line to 0.36, 0.517
+    line to 0.294, 0.563
+    line to 0.222, 0.601
+    line to 0.145, 0.629
+    line to 0.064, 0.648
+    line to -0.019, 0.656
+    line to -0.104, 0.654
+    line to -0.187, 0.641
+    line to -0.27, 0.616
+    line to -0.349, 0.582
+    line to -0.423, 0.537
+    line to -0.492, 0.482
+    line to -0.554, 0.419
+    line to -0.607, 0.348
+    line to -0.651, 0.27
+    line to -0.686, 0.186
+    line to -0.709, 0.098
+    line to -0.721, 0.007
+    line to -0.721, -0.085
+    line to -0.71, -0.178
+    line to -0.687, -0.269
+    line to -0.651, -0.356
+    line to -0.605, -0.44
+    line to -0.548, -0.517
+    line to -0.481, -0.587
+    line to -0.406, -0.648
+    line to -0.322, -0.699
+    line to -0.232, -0.739
+    line to -0.137, -0.768
+    line to -0.039, -0.785
+    line to 0.062, -0.789
+    line to 0.163, -0.78
+    line to 0.263, -0.757
+    line to 0.359, -0.723
+    line to 0.451, -0.676
+    line to 0.537, -0.617
+    line to 0.615, -0.547
+    line to 0.684, -0.467
+    line to 0.743, -0.379
+    line to 0.79, -0.283
+    line to 0.825, -0.181
+    line to 0.847, -0.075
+    line to 0.855, 0.034
+    line to 0.849, 0.143
+    line to 0.829, 0.251
+    line to 0.795, 0.357
+    line to 0.748, 0.458
+    line to 0.688, 0.553
+    line to 0.615, 0.64
+    line to 0.532, 0.717
+    line to 0.439, 0.784
+    line to 0.338, 0.838
+    line to 0.23, 0.88
+    line to 0.116, 0.907
+    line to -0, 0.92
+    line to -0, 1.005
+    line to 0.127, 0.991
+    line to 0.251, 0.962
+    line to 0.369, 0.917
+    line to 0.481, 0.858
+    line to 0.583, 0.786
+    line to 0.674, 0.701
+    line to 0.754, 0.606
+    line to 0.82, 0.503
+    line to 0.873, 0.392
+    line to 0.91, 0.276
+    line to 0.933, 0.157
+    line to 0.94, 0.037
+    line to 0.931, -0.083
+    line to 0.908, -0.199
+    line to 0.87, -0.311
+    line to 0.819, -0.417
+    line to 0.755, -0.515
+    line to 0.679, -0.603
+    line to 0.593, -0.681
+    line to 0.499, -0.746
+    line to 0.397, -0.799
+    line to 0.291, -0.838
+    line to 0.18, -0.863
+    line to 0.069, -0.873
+    line to -0.043, -0.87
+    line to -0.152, -0.852
+    line to -0.258, -0.82
+    line to -0.358, -0.776
+    line to -0.451, -0.72
+    line to -0.535, -0.652
+    line to -0.61, -0.575
+    line to -0.674, -0.49
+    line to -0.726, -0.397
+    line to -0.766, -0.3
+    line to -0.792, -0.198
+    line to -0.806, -0.095
+    line to -0.806, 0.008
+    line to -0.793, 0.11
+    line to -0.768, 0.208
+    line to -0.73, 0.302
+    line to -0.681, 0.39
+    line to -0.621, 0.47
+    line to -0.553, 0.542
+    line to -0.476, 0.604
+    line to -0.392, 0.655
+    line to -0.304, 0.694
+    line to -0.211, 0.722
+    line to -0.117, 0.738
+    line to -0.022, 0.741
+    line to 0.072, 0.733
+    line to 0.164, 0.712
+    line to 0.251, 0.681
+    line to 0.333, 0.638
+    line to 0.409, 0.586
+    line to 0.476, 0.526
+    line to 0.535, 0.457
+    line to 0.585, 0.382
+    line to 0.624, 0.303
+    line to 0.652, 0.219
+    line to 0.669, 0.133
+    line to 0.676, 0.046
+    line to 0.671, -0.04
+    line to 0.655, -0.124
+    line to 0.629, -0.204
+    line to 0.593, -0.28
+    line to 0.548, -0.351
+    line to 0.494, -0.414
+    line to 0.434, -0.47
+    line to 0.368, -0.517
+    line to 0.296, -0.555
+    line to 0.221, -0.583
+    line to 0.144, -0.601
+    line to 0.066, -0.609
+    line to -0.012, -0.607
+    line to -0.088, -0.595
+    line to -0.162, -0.574
+    line to -0.232, -0.544
+    line to -0.296, -0.505
+    line to -0.355, -0.459
+    line to -0.407, -0.407
+    line to -0.451, -0.348
+    line to -0.487, -0.285
+    line to -0.514, -0.219
+    line to -0.533, -0.15
+    line to -0.542, -0.08
+    line to -0.543, -0.011
+    line to -0.534, 0.058
+    line to -0.517, 0.124
+    line to -0.492, 0.187
+    line to -0.46, 0.246
+    line to -0.42, 0.299
+    line to -0.375, 0.347
+    line to -0.324, 0.387
+    line to -0.269, 0.421
+    line to -0.211, 0.447
+    line to -0.151, 0.465
+    line to -0.09, 0.475
+    line to -0.028, 0.477
+    line to 0.032, 0.472
+    line to 0.091, 0.459
+    line to 0.147, 0.438
+    line to 0.199, 0.411
+    line to 0.247, 0.378
+    line to 0.29, 0.339
+    line to 0.326, 0.296
+    line to 0.357, 0.249
+    line to 0.381, 0.199
+    line to 0.398, 0.147
+    line to 0.408, 0.094
+    line to 0.412, 0.041
+    line to 0.408, -0.012
+    line to 0.398, -0.063
+    line to 0.382, -0.112
+    line to 0.359, -0.157
+    line to 0.332, -0.199
+    line to 0.3, -0.236
+    line to 0.263, -0.269
+    line to 0.224, -0.296
+    line to 0.182, -0.317
+    line to 0.138, -0.333
+    line to 0.093, -0.342
+    line to 0.048, -0.346
+    line to 0.003, -0.344
+    line to -0.04, -0.336
+    line to -0.081, -0.323
+    line to -0.119, -0.305
+    line to -0.155, -0.283
+    line to -0.186, -0.256
+    line to -0.214, -0.227
+    line to -0.237, -0.194
+    line to -0.255, -0.16
+    line to -0.268, -0.124
+    line to -0.277, -0.087
+    line to -0.28, -0.05
+    line to -0.279, -0.014
+    line to -0.273, 0.021
+    line to -0.263, 0.055
+    line to -0.249, 0.086
+    line to -0.231, 0.115
+    line to -0.21, 0.14
+    line to -0.186, 0.162
+    line to -0.161, 0.181
+    line to -0.133, 0.195
+    line to -0.105, 0.206
+    line to -0.076, 0.212
+    line to -0.047, 0.215
+    line to -0.019, 0.214
+    line to 0.008, 0.209
+    line to 0.034, 0.201
+    line to 0.058, 0.19
+    line to 0.079, 0.176
+    line to 0.098, 0.16
+    line to 0.114, 0.142
+    line to 0.128, 0.123
+    line to 0.138, 0.102
+    line to 0.145, 0.081
+    line to 0.149, 0.06
+    line to 0.151, 0.039
+    line to 0.149, 0.019
+    line to 0.145, 0
+    close
+}
+
+HawkeyeDome = material {
+    pigment [0.62, 0.62, 0.60]  specular 0.25  shininess 40
+    decal { path HawkeyeSpiral  color [0.05, 0.05, 0.05]  planar  min Y 0  max Y 0.6  scale 3.5 }
+}
+
+// A four-bladed propeller, its disc square to X.
+primitive HawkeyeProp() -> group {
+    return group {
+        cube { scale [0.08, 2.05, 0.16] }
+        cube { scale [0.08, 0.16, 2.05] }
+        sphere { scale [0.5, 0.32, 0.32]  translate X 0.2 }
+        material AircraftNavyDark
+    }
+}
+
+primitive Hawkeye(folded = 1) -> group {
+    return group {
+        superellipsoid { east 1  north 0.8  scale [7.6, 1.05, 1.0]  translate [0.4, 2.2, 0] }
+        sphere { scale [1.1, 0.5, 0.75]  translate [5.9, 2.75, 0]  material AircraftCanopy }
+        superellipsoid { east 1  north 0.9  scale [1.6, 0.7, 0.65]  translate [-6.5, 2.75, 0] }
+        object AircraftPlate(HawkeyeWingIn, 3.25, 0.32)
+        object AircraftPlate(HawkeyeWingIn, 3.25, 0.32) { scale [1, 1, -1] }
+        group {
+            object AircraftPlate(HawkeyeWingOut, 0, 0.26) {
+                rotate X (-90 * folded)  rotate Z (90 * folded)  translate [1.75, 0, 4.6]
+            }
+            translate Y 3.25
+        }
+        group {
+            object AircraftPlate(HawkeyeWingOut, 0, 0.26) {
+                rotate X (-90 * folded)  rotate Z (90 * folded)  translate [1.75, 0, 4.6]
+            }
+            translate Y 3.25
+            scale [1, 1, -1]
+        }
+        superellipsoid { east 0.8  north 0.8  scale [3.3, 0.72, 0.62]  translate [0.9, 2.7, 3.9] }
+        superellipsoid { east 0.8  north 0.8  scale [3.3, 0.72, 0.62]  translate [0.9, 2.7, -3.9] }
+        object HawkeyeProp() { translate [4.3, 2.8, 3.9] }
+        object HawkeyeProp() { translate [4.3, 2.8, -3.9] }
+        // Her tailplane, with eleven degrees of dihedral, and its four fins.
+        object AircraftPlate(HawkeyeStab, 0, 0.18) { rotate X -11  translate Y 3.35 }
+        object AircraftPlate(HawkeyeStab, 0, 0.18) { rotate X -11  translate Y 3.35  scale [1, 1, -1] }
+        object AircraftPlate(HawkeyeFin, 0, 0.14) { rotate X -90  translate [0, 3.6, 1.35] }
+        object AircraftPlate(HawkeyeFin, 0, 0.14) { rotate X -90  translate [0, 3.6, -1.35] }
+        object AircraftPlate(HawkeyeFin, 0, 0.14) { rotate X -90  translate [0, 4.1, 3.9] }
+        object AircraftPlate(HawkeyeFin, 0, 0.14) { rotate X -90  translate [0, 4.1, -3.9] }
+        // Her rotodome on its two struts.
+        cube { scale [0.25, 0.75, 0.18]  translate [-1.2, 4.0, 0.5] }
+        cube { scale [0.25, 0.75, 0.18]  translate [-1.2, 4.0, -0.5] }
+        group {
+            sphere { scale [3.66, 0.38, 3.66] }
+            translate [-1.6, 5.15, 0]
+            material HawkeyeDome
+        }
+        object AircraftLeg(6.2, 0, 0.3, 1.3)
+        object AircraftLeg(0.6, 2.2, 0.42, 1.9)
+        object AircraftLeg(0.6, -2.2, 0.42, 1.9)
+        material AircraftNavyGray
+    }
+}
+
+// The EA-6B Prowler: 18.24 m long with her refueling probe, 16.15 m across, 7.87 m folded, 4.95 m high to the
+// receiver pod on top of her fin.  Four men sit two and two under one broad canopy, and a jamming pod hangs under
+// each wing.
+ProwlerWingIn = path { move to 2.6, 0  line to 1.3, 2.9  line to -1.05, 2.9  line to -1.6, 0  close }
+ProwlerWingOut = path { move to 0, 0  line to -2.3, 5.0  line to -3.3, 5.0  line to -2.35, 0  close }
+ProwlerStab = path { move to -6.6, 0  line to -8.0, 3.0  line to -8.9, 3.0  line to -8.7, 0  close }
+ProwlerFin = path { move to -4.2, 0  line to -6.3, 2.75  line to -8.2, 2.75  line to -8.0, 0  close }
+
+primitive Prowler(folded = 1) -> group {
+    return group {
+        superellipsoid { east 0.7  north 0.7  scale [4.0, 0.95, 1.05]  translate [4.4, 2.2, 0] }
+        superellipsoid { east 0.9  north 0.8  scale [5.6, 0.75, 0.8]  translate [-3.0, 2.25, 0] }
+        sphere { scale [1.0, 0.35, 0.35]  translate [8.2, 2.0, 0]  material AircraftRadome }
+        superellipsoid { east 0.5  north 0.5  scale [1.9, 0.45, 0.85]  translate [5.0, 2.95, 0]  material AircraftCanopy }
+        cylinder { min Y 0  max Y 1.4  scale 0.05  rotate Z -90  translate [7.4, 2.9, 0] }
+        superellipsoid { east 0.7  north 0.7  scale [2.7, 0.55, 0.55]  translate [1.2, 1.55, 1.25] }
+        superellipsoid { east 0.7  north 0.7  scale [2.7, 0.55, 0.55]  translate [1.2, 1.55, -1.25] }
+        group {
+            object AircraftPlate(ProwlerWingIn, 0, 0.2)
+            object AircraftPlate(ProwlerWingOut, 0, 0.16) { rotate X (-100 * folded)  translate [1.3, 0, 2.9] }
+            translate [0, 2.2, 0.9]
+        }
+        group {
+            object AircraftPlate(ProwlerWingIn, 0, 0.2)
+            object AircraftPlate(ProwlerWingOut, 0, 0.16) { rotate X (-100 * folded)  translate [1.3, 0, 2.9] }
+            translate [0, 2.2, 0.9]
+            scale [1, 1, -1]
+        }
+        superellipsoid { east 1  north 0.7  scale [2.2, 0.38, 0.38]  translate [0.6, 1.25, 2.9] }
+        superellipsoid { east 1  north 0.7  scale [2.2, 0.38, 0.38]  translate [0.6, 1.25, -2.9] }
+        object AircraftPlate(ProwlerStab, 2.45, 0.14) { translate Z 0.4 }
+        object AircraftPlate(ProwlerStab, 2.45, 0.14) { translate Z 0.4  scale [1, 1, -1] }
+        object AircraftPlate(ProwlerFin, 0, 0.18) { rotate X -90  translate Y 2.8 }
+        superellipsoid { east 1  north 0.8  scale [1.7, 0.42, 0.42]  translate [-6.6, 5.55, 0] }
+        object AircraftLeg(5.6, 0, 0.3, 1.4)
+        object AircraftLeg(-0.9, 1.7, 0.4, 1.4)
+        object AircraftLeg(-0.9, -1.7, 0.4, 1.4)
+        material AircraftNavyGray
+    }
+}
+
+// The S-3B Viking: 16.26 m long, 20.93 m across, 8.99 m folded, 6.93 m high, 4.65 m with her fin folded.  Her
+// wings fold up and on over her back until they cross, the port one over the starboard, and her tall fin folds
+// down to port to clear the hangar's deckhead.
+VikingWingIn = path { move to 1.7, 0  line to 1.15, 3.4  line to -1.75, 3.4  line to -2.1, 0  close }
+VikingWingOut = path { move to 0, 0  line to -1.7, 6.6  line to -3.0, 6.6  line to -2.9, 0  close }
+VikingStab = path { move to -5.4, 0  line to -6.6, 4.1  line to -7.6, 4.1  line to -7.9, 0  close }
+VikingFin = path { move to -4.2, 0  line to -6.5, 3.8  line to -7.8, 3.8  line to -7.9, 0  close }
+
+primitive Viking(folded = 1) -> group {
+    return group {
+        superellipsoid { east 0.6  north 0.6  scale [7.0, 1.3, 1.15]  translate [0.3, 2.0, 0] }
+        sphere { scale [1.4, 1.05, 1.1]  translate [6.6, 2.0, 0] }
+        superellipsoid { east 0.5  north 0.5  scale [1.2, 0.4, 0.95]  translate [5.9, 3.1, 0]  material AircraftCanopy }
+        group {
+            object AircraftPlate(VikingWingIn, 0, 0.24)
+            object AircraftPlate(VikingWingOut, 0, 0.18) { rotate X (-152 * folded)  translate [1.15, 0, 3.4] }
+            translate [0, 3.35, 0.9]
+        }
+        group {
+            object AircraftPlate(VikingWingIn, 0, 0.24)
+            object AircraftPlate(VikingWingOut, 0, 0.18) { rotate X (-146 * folded)  translate [1.15, 0, 3.4] }
+            translate [0, 3.35, 0.9]
+            scale [1, 1, -1]
+        }
+        superellipsoid { east 0.8  north 0.8  scale [1.9, 0.62, 0.62]  translate [0.9, 2.25, 2.85] }
+        superellipsoid { east 0.8  north 0.8  scale [1.9, 0.62, 0.62]  translate [0.9, 2.25, -2.85] }
+        object AircraftPlate(VikingStab, 2.6, 0.14)
+        object AircraftPlate(VikingStab, 2.6, 0.14) { scale [1, 1, -1] }
+        object AircraftPlate(VikingFin, 0, 0.2) { rotate X (-90 + 90 * folded)  translate Y 3.2 }
+        object AircraftLeg(5.4, 0, 0.3, 1.0)
+        object AircraftLeg(0.0, 1.6, 0.4, 1.0)
+        object AircraftLeg(0.0, -1.6, 0.4, 1.0)
+        material AircraftNavyGray
+    }
+}
+
+// The SH-60F Seahawk: 15.26 m long, 3.79 m to the top of her rotor head, her rotor 16.36 m across.  Folded, her
+// four blades lie aft along her tail boom and her tail pylon folds forward beside it, and she is 12.47 m long.
+primitive Seahawk(folded = 1) -> group {
+    return group {
+        superellipsoid { east 0.45  north 0.45  scale [3.0, 0.95, 1.18]  translate [2.6, 1.55, 0] }
+        sphere { scale [1.1, 0.75, 1.0]  translate [5.0, 1.55, 0]  material AircraftCanopy }
+        superellipsoid { east 0.6  north 0.6  scale [2.0, 0.42, 0.95]  translate [1.8, 2.75, 0] }
+        superellipsoid { east 1  north 1  scale [3.8, 0.45, 0.42]  translate [-3.2, 2.05, 0] }
+        cylinder { min Y 2.9  max Y 3.6  scale 0.25  translate [1.6, 0, 0] }
+        if (folded > 0.5) {
+            cube { scale [1.0, 0.12, 0.85]  translate [-6.3, 2.2, 0.85] }
+            cube { scale [3.9, 0.06, 0.27]  rotate Y 4  translate [-2.3, 3.5, 0.5] }
+            cube { scale [3.9, 0.06, 0.27]  rotate Y -4  translate [-2.3, 3.5, -0.5] }
+            cube { scale [3.9, 0.06, 0.27]  rotate Y 1.5  translate [-2.3, 3.3, 0.18] }
+            cube { scale [3.9, 0.06, 0.27]  rotate Y -1.5  translate [-2.3, 3.3, -0.18] }
+        }
+        if (folded < 0.5) {
+            cube { scale [1.0, 0.85, 0.12]  translate [-7.2, 2.85, 0] }
+            cylinder { min Y -1.65  max Y 1.65  scale [0.05, 1, 0.12]  rotate X 90  translate [-7.6, 3.4, 0.25] }
+            for blade in [0, 3] {
+                cube { scale [4.1, 0.06, 0.27]  translate X 4.1  rotate Y (blade * 90 + 20)  translate [1.6, 3.6, 0] }
+            }
+        }
+        object AircraftLeg(1.0, 1.4, 0.3, 0.9)
+        object AircraftLeg(1.0, -1.4, 0.3, 0.9)
+        object AircraftLeg(-4.6, 0, 0.2, 1.4)
+        material AircraftNavyGray
     }
 }

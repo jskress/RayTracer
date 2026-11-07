@@ -366,6 +366,40 @@ public class TestImports
             """));
     }
 
+    [TestMethod]
+    public void TestAnIncludeMayFollowAnImport()
+    {
+        // Includes and imports come in any order.  Taken once each, includes first, an include written after
+        // an import was handed to the scene's clauses, and the scene was refused as "an unsupported object type".
+        Write("extra.igl", "T_Extra = material { pigment color [0.2, 0.8, 0.2] }");
+
+        Assert.IsNull(ErrorFrom("""
+            import 'library' { T_Wanted }
+            include 'extra.igl'
+            import 'trees' { elm }
+            include 'extra.igl'
+            sphere { material T_Wanted }
+            sphere { material T_Extra  translate [2, 0, 0] }
+            object elm(2)
+            """));
+    }
+
+    [TestMethod]
+    public void TestALibraryMayIncludeAFileAfterAnImport()
+    {
+        Write("shared.igl", "T_Shared = material { pigment color [0.2, 0.8, 0.2] }");
+        Write("compound.igl", """
+            import 'library' { T_Wanted }
+            include 'shared.igl'
+            T_Compound = material T_Shared { }
+            """);
+
+        Assert.IsNull(ErrorFrom("""
+            import 'compound' { T_Compound }
+            sphere { material T_Compound }
+            """));
+    }
+
     /// <summary>
     /// A mistake in the scene after an import is reported where it is, as what it is.  Every file read shared one
     /// record of the furthest place reading had failed, so the library's last look ahead -- further down its own

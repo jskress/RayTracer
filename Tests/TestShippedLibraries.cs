@@ -4796,4 +4796,123 @@ public class TestShippedLibraries
 
         Assert.IsTrue(top + 14 > 24.5, $"her mainmast reaches only {top + 14:F2} m");
     }
+
+    /// <summary>
+    /// Copies the vessels library beside the scenes this class writes, with the aircraft library her air wing comes
+    /// from.
+    /// </summary>
+    private void UseVessels()
+    {
+        foreach (string name in new[] { "vessels.igl", "aircraft.igl" })
+            File.Copy(Shipped.First(path => Path.GetFileName(path) == name), Path.Combine(_directory, name), true);
+    }
+
+    [TestMethod]
+    public void TestTheCarrierEnterpriseIsAsLongAndAsBroadAsHerFlightDeck()
+    {
+        // From straight above, half a meter to a pixel, her bow to the right and her port side up: 342.3 m on her
+        // flight deck and 78.4 m across it, and the catwalks round its edge reaching 1.8 m further all round --
+        // 345.9 m long and 82.1 m across, from the catwalk outside her island's sponson to the one by her port
+        // quarter.  The sponson of three domes beside her island (X -14 to -6) stands 1.6 m further out than the
+        // catwalk, so her breadth is taken fore and aft of it.
+        UseVessels();
+        const double Size = 0.5;
+        Canvas top = OrthographicView("import 'vessels' { CarrierEnterprise }", ["object CarrierEnterprise(0)"],
+            (0, 0, 0), (0, 1, 0), "[0, 0, 1]", Size, 760, 240, "[0, -1, 0]");
+        (double aft, double ahead, _, _) = ReachIn(top, 0, top.Width, Size);
+        int domesFrom = (int) (top.Width / 2.0 - 16 / Size), domesTo = (int) (top.Width / 2.0 - 4 / Size);
+        (_, _, double starboardAft, double portAft) = ReachIn(top, 0, domesFrom, Size);
+        (_, _, double starboardFore, double portFore) = ReachIn(top, domesTo, top.Width, Size);
+
+        Assert.AreEqual(345.9, ahead - aft, 1.5, "her length");
+        Assert.AreEqual(82.1, Math.Max(portAft, portFore) - Math.Min(starboardAft, starboardFore), 1.5,
+            "her breadth");
+    }
+
+    [TestMethod]
+    public void TestTheCarrierEnterprisesIslandAndMastStandToStarboard()
+    {
+        // From dead ahead, a quarter of a meter to a pixel: what stands highest is her mast, 57 m over the water and
+        // 27.75 m to starboard of her middle -- which, seen from ahead, is to the left.
+        UseVessels();
+        const double Size = 0.25;
+        Canvas ahead = OrthographicView("import 'vessels' { CarrierEnterprise }", ["object CarrierEnterprise(0)"],
+            (0, 30, 0), (1, 0, 0), "[0, 1, 0]", Size, 400, 240, "[-1, -1, 0]");
+        int high = int.MaxValue, column = -1;
+
+        for (int y = 0; y < ahead.Height && column < 0; y++)
+        for (int x = 0; x < ahead.Width; x++)
+        {
+            if (!IsTheBackdrop(ahead.GetPixel(x, y)))
+            {
+                (high, column) = (y, x);
+
+                break;
+            }
+        }
+
+        double up = 30 + (ahead.Height / 2.0 - high) * Size;
+        double across = (column + 0.5 - ahead.Width / 2.0) * Size;
+
+        Assert.AreEqual(57, up, 0.5, "her masthead");
+        Assert.AreEqual(-27.75, across, 0.5, "her mast across her");
+    }
+
+    [TestMethod]
+    public void TestCarrierAircraftParkNarrowerThanTheyFly()
+    {
+        // From straight above, five centimeters to a pixel, across each: a Hornet 8.38 m with her outer wings folded
+        // and wider than 11.5 m with them spread; a Tomcat 19.55 m with her wings at 20 degrees and no wider than her
+        // tailplanes' 10.15 m, give or take her swept wingtips, overswept to park.
+        UseVessels();
+        const double Size = 0.05;
+
+        double Across(string aircraft)
+        {
+            Canvas top = OrthographicView("import 'aircraft' { Hornet, Tomcat }", [$"object {aircraft}"],
+                (0, 0, 0), (0, 1, 0), "[1, 0, 0]", Size, 440, 440, "[0, -1, 0]");
+            (double left, double right, _, _) = ReachIn(top, 0, top.Width, Size);
+
+            return right - left;
+        }
+
+        Assert.AreEqual(8.38, Across("Hornet(1)"), 0.4, "a Hornet folded");
+        Assert.IsTrue(Across("Hornet(0)") > 11.5, "a Hornet spread is no wider than she folds");
+        Assert.AreEqual(19.55, Across("Tomcat(20)"), 0.5, "a Tomcat spread");
+        Assert.IsTrue(Across("Tomcat(75)") < 10.7, "a Tomcat overswept is wider than her tailplanes");
+    }
+
+    [TestMethod]
+    public void TestTheCarrierEnterprisesWakeLiesAsternOfHerWhereverSheIsTurned()
+    {
+        // The sea with her wake in it, from straight above, two meters to a pixel: white astern of her, and dark ahead
+        // and abeam -- and turned a quarter, astern is where the turn puts it.
+        UseVessels();
+        const double Size = 2;
+
+        double Red(int turn, double x, double z)
+        {
+            Canvas top = OrthographicView("import 'vessels' { CarrierEnterpriseWake }",
+                [$"plane {{ material CarrierEnterpriseWake(0, 0, {turn}) }}"],
+                (0, 0, 0), (0, 1, 0), "[1, 0, 0]", Size, 400, 400, "[0, -1, 0]");
+            double sum = 0;
+            int count = 0;
+
+            // Seen from above with X up the picture, -Z is to the right.
+            for (double dx = -30; dx <= 30; dx += Size)
+            for (double dz = -8; dz <= 8; dz += Size)
+            {
+                sum += top.GetPixel((int) Math.Floor(200 - (z + dz) / Size), (int) Math.Floor(200 - (x + dx) / Size)).Red;
+                count++;
+            }
+
+            return sum / count;
+        }
+
+        Assert.IsTrue(Red(0, -230, 0) > 0.12, $"astern of her was {Red(0, -230, 0):F3}");
+        Assert.IsTrue(Red(0, 230, 0) < 0.05, $"ahead of her was {Red(0, 230, 0):F3}");
+        Assert.IsTrue(Red(0, 0, -150) < 0.05, $"abeam of her was {Red(0, 0, -150):F3}");
+        Assert.IsTrue(Red(90, 0, 230) > 0.12, $"astern of her turned a quarter was {Red(90, 0, 230):F3}");
+        Assert.IsTrue(Red(90, -230, 0) < 0.05, $"where astern was before she was turned was {Red(90, -230, 0):F3}");
+    }
 }

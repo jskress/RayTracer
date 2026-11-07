@@ -990,6 +990,8 @@ object Submarine(70) { translate Z -60 }
 | `Sailboat` | A sloop: hull, fin keel, coachroof, mast and two sails. |
 | `Trawler` | A working boat: hull, bulwarks, wheelhouse and a derrick. |
 | `Submarine` | A teardrop hull, a sail, diving planes and a rudder. |
+| `CarrierEnterprise` | USS Enterprise (CVN-65) as she was in 2004, her air wing parked on her deck; see [The carrier Enterprise](#the-carrier-enterprise). |
+| `CarrierEnterpriseWake` | A sea with her wake in it. |
 | `VesselWhite`, `VesselBlue`, `VesselGreen` | Topsides paint. |
 | `VesselAntifoul` | What a hull is below the waterline. |
 
@@ -1062,6 +1064,53 @@ greatest girth exactly amidships and tapers from there to both ends, which is a 
 parallel middle body with a blunt bow on one end and a long fine run to the screw on the other, so it is
 a cylinder between two unequal ellipsoids, each sized to meet the cylinder at full girth so the joins do
 not show as rings.
+
+##### The carrier Enterprise
+
+```
+import 'vessels' { CarrierEnterprise, CarrierEnterpriseWake }
+import 'water' { Water }
+
+object Water(400000, 400000, 'breezy') { material CarrierEnterpriseWake() }
+object CarrierEnterprise()
+```
+
+USS Enterprise (CVN-65), the first nuclear carrier, as she was in 2004 — after the refit of 1979–82 had taken the
+SCANFAR cube off her island and put rotating radars on a mast in its place: 342.3 m on her flight deck, 78.4 m
+across it, 40.5 m in the beam at her waterline, drawing 12 m, her flight deck 19 m over the water.  She is a
+particular ship rather than a length, so she takes no length; like the rest here she faces `+X`, her waterline
+at nought and her middle at the origin, with her port side to `+Z`.
+
+`CarrierEnterprise(planes)` parks Carrier Air Wing One on her deck as she carried it in June 2004 — Hornets
+and Tomcats in two rows angled across her bow with their tails over her sides, Prowlers, Vikings and Hawkeyes
+along her starboard edge either side of her island and a second rank inboard of them, two Seahawks on her
+fantail and a Hornet on her port elevator, her landing area clear — from the [aircraft](#aircraft).
+`planes` is `1` unless said; `0` leaves her deck bare.
+
+No plans of her are public.  Her deck is drawn from a Navy photograph taken from straight overhead in November
+2003, scaled to her published length and breadth; her hull, island and mast are from Navy photographs of her
+underway in 2003 and 2004 from her bow, either beam and astern.  Her island has her number on both sides, the
+Battle E to port, two decks of windows and her domes; her flight deck its landing area, its four catapults
+and its elevators painted on.
+
+**What makes a carrier read as one from the air is her edges.**  Her flight deck stands out over her hull by
+up to twenty meters, and what lies under it — the sloping skirts carrying it, the hangar bays open under her
+elevators, the catwalks and banks of life rafts round the rim — is the dark, busy band that frames the deck.
+Drawn as a slab on a hull she was a model.
+
+**Her wake is in the sea, not on it.**  `CarrierEnterpriseWake(along, across, turn)` is a sea water with her
+wake in it — the white water her bow throws up and spreads down her sides, the churned band astern as wide as
+her transom fading over several of her lengths, and the diverging Kelvin crests breaking white near her —
+for the surface of water she stands in.  It is a pattern in her frame, so it lies where she lies: give it the
+place and turn she was given, `along` and `across` for her `translate` in X and Z and `turn` for her
+`rotate Y`.  Foam laid as decals on a second sheet of water over the first read as stickers and doubled the
+render; read from the place, it costs nothing to say.
+
+From a helicopter off her bow her side foam, fifteen meters wide amidships, foreshortens to a few pixels, and
+what shows white is her bow wave and her wake — as it does in photographs of her.  From that height the
+`water` library's five wave trains also beat into a quilted pattern the open ocean does not have:
+[`the-enterprise-underway.igl`](../gallery/Local/showcase/the-enterprise-underway.igl) writes its own sea, seven
+trains of unrelated lengths and headings.
 
 #### Sailing Ships
 
@@ -2545,6 +2594,7 @@ object Helicopter(14) { translate Z -40 }
 | `Airliner` | Swept wings, two engines on pylons, a fin and a tailplane, and a row of windows. |
 | `LightPlane` | High wing on a strut, a propeller, and fixed gear. |
 | `Helicopter` | A cabin, a tail boom, a main rotor and a tail rotor, on skids. |
+| `Hornet`, `Tomcat`, `Hawkeye`, `Prowler`, `Viking`, `Seahawk` | Carrier aircraft of the early 2000s, folded to park or spread to fly; see [Carrier aircraft](#carrier-aircraft). |
 | `AircraftWhite`, `AircraftBlue`, `AircraftRed` | Liveries. |
 | `AircraftMetal`, `AircraftGlass`, `AircraftTire` | The rest of it. |
 
@@ -2620,6 +2670,40 @@ It has to run from the bottom of the fuselage out to half span, at whatever angl
 And the windows are what make an airliner an airliner rather than a missile.  One row down the side
 gives the fuselage a scale nothing else does — without them a tube with wings could be four meters
 long or forty, and the eye has no way to tell.
+
+##### Carrier aircraft
+
+```
+import 'aircraft' { Hornet, Tomcat, Hawkeye, Prowler, Viking, Seahawk }
+
+object Hornet(1)                        // folded, parked
+object Tomcat(75)  { translate Z 20 }   // overswept, parked
+object Hawkeye(0)  { translate Z 45 }   // spread, flying
+```
+
+Six types a carrier carried in the early 2000s, each the type it is rather than a length and a livery,
+to its published length, span and height, in Navy gray:
+
+| | | Long | Across | Folded |
+| --- | --- | --- | --- | --- |
+| `Hornet` | F/A-18C, twin fins canted out, leading-edge extensions to the cockpit | 17.07 m | 12.31 m | 8.38 m |
+| `Tomcat` | F-14A, wings swinging at the edge of the broad glove | 19.1 m | 19.55 m at 20° | 10.15 m at 75° |
+| `Hawkeye` | E-2C, her rotodome with VAW-123's spiral on it | 17.56 m | 24.56 m | 8.94 m |
+| `Prowler` | EA-6B, four seats under one canopy, a pod on her fin | 18.24 m | 16.15 m | 7.87 m |
+| `Viking` | S-3B, high wing, engines in pods, a fin that folds | 16.26 m | 20.93 m | 8.99 m |
+| `Seahawk` | SH-60F, her blades folded aft along her boom | 15.26 m | 16.36 m rotor | 12.47 m long |
+
+The number is how they stand.  For all but the Tomcat it is `1` (unless said) to fold them, as they are
+parked, and `0` to spread them to fly.  The Tomcat's wings swing rather than fold, so hers is the sweep in
+degrees: 20 spread, 68 swept in flight, and 75 — oversweep, past what she flies at, over her tailplanes — to
+park her.  Like the rest here they face `+X` and stand on their wheels at nought.
+
+**A parked carrier aircraft is mostly how it folds.**  From the air that is nearly all you see of it.  A
+Hornet's outer wings stand up from a third of the way out; a Prowler's do the same a little further in, and
+a Viking's go on over her back until they cross.  A Hawkeye's are turned on edge and laid aft along her
+sides under her dome, so she parks in half her width.  Drawn with their wings out, a carrier's rows came out a
+solid crush of wings.  Each is built of thin plates drawn in plan — wings, tailplanes, fins — on a body of
+ellipsoids, because from above or across a flight deck the planform is what tells one from another.
 
 #### Spacecraft
 
