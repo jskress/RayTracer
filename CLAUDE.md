@@ -640,7 +640,9 @@ space the surface STANDS IN (parent's or instance's, never its own scale); memo 
 scene, surface, time, point)) and `facing { toward d }` ((1 + n.d)/2, WORLD space).  `material blend <pattern> { [v, M, ...] }` (`Core/MaterialBlend.cs`; or N materials
 for a discrete pattern) is settled per hit in `Scene.RegularizedFor` -> `intersection.Material`: scalars and pigment
 (`Pigments/MixedPigment.cs`) mixed, skins (coat, sheen, film, interior, decals) the nearer's, mixtures cached at 256
-steps; a blend's own properties are its FIRST material's for whatever asks without a hit (shadows, photons); a
+steps, a settled material with decals anchored where the blend was written (`Material.AnchoredAs`: a blend's
+materials are written on no surface, and until 2026-11-06 a sheer band in a paint-over-copper blend handed down from
+a hull's group was laid in the lofted planking's own space, along its length, and faded to nothing); a blend's own properties are its FIRST material's for whatever asks without a hit (shadows, photons); a
 mixture of a smooth and a rough material carries `Material.Split` and `GetHitColor` shades the hit as EACH, each
 regularized for a spread ray (`Regularized`), and mixes the answers (`HitColorOf`), each lamp sample's light reaching
 the place found once for both (`Scene.Reached<TS>`, keyed by intersection, light and sample; not through rough glass)
@@ -688,6 +690,26 @@ always shows the Arch as a straight spire (its plane holds the eye); `ultraWide`
 about a thousandth of daylight.  `SpillMountains` (shared: `SpillMountain` gives back a group, since only a group can
 be the one shape in many places) and `FistOfGod` are height fields.  The rim wall is scrith, milky gray (the wiki;
 the RPG says black), lit only at a graze and by the sky, so from inside the air hardly brighter than the haze; `gallery/Local/showcase/ringworld-*.igl` are the four views.
+
+The `sailing-ships` library (meters, +X, waterline y = 0, port +Z, as `vessels`) holds particular ships.
+`SchoonerEnterprise(trim, belly)` is the 1799 USS Enterprise as in 1801 (84 ft 7 in on deck, 22 ft 6 in beam, 9 ft 6
+in aft): hull lofted from sixteen stations of five normalized families (`EntMid`, `EntRun`... in the loft's XY,
+stacked along Z, `rotate Y 90`), each standing on its rabbet and reaching its rail (`EntRail`), cut by a raked-plane
+cube at the transom, its deck a well loft subtracted (`material blend facing`: planking up, red bulwarks); keel/stem,
+rudder and knee are extrusions turned on their sides, so their paint blends run along their own Z (`EntProfilePaint`);
+the ochre band follows the sheer as a decal (a quad segment is exactly a parabola's sheer).  Planked, the user's call
+(2026-11-06, "ships of that era look like they are made of planks"): hull and bulwarks by `normal planks` warped along
+the sheer and deck line (`EntHullCopper`, `EntBulwarkRed`, `PolHullStuff`, `PolBulwarkRed`), the deck by a planks
+pigment, the poop's slab and sides in their own unit cubes scaled back to meters, spars and fittings grained by
+stretched bozo; the plain `EntRed` is for port cuts and fittings, which a strake pattern would cut oddly.  Rig from Roux's 1806
+portrait (NHHC NH 54388): masts raked 11/12 degrees, each mast built in its own frame (`EntForeX/Y`, `EntMainTX/TY/TZ`
+for places on spars swung `trim` about it); sails are `ShipSail` parametric sheets between four corners bellied by
+sin(pi u) sin(pi v), seams by cloth (`ShipCanvasAlongX/Z`); rigging is strands (`ShipShrouds` with ratlines).
+`PolaccaTripoli(trim, belly)`: pole masts square to the truck, mizzen shot away over her starboard side, the Karamanli
+flag.  `GunSmoke(long, reach, high)` is white powder smoke (scattering 1.6, absorption 0.06) built along X drifting
++Z; its density function must be ONE expression.  `gallery/Local/showcase/the-enterprise-and-the-tripoli.igl` (2 h 54
+min at 1920x1080).  Foam laid as decals on a second `Water` 3 cm up (the same waves: width/depth only bound a swells)
+doubled the render and read as stickers; it was dropped.
 
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with
@@ -1079,6 +1101,19 @@ paint.  A `Viewing` (eye, normal, light) is handed down only to a pigment whose 
 with no particular light (transparency, refraction, metallic tint, shadow tint) the light is taken to be at the eye.
 `NoiseGenerator` takes a point's lattice cell in 64 bits masked to its 256: in 32 it threw past two billion cells, which
 a ground plane met near the horizon reaches in a fine gravel's noise (a fountain's movie died after half an hour).
+A pattern's `warp { X { } Y { } Z { } }` (`Patterns/Warp.cs`, `Pattern.Warp`, parsed beside turbulence in either order)
+bends the space it is read in: each coordinate said is a compiled field function of the point (`FieldFunction`, so a
+single expression, scene functions folded in), the rest stand.  Done FIRST -- before turbulence, in the pattern's own
+space (after its transforms), in `ValueFor`, `SamplesOver` and `SharesOver` (`Pattern.Bent`) -- with the footprint
+carried as the chord of each edge through it, so filtering averages where the bent pattern reads; a warped picture's
+slope is sampled, not taken along its texels.  `planks { plank size [l, w, d]  seam size s }` (`Patterns/PlanksPattern.cs`,
+sizes read by hand either side of the colors, as brick's) is boards along X lying beside each other across Y and Z,
+CENTERED on nought both ways (laid from a seam, a floor at y = 0 was seam end to end), butts shifted by the golden and
+silver ratios' fractions per row and layer, a seam 0 and a board 0.5 + 0.5 x `Field.DrawFor`, rising smoothstep across
+the seam so a `normal planks` is a rounded groove (a step has no slope a normal can take).  The `sailing-ships` hulls
+are planked so: a roughening on a COPY of the blend's first material (a blend's normal is its first material's, and the
+keel's profile paint shares the copper), warped along the sheer, read in ship space by `rotate Y -90` (the hull loft
+stands along its own Z).
 
 ### Expression language (`Terms/`)
 

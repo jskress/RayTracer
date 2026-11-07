@@ -147,7 +147,11 @@ public class SurfaceNormal
 
         Point patternPoint = _inverseTransform.Value * point;
         using Bearing.Scope _ = Bearing.Into(_inverseTransform.Value);
-        Vector gradient = Pattern.SlopeAt(patternPoint, patch?.TransformedBy(_inverseTransform.Value)) ??
+        // A picture's own slope is taken along its texels where the pattern reads it; bent, the pattern reads it
+        // somewhere else, so a warped picture's slope is sampled as any other pattern's is.
+        Vector gradient = (Pattern.Warp is null
+                              ? Pattern.SlopeAt(patternPoint, patch?.TransformedBy(_inverseTransform.Value))
+                              : null) ??
                           GradientAt(patternPoint);
 
         if (gradient.Magnitude.Near(0))

@@ -380,6 +380,33 @@ public class TestDecals
             "the decal was placed in the space of the part rather than the group");
     }
 
+    [TestMethod]
+    public void TestADecalInABlendIsPlacedWhereTheBlendWasWritten()
+    {
+        // A floor stretched four times along X inside a group wearing a blend whose material there paints a
+        // two-unit square.  A blend's materials are named ones, written on no surface, and settled at the hit they
+        // laid their decals in the floor's own space: the square four times as long.  In the group's, where the
+        // blend was written, it is two units wide.
+        Canvas picture = FloorShowing("""
+            Painted = material {
+                pigment color White  ambient 1  diffuse 0  specular 0
+                decal {
+                    path { move to -1, -1  line to 1, -1  line to 1, 1  line to -1, 1  close }
+                    color Red  planar  min Y -1  max Y 1
+                }
+            }
+            Bare = material { pigment color Black  ambient 1  diffuse 0  specular 0 }
+            group {
+                plane { scale [4, 1, 1] }
+                material blend linear Y gradient { [0, Painted, 1, Bare] }
+            }
+            """);
+
+        Assert.IsTrue(Colors.Red.Matches(FloorAt(picture, 0.5, 0)), "the blend's decal was not painted at all");
+        Assert.IsTrue(Colors.White.Matches(FloorAt(picture, 2.5, 0)),
+            $"the floor was {FloorAt(picture, 2.5, 0)}: the blend's decal was placed in the part's space");
+    }
+
     // ---------------------------------------------------------------------------------------------
     // The wrapped projections.
     // ---------------------------------------------------------------------------------------------

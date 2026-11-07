@@ -1096,7 +1096,8 @@ materials, as a pigment's map has values and colors, and then the pattern's tran
 value the first material is whole, above the last the last; between two, the surface is shaded with a
 material part way between them, every number of its finish -- `diffuse`, `specular`, `reflective`,
 `roughness`, `metallic` and the rest -- mixed in proportion, and its color mixed too.  What cannot be
-mixed, a coat, a sheen, a film, an interior, decals, is the nearer material's.  Between a smooth material
+mixed, a coat, a sheen, a film, an interior, decals, is the nearer material's -- its decals placed where the
+blend was written, as the blend's own would be, however many parts it is handed down to.  Between a smooth material
 and a rough one, the surface is shaded as each and the two looks are mixed, since a smooth mirror and a
 rough one are worked out in different ways and a mixture of the numbers would jump from one way to the
 other at the first trace of roughness.  The materials may be named

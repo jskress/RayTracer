@@ -17,6 +17,12 @@ public interface IPatternResolver
     Resolver<Turbulence> TurbulenceResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how a pattern's space is bent, if it is.  Like turbulence it belongs to no
+    /// pattern in particular, so it lives here for the parser to set on any.
+    /// </summary>
+    Resolver<Warp> WarpResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for what a pattern's value is multiplied by before it is
     /// shaped.
     /// </summary>

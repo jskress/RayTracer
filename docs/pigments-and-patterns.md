@@ -126,6 +126,7 @@ map*: pairs of a position and the color at that position, in square brackets.
 | `dents`, `wrinkles` | Noise meant chiefly for roughening. |
 | `leopard` | Spots. |
 | `ripples`, `waves` | Rings spreading from scattered sources. |
+| `planks` | Boards side by side, butted end to end, each its own shade, with seams between; see [Planks](#planks). |
 | `radial` | The angle about the Y axis. |
 | `planar`, `spherical`, `cylindrical`, `boxed` | Distance from a plane, point, axis or box. |
 | `flop` | Not a place at all: the angle the surface is seen at; see [A color that shifts with the angle](#a-color-that-shifts-with-the-angle). |
@@ -148,6 +149,44 @@ to its start in a hard seam down every vein.  Say `ramp wave` for the sawtooth.
 
 Adding `banded` before the opening bracket turns the blending off, so each entry holds until
 the next rather than fading into it.
+
+#### Planks
+
+`planks` lays boards: each runs along X, lies beside the next across Y and across Z, and is butted
+to the one after it end to end.  A seam reads nought; a board reads a number of its own, from a half
+to one, so a map shades the boards one from another above a half and colors the seams below it.
+Two settings size them, written before or after the colors as a brick's are:
+
+```
+pigment planks {
+    plank size [4, 1000, 0.14]
+    seam size 0.012
+    [0, [0.10, 0.08, 0.06], 0.5, [0.63, 0.55, 0.42], 1, [0.54, 0.46, 0.34]]
+}
+```
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `plank size` | `[4, 0.15, 0.15]` | How long a board is along X, and how wide across Y and across Z. |
+| `seam size` | 0.008 | How wide a seam is: the whole width over which a board's edge rounds down into it. |
+
+A floor lies across Y, so it shows the boards lying beside each other across Z, and a wall the ones
+across Y; between the two, round a curve, it shows both.  To have boards beside each other only one
+way, make them far wider the other: the floor above, a thousand units across Y, has seams only
+across Z.  A board's middle stands on nought both ways, so a floor at nought, or a wall through it,
+lies along the middle of a row of boards.  The butts are staggered by the golden ratio, so no row's
+butts ever line up with a neighbor's.
+
+**A board rises out of its seam rather than stepping out of it**, smoothly across the seam's width,
+so `planks` makes a [roughening](materials.md#roughening-the-surface) as well as a pigment: its
+seams are rounded grooves.  A painted hull wants it that way, since paint hides the seams' color
+and not their shape:
+
+```
+normal planks { plank size [7, 0.2, 1000]  seam size 0.03  depth 0.06 }
+```
+
+To lay boards along a curve -- a hull's strakes along her sheer -- [warp](#warp) them.
 
 #### Adding a bounce
 
@@ -310,6 +349,46 @@ bends each ring by a wave of the turbulence scaled by its amplitude, across X an
 takes only its turbulence's octaves and layers, never its amplitude, its bands being stirred by
 fixed amounts of their own.  (Until October 2026 marble and wood ignored the amplitude too, so a
 wood said to take `amplitude 0.25` was drawn as at one.)
+
+### Warp
+
+A pattern can be moved, turned, scaled and sheared, all of which keep a straight line straight.  A
+warp bends it: each of the coordinates the pattern reads may be given as a function of the point,
+fenced in braces as a [parametric surface's](advanced-surfaces.md#parametric) are, and
+those not given stay as they were.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/warpClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/warpClause.svg">
+  <img alt="Warp" src="images/pigments/warpClause.svg">
+</picture>
+
+```
+function Rail(x) -> number { return 2.34 + 0.0029 * (x + 2) * (x + 2) }
+
+normal planks {
+    plank size [7, 0.2, 1000]  seam size 0.03
+    warp { Y { (y - Rail(x)) / (1 - 0.25 * (x / 13) * (x / 13)) + 0.1 } }
+    depth 0.06
+}
+```
+
+That lays a hull's strakes: the height above her rail becomes the height the boards are read at, so
+every seam runs along her sheer, and dividing by a little less than one toward her ends draws them
+closer together there, as planks taper into a stem and a counter.  Adding half a board puts a seam
+along the rail itself.
+
+The warp is written with the turbulence, before or after it, and is always done first: the space is
+bent, then stirred, then read.  Inside the braces, lower-case `x`, `y` and `z` are the point, in the
+**pattern's own space** -- the space its own transforms leave it in, which for a pattern that is not
+scaled or turned is the surface's (see [Patterns Live in the Surface's Space](#patterns-live-in-the-surfaces-space)).
+Each function is a single expression, as an [isosurface's](advanced-surfaces.md#isosurface) is,
+and may call functions of your own that are.  A pattern that averages itself over the patch a ray
+covers, to keep fine detail from glittering far off, averages over the patch where the bent pattern
+reads it.
+
+Any pattern may be warped, wherever a pattern is written: a pigment, a roughening, a
+[blend of materials](materials.md#blending-materials), a medium's density.
 
 ### Shaping the Value
 

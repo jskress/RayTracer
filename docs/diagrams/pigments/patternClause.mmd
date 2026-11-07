@@ -1,8 +1,10 @@
 railroad-ebnf-beta
 title "A pattern pigment"
 
-pattern = name [ "with" "seed" number ] "{" [ turbulence ] [ shaping ] [ weathering ] colors [ weathering ]
-          { transform } "}" ;
+pattern = name [ "with" "seed" number ] "{" [ sizes ] [ turbulence ] [ warp ] [ shaping ] [ weathering ] colors
+          [ sizes ] [ weathering ] { transform } "}" ;
+
+sizes = ( "brick" | "mortar" | "plank" | "seam" ) "size" ( number | vector ) ;
 
 weathering = "radius" number | "toward" ( "X" | "Y" | "Z" | vector ) ;
 

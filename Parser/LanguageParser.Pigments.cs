@@ -300,6 +300,9 @@ public partial class LanguageParser
         if (resolver is BrickPatternResolver brick)
             ReadBrickSizesInto(brick);
 
+        if (resolver is PlanksPatternResolver planks)
+            ReadPlankSizesInto(planks);
+
         return new PatternPigmentResolver
         {
             SeedResolver = seedResolver,

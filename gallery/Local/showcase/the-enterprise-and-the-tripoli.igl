@@ -1,0 +1,61 @@
+// The schooner Enterprise fighting the Tripolitan corsair Tripoli west of Malta on 1 August 1801, the first action
+// of the First Barbary War: Lieutenant Sterett's twelve guns against the polacca's fourteen, for three hours, at
+// pistol shot.  Tripoli struck her colors three times and fired again each time; at the last Sterett had his guns
+// laid on her waterline, and here her mizzen is already over her side and her larboard side holed between wind and
+// water.  Enterprise lost not a man.
+//
+// Both ships come from the `sailing-ships` library: Enterprise from her dimensions and Antoine Roux's portrait of her
+// drawn from life in 1806, Tripoli as the Barbary polaccas were drawn.  The wind is on Enterprise's larboard side, so
+// she heels toward her enemy and her smoke rolls down onto the polacca; the view is from her weather bow, the sun
+// over the viewer's shoulder.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.25
+    angles are degrees
+    // Powder smoke is a scattering medium, and at the sixteen places a ray asks along it by default it shows grain.
+    medium samples 32
+    info {
+        title 'The Enterprise and the Tripoli'
+        author 'J. Stephen Kress'
+        description 'The schooner Enterprise fighting the corsair Tripoli west of Malta on 1 August 1801.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'sailing-ships' { SchoonerEnterprise, PolaccaTripoli, GunSmoke }
+import 'water' { Water }
+
+camera { location [28, 6, 50]  look at [8, 8.5, -18]  field of view 62  exposure 0.6 }
+
+// A Mediterranean summer morning: the sun high over the viewer's shoulder, the sky hazy toward the horizon.
+background physical sky { sun elevation 45  sun azimuth 205  turbidity 4.2  brightness 3 }
+sky light { samples 24 }
+
+// The sea west of Malta, deep and blue: the `water` library's sea water with a bluer body.
+MediterraneanWater = material {
+    pigment [0.018, 0.085, 0.22]
+    ambient 0.12  diffuse 0.10  specular 1  shininess 900  reflective 1  transparency 0.88
+    interior { index of refraction Water  clarity 24  filter 1 }
+}
+
+object Water(40000, 40000, 'choppy') { material MediterraneanWater }
+
+// Enterprise, heeled to starboard by the wind on her larboard beam, her starboard guns fighting, and the smoke of
+// her broadside rolling down toward the polacca.
+object SchoonerEnterprise(-28) { rotate X -7 }
+object GunSmoke(28, 34, 17, 1) { rotate Y 180  translate [0, 0, -3.4] }
+
+// Tripoli, thirty meters to leeward and a little ahead, closing, one of her larboard guns going off, and her own
+// smoke blowing back across her deck.
+group {
+    object PolaccaTripoli(-25)
+    sphere { scale [0.32, 0.26, 0.55]  translate [-4.5, 1.87, 4.5]  no shadow
+             material { pigment [1, 0.62, 0.26]  emission 4  ambient 0  diffuse 0  specular 0 } }
+    rotate X -3.5  rotate Y -5  translate [24, 0, -30]
+}
+object GunSmoke(22, 16, 12, 2, 0.12) { rotate Y 175  translate [24, 0, -24.5] }

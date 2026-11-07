@@ -24,6 +24,12 @@ public abstract class Pattern
     public Turbulence Turbulence { get; set; }
 
     /// <summary>
+    /// This property holds how the space the pattern is read in is bent, before turbulence stirs a point and before
+    /// the pattern sees it, or <c>null</c> to leave it straight.  See <see cref="Patterns.Warp"/>.
+    /// </summary>
+    public Warp Warp { get; set; }
+
+    /// <summary>
     /// This property reports whether this pattern folds turbulence into its own arithmetic rather
     /// than having its points stirred for it.  Marble and wood do, because what they want stirred
     /// is the single coordinate they are built from, not the point in space -- and stirring both
@@ -221,6 +227,8 @@ public abstract class Pattern
         if (finest <= 0 || footprint is null || footprint.IsEmpty)
             return 0;
 
+        (point, footprint) = Bent(point, footprint);
+
         if (Turbulence is not null && !StirsItsOwnPoints)
             point = Turbulence.Warp(point, footprint.Width);
 
@@ -267,6 +275,8 @@ public abstract class Pattern
 
         if (finest <= 0 || footprint is null || footprint.IsEmpty)
             return false;
+
+        (point, footprint) = Bent(point, footprint);
 
         if (Turbulence is not null && !StirsItsOwnPoints)
             point = Turbulence.Warp(point, footprint.Width);
@@ -350,6 +360,7 @@ public abstract class Pattern
     public double ValueFor(Point point, Footprint footprint)
     {
         footprint ??= Footprint.None;
+        (point, footprint) = Bent(point, footprint);
 
         double width = footprint.Width;
         double value = Evaluate(Turbulence is null || StirsItsOwnPoints
@@ -374,6 +385,7 @@ public abstract class Pattern
             return ValueFor(point, footprint);
 
         footprint ??= Footprint.None;
+        (point, footprint) = Bent(point, footprint);
 
         double width = footprint.Width;
         double value = Evaluate(Turbulence is null || StirsItsOwnPoints
@@ -381,6 +393,13 @@ public abstract class Pattern
             : Turbulence.Warp(point, width), footprint, viewing);
 
         return Shape(value);
+    }
+
+    // The point and the patch about it, carried through the warp if there is one; the patch first, since it is
+    // measured about the point as it was.
+    private (Point, Footprint) Bent(Point point, Footprint footprint)
+    {
+        return Warp is null ? (point, footprint) : (Warp.Bend(point), Warp.Bend(point, footprint));
     }
 
     /// <summary>
@@ -481,7 +500,8 @@ public abstract class Pattern
     /// if not.</returns>
     protected virtual bool DetailsMatch(Pattern pattern)
     {
-        return DiscretePigmentsNeeded == pattern.DiscretePigmentsNeeded;
+        return DiscretePigmentsNeeded == pattern.DiscretePigmentsNeeded &&
+               (Warp is null ? pattern.Warp is null : Warp.Matches(pattern.Warp));
     }
 
     /// <summary>

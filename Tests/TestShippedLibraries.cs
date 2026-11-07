@@ -4678,4 +4678,122 @@ public class TestShippedLibraries
 
         Assert.IsNotNull(seen);
     }
+
+    /// <summary>
+    /// Copies the sailing ships library beside the scenes this class writes, with the cloth library it flies its
+    /// colors from.
+    /// </summary>
+    private void UseSailingShips()
+    {
+        foreach (string name in new[] { "sailing-ships.igl", "cloth.igl" })
+            File.Copy(Shipped.First(path => Path.GetFileName(path) == name), Path.Combine(_directory, name), true);
+    }
+
+    [TestMethod]
+    public void TestTheEnterpriseIsAsBroadAndDrawsAsMuchAsHerBuilderMadeHer()
+    {
+        // Her hull alone, from straight above and from her starboard side, two and a half centimeters to a pixel: 22 ft
+        // 6 in in the beam, and drawing 9 ft 6 in aft, at the heel of her sternpost.
+        UseSailingShips();
+        const double Size = 0.025;
+        Canvas top = OrthographicView("import 'sailing-ships' { EntHull }", ["object EntHull()"], (0, 0, 0), (0, 1, 0),
+            "[1, 0, 0]", Size, 320, 1200, "[0, -1, 0]");
+        (double left, double right, _, _) = ReachIn(top, 0, top.Width, Size);
+
+        Assert.AreEqual(6.858, right - left, 0.06, "her beam");
+
+        Canvas side = OrthographicView("import 'sailing-ships' { EntHull }", ["object EntHull()"], (0, 0, 0), (0, 0, -1),
+            "[0, 1, 0]", Size, 1200, 320, "[0, 0, 1]");
+        (_, _, double bottom, _) = ReachIn(side, 0, side.Width, Size);
+
+        Assert.AreEqual(-2.896, bottom, 0.04, "her draft aft");
+    }
+
+    [TestMethod]
+    public void TestTheEnterprisesBandFollowsHerSheer()
+    {
+        // Her hull from her starboard side, two centimeters to a pixel.  The ochre band her ports are cut in runs along
+        // her sheer, which rises four tenths of a meter from her waist to her bow: half a meter over her deck is ochre at
+        // both, and the band's height at her waist is black at her bow, under the band there.  A band drawn level -- or
+        // a decal in her paint blend laid in her planking's own space, which faded it to nothing -- fails one or the
+        // other.
+        UseSailingShips();
+        const double Size = 0.02;
+        Canvas side = OrthographicView("import 'sailing-ships' { EntHull }", ["object EntHull()"], (0, 1.5, 0),
+            (0, 0, -1), "[0, 1, 0]", Size, 1400, 300, "[0, 0, 1]");
+
+        Color At(double x, double y) =>
+            side.GetPixel((int) Math.Floor(700 + x / Size), (int) Math.Floor(150 - (y - 1.5) / Size));
+
+        static double Deck(double x) => 1.29 + 0.0029 * (x + 2) * (x + 2);
+        static bool Ochre(Color color) => color.Red > 0.08 && color.Red > 1.6 * color.Blue;
+        // Her black paint is glossy, and where she is broadest it faces the light square on: dark and colorless, then.
+        static bool Black(Color color) => color.Red < 0.2 && Math.Abs(color.Red - color.Blue) < 0.03;
+
+        Assert.IsTrue(Ochre(At(-2, Deck(-2) + 0.5)), $"her waist half a meter over her deck was {At(-2, Deck(-2) + 0.5)}");
+        Assert.IsTrue(Ochre(At(10, Deck(10) + 0.5)), $"her bow half a meter over her deck was {At(10, Deck(10) + 0.5)}");
+        Assert.IsTrue(Black(At(10, Deck(-2) + 0.5)), $"her bow at the height of her waist's band was {At(10, Deck(-2) + 0.5)}");
+        Assert.IsTrue(Black(At(-2, Deck(-2) - 0.5)), $"her waist under her band was {At(-2, Deck(-2) - 0.5)}");
+    }
+
+    [TestMethod]
+    public void TestTheEnterprisesTrimSwingsHerMainBoomToTheSideAsked()
+    {
+        // From straight above, five centimeters to a pixel, the four meters of water past her taffrail where her main boom
+        // reaches: swung to port by a positive trim and to starboard by a negative one, nothing on the other side.
+        UseSailingShips();
+        const double Size = 0.05;
+
+        (int Port, int Starboard) Swung(int trim)
+        {
+            Canvas top = OrthographicView("import 'sailing-ships' { SchoonerEnterprise }", [$"object SchoonerEnterprise({trim})"],
+                (-15, 0, 0), (0, 1, 0), "[1, 0, 0]", Size, 360, 80, "[0, -1, 0]");
+            int port = 0, starboard = 0;
+
+            // Seen from above with her bow up, her starboard side is to the right.
+            for (int x = 0; x < top.Width; x++)
+            for (int y = 0; y < top.Height; y++)
+            {
+                if (IsTheBackdrop(top.GetPixel(x, y)))
+                    continue;
+
+                if (x < 130)
+                    port++;
+                else if (x >= 230)
+                    starboard++;
+            }
+
+            return (port, starboard);
+        }
+
+        (int port, int starboard) = Swung(30);
+
+        Assert.IsTrue(port > 100 && starboard == 0, $"trimmed to port, {port} pixels showed to port and {starboard} to starboard");
+
+        (port, starboard) = Swung(-30);
+
+        Assert.IsTrue(starboard > 100 && port == 0, $"trimmed to starboard, {port} pixels showed to port and {starboard} to starboard");
+    }
+
+    [TestMethod]
+    public void TestTheTripoliHasLostHerMizzenAndKeptHerMain()
+    {
+        // From her starboard side, ten centimeters to a pixel: nothing stands over the stump of her mizzen, at 9 m abaft
+        // her middle, from five and a half meters up; her mainmast, a single pole, reaches past twenty-four.
+        UseSailingShips();
+        const double Size = 0.1;
+        Canvas side = OrthographicView("import 'sailing-ships' { PolaccaTripoli }", ["object PolaccaTripoli(-25)"],
+            (-4, 14, 0), (0, 0, -1), "[0, 1, 0]", Size, 140, 260, "[0, 0, 1]");
+
+        int Column(double x) => (int) Math.Floor(70 + (x + 4) / Size);
+        int Row(double y) => (int) Math.Floor(130 - (y - 14) / Size);
+
+        for (int x = Column(-9.6); x <= Column(-8.4); x++)
+        for (int y = Row(26); y <= Row(5.5); y++)
+            Assert.IsTrue(IsTheBackdrop(side.GetPixel(x, y)), $"something stands over her mizzen's stump at {x}, {y}");
+
+        (_, _, _, double top) = ReachIn(side, Column(-1.6), Column(-0.2), Size);
+
+        Assert.IsTrue(top + 14 > 24.5, $"her mainmast reaches only {top + 14:F2} m");
+    }
 }

@@ -92,17 +92,17 @@ public partial class LanguageParser
             'motion', 'mottled', 'move', 'named', 'neutral', 'no', 'noise', 'none', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
             'sdf', 'julia', 'iterations', 'c', 'mandelbulb', 'mandelbox', 'menger', 'outer', 'fold', 'detail', 'tiles', 'tile', 'cell', 'turns', 'tries', 'fit', 'hypertexture', 'eroded', 'drawn', 'resolution', 'replace', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
-            'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
+            'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'plank', 'planks', 'point', 'points', 'poly',
             'portal', 'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reach', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'glass', 'glints', 'grown', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rounded', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
-            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'solid', 'source',
+            'seam', 'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'solid', 'source',
             'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'splash', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'step', 'stretched', 'strength', 'stripes', 'subsurface', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'tint', 'title', 'to', 'toward', 'top', 'toroidal', 'torus',
             'toVertical',
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'tumble', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
-            'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
+            'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'warp', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
             'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span', 'falls', 'burst',
             'channel', 'red', 'green', 'blue', 'alpha', 'map', 'directx', 'vignetting', 'distortion', 'chromatic',
             'aberration', 'loft', 'section', 'straight', 'triplanar', 'shuffled', 'catenary', 'sag', 'rope', 'chain',
@@ -212,6 +212,17 @@ public partial class LanguageParser
         // Turbulence is written either as a bare amount, which is by far the common case and means
         // the amplitude alone, or as a block when there is more to say.
         turbulenceClause: { turbulence > [ openBrace | _expression ] }
+        // How the space a pattern is read in is bent: each coordinate it reads may be given as a function of the
+        // point, fenced in braces as a parametric surface's coordinates are, and for the same reasons -- each is a
+        // whole curve's worth of arithmetic, and the upper-case axis words keep what is being said apart from the
+        // lower-case x, y and z it is said in.
+        warpClause: { warp > openBrace ?? 'Expecting an open brace to follow "warp" here.' }
+        warpEntryClause:
+        {
+            [ X | Y | Z ] >
+            openBrace ?? 'Expecting an open brace to follow the coordinate here.' >
+            _expression > closeBrace ?? 'Expecting a close brace to end the coordinate here.'
+        }
         turbulenceEntryClause:
         [
             { amplitude > _expression } | { octaves > _expression } |
@@ -580,7 +591,7 @@ public partial class LanguageParser
         // Pattern clauses.
         patternClause:
         [
-            imagePatternClause | agate | boxed | brick | checker | crevices | cubic | edges | facing | flop | hexagon | leopard | planar |
+            imagePatternClause | agate | boxed | brick | checker | crevices | cubic | edges | facing | flop | hexagon | leopard | planar | planks |
             radial | ripples | square | triangular | waves | flow | deposits | wear |
             {
                 [ bozo | crackle | dents | granite | wrinkles ] > withSeedClause{?}
@@ -606,6 +617,10 @@ public partial class LanguageParser
         brickSizeClause:
         {
             [ brick | mortar ] > size > _expression
+        }
+        plankSizeClause:
+        {
+            [ plank | seam ] > size > _expression
         }
         // How far a crevice or an edge is looked for about a place, and which way a surface is asked to face.
         weatheringEntryClause:
