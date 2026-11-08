@@ -1,0 +1,61 @@
+// The four Enterprises on one sea in the late afternoon, at their true sizes: the schooner of 1799 under sail close
+// by, the nuclear carrier of 1961 steaming in the middle distance, the space shuttle of 1977 gliding over her as she
+// glided in her landing tests, and the starship high above them all.  The camera is four and a half meters over the
+// water, so that the near ones stand large and the far ones small, oldest nearest and newest farthest.
+//
+// Each is from her own library: `sailing-ships`, `vessels`, `spacecraft` and `star-trek`.  The sea is the carrier's
+// picture's, seven wave trains with her wake in them.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.2
+    angles are degrees
+    info {
+        title 'The Four Enterprises'
+        author 'J. Stephen Kress'
+        description 'The schooner, the carrier, the shuttle and the starship Enterprise on one sea in the late afternoon.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'sailing-ships' { SchoonerEnterprise }
+import 'vessels' { CarrierEnterprise, CarrierEnterpriseWake }
+import 'spacecraft' { ShuttleEnterprise }
+import 'star-trek' { Enterprise }
+
+camera { location [0, 4.5, 0]  look at [0, 22, -100]  field of view 64  exposure 1.6 }
+
+// Late afternoon: the sun fourteen degrees up behind the camera's right shoulder, on the schooner's sails.
+background physical sky { sun elevation 14  sun azimuth 225  turbidity 4  brightness 3 }
+sky light { samples 12 }
+
+// The carrier's own sea: seven wave trains of unrelated lengths and headings, her wake in it where she is.
+swells {
+    width 400000  depth 400000
+    wave { steepness 0.100  wavelength 34.0  direction [0.96, 0, 0.28]   phase 0.3 }
+    wave { steepness 0.090  wavelength 21.7  direction [0.62, 0, 0.78]   phase 1.9 }
+    wave { steepness 0.085  wavelength 14.3  direction [0.95, 0, -0.31]  phase 4.1 }
+    wave { steepness 0.080  wavelength 9.4   direction [0.34, 0, 0.94]   phase 2.6 }
+    wave { steepness 0.070  wavelength 6.1   direction [0.81, 0, -0.59]  phase 5.3 }
+    wave { steepness 0.060  wavelength 3.9   direction [0.99, 0, 0.12]   phase 0.8 }
+    wave { steepness 0.050  wavelength 2.6   direction [0.50, 0, -0.87]  phase 3.7 }
+    material CarrierEnterpriseWake(205, -690, 228)
+}
+
+// -- The four of them -------------------------------------------------------------------------------------------
+
+// The schooner, under sail a hundred and ten meters off, heading the way the others are, nearly toward us.
+object SchoonerEnterprise(-24) { rotate Y 233  translate [-24, 0, -110] }
+
+// The carrier, steaming seven hundred meters off, coming on toward us, her starboard bow and her island to us.
+object CarrierEnterprise() { rotate Y 228  translate [205, 0, -690] }
+
+// The shuttle, gliding over the carrier as she glided in 1977, her tail cone on, nose down a little.
+object ShuttleEnterprise(0, 1, 0) { rotate Z -10  rotate X 12  rotate Y 195  translate [66, 80, -225] }
+
+// The starship, nine hundred meters off and three hundred up, high over the schooner's masts.
+object Enterprise(289) { rotate Z 4  rotate Y 210  translate [-155, 310, -885] }
