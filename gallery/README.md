@@ -270,7 +270,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 197 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 198 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -1697,7 +1697,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Showcase</b> &mdash; 14 images &middot; whole pictures, made for their own sake</summary>
+<summary><b>Showcase</b> &mdash; 15 images &middot; whole pictures, made for their own sake</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1810,6 +1810,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/showcase/the-enterprise-underway.igl">The Enterprise Underway</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/the-four-enterprises.png">
+      <img alt="The Four Enterprises" height="120" src="Local/showcase/the-four-enterprises.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/the-four-enterprises.igl">The Four Enterprises</a>
     </td>
   </tr>
 </table>

@@ -749,6 +749,10 @@ material blend read through `warp { X { EarthClouds(x, y, z) } }` (a cloud shell
 look grazing the horizon pass under a cloud and see its unlit underside as a black speck), and Ringworld-style air,
 one shell, glow times absorption, density exp(-h/8 km).  Doors at 0.9 there: at 175.5 degrees the far door lay edge-on
 and came out a dotted line (17 s at 1920x1080).
+`gallery/Local/showcase/the-four-enterprises.igl` puts the schooner, the carrier, the shuttle (`ShuttleEnterprise(0, 1,
+0)`, as she glided in 1977) and the 1701 on one sea at their TRUE sizes, the camera 4.5 m over the water so that forced
+perspective makes the near two large (the user's call, 2026-11-08: low over the water, late afternoon).  Looking down
+-Z, screen right is -X (47 min at 1920x1080).
 
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with
