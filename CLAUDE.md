@@ -729,6 +729,27 @@ CvnWake(x, z) } }` -- side foam, stern wake, Kelvin arms, broken by noise -- in 
 `gallery/Local/showcase/the-enterprise-underway.igl` writes its own seven-train sea: from a helicopter's height the
 `water` library's five trains beat into a quilted moire (2 h 34 min at 1920x1080).
 
+The `spacecraft` library's `ShuttleEnterprise(doors, cone, flown)` is OV-101 at her own size (37.24 m, span 23.79 m;
+meters, +X, port +Z, origin the middle of her length and of her fuselage's height, Xo 969 in her own stations, inches
+aft of a point 236 in ahead of her nose).  Her stations are traced from NASA's News Reference dimension drawing (Fig.
+3-2) at ONE scale (2.99 in a pixel) that gives length, span and bay alike, the drawing's 0.68-degree tilt taken out;
+each is two superellipses about one height sampled at the same angles everywhere (pieced stations creased her sides).
+Wings are upper (white) and lower (black) lofts split along the chord: a decal from above paints both faces of one
+loft.  The starboard wing is lofted along -Z, not mirrored, so its decals are in the ship's frame; her fuselage's
+material sits on a group round the rotated loft for the same reason.  `doors` cuts the bay (CSG: a box above the hinge
+line, a 15 ft cylinder) and swings shell doors with radiators about their hinges (an `if` is refused inside a CSG, so
+the skin's choice is a group primitive, `OvSkinnedBody`); `cone` is the 1977 tail cone, 11.5 m, measured from the
+photographs; `flown` 1 is the operational tile (black nose top and window frames, from Challenger photographed from
+above), 0 her 1977 white with the air data boom.  Lettering is Arimo (fetched by the renderer).  `ShuttleArm(yaw,
+pitch, elbow, wristPitch, wristYaw, wristRoll)` is the RMS in her frame (shoulder on the port sill at Xo 679.5; 6.37 m
+and 7.06 m booms); `SpinSatellite`/`SatelliteCradle(open)` an HS-376-like drum in a sunshield cradle.  Trap: a
+`cylinder { min Y a max Y b scale r }` scales its LENGTH too -- write `scale [r, 1, r]`.
+`gallery/Local/showcase/the-enterprise-in-orbit.igl` writes its own Earth: an ocean sphere with clouds PAINTED on as a
+material blend read through `warp { X { EarthClouds(x, y, z) } }` (a cloud shell with clear gaps inside the air let a
+look grazing the horizon pass under a cloud and see its unlit underside as a black speck), and Ringworld-style air,
+one shell, glow times absorption, density exp(-h/8 km).  Doors at 0.9 there: at 175.5 degrees the far door lay edge-on
+and came out a dotted line (17 s at 1920x1080).
+
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with
 `Material.WithoutDiffuse()` (swapped onto `Intersection.Material` for the light loop) and adds the walk's light; the

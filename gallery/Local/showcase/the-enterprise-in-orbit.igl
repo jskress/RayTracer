@@ -1,0 +1,129 @@
+// The shuttle Enterprise in orbit, as she would have been had she flown: three hundred kilometers over the ocean, her
+// payload bay doors open, her arm raised over the bay and a communications satellite standing in it in its sunshield,
+// ready to be sent on its way.  She never went to space -- OV-101 flew only in 1977's landing tests, let go from a 747
+// over the Mojave -- and here she wears the tile an orbiter wore, under her own name and markings.
+//
+// She, her arm and the satellite come from the `spacecraft` library, drawn from NASA's dimension drawing and its
+// photographs of her and of Challenger from above.  The Earth is written here: an ocean sphere with clouds painted
+// over it, from weather systems two thousand kilometers across down to cumulus a few kilometers across, and a shell of
+// air that thins by e every eight kilometers up and glows blue along the limb.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.15
+    angles are degrees
+    info {
+        title 'The Enterprise in Orbit'
+        author 'J. Stephen Kress'
+        description 'The shuttle Enterprise in orbit as she would have been had she flown, her bay open and a satellite in it.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'spacecraft' { ShuttleEnterprise, ShuttleArm, SatelliteCradle }
+
+camera { location [6, 11, 64]  look at [-1, -1, 0]  field of view 50  exposure 0.25 }
+
+// Space, and the sun high over the camera's left shoulder, down into her bay.
+background Black
+distant light { direction [0.5, -0.7, -0.5]  color [1.3, 1.27, 1.2] }
+
+// -- The Earth ---------------------------------------------------------------------------------------------------
+
+EarthRadius = 6371000
+EarthAirDepth = 8000
+EarthAirTop = 9 * EarthAirDepth
+
+EarthOcean = material {
+    pigment bozo {
+        [0, [0.008, 0.03, 0.09], 1, [0.014, 0.05, 0.13]]
+        scale 0.004
+    }
+    specular 0.7  shininess 18  ambient 0
+    normal wrinkles { depth 0.3  scale 0.0012 }
+}
+
+EarthCloud = material {
+    pigment [0.95, 0.95, 0.97]  diffuse 1  specular 0  ambient 0.3
+    normal wrinkles { depth 0.9  scale 0.0012 }
+}
+EarthThinCloud = material {
+    pigment [0.42, 0.46, 0.55]  diffuse 0.9  specular 0.2  shininess 18  ambient 0
+}
+// A blend's roughening is its first material's, so the clear air carries the clouds' relief.
+EarthClear = material {
+    transparency 1  diffuse 0  specular 0  ambient 0  interior { ior 1 }
+    normal wrinkles { depth 0.3  scale 0.0012 }
+}
+
+function EarthAirDensity(x, y, z) -> number {
+    return exp(-(sqrt(x * x + y * y + z * z) - 1) * EarthRadius / EarthAirDepth)
+}
+
+EarthAirAbsorption = color [0.07, 0.11, 0.23] / EarthAirDepth
+EarthAirGlow = color [0.62, 0.76, 1.0] * 0.55
+
+// How cloudy the sky is over a place on the unit sphere, nought to one: weather systems two thousand kilometers
+// across, the bands and swirls of their fronts, and cumulus a few kilometers across, each a noise of its own.
+function EarthSwirl(x, y, z) -> number {
+    return noise(x * 6 + 3.1, y * 6, z * 6)
+}
+
+function EarthClouds(x, y, z) -> number {
+    return clamp((noise(x * 2.6 + 11, y * 2.6, z * 2.6) - 0.47) * 2.4
+                 + (noise(x * 30 + EarthSwirl(x, y, z) * 4, y * 30 + EarthSwirl(z, x, y) * 4, z * 30) - 0.5) * 1.5
+                 + (noise(x * 260, y * 260, z * 260) - 0.5) * 1.3
+                 + (noise(x * 1100, y * 1100, z * 1100) - 0.5) * 0.8 - 0.11, 0, 0.999)
+}
+
+primitive Earth() -> group {
+    return group {
+        // the sea, and the clouds over it painted on: from three hundred kilometers up, a deck six kilometers over the
+        // water is the water's own surface, and a shell of cloud with clear gaps in it, inside the air, let a look
+        // grazing the horizon pass under a cloud and see its unlit underside as a black speck
+        sphere {
+            material blend linear X gradient {
+                warp { X { EarthClouds(x, y, z) } }
+                [0, EarthOcean, 0.40, EarthOcean, 0.5, EarthThinCloud, 0.7, EarthCloud, 1, EarthCloud]
+            }
+            scale EarthRadius
+        }
+        difference {
+            sphere { scale 1 + EarthAirTop / EarthRadius }
+            sphere { scale 1 + 10 / EarthRadius }
+            material {
+                transparency 1
+                ambient 0  diffuse 0  specular 0
+                interior {
+                    ior 1
+                    medium {
+                        absorption EarthAirAbsorption
+                        emission color EarthAirGlow * EarthAirAbsorption
+                        density function { EarthAirDensity(x, y, z) }
+                    }
+                }
+            }
+            no shadow
+            scale EarthRadius
+        }
+    }
+}
+
+object Earth() { translate Y -6671000 }
+
+// -- Her, three hundred kilometers up ----------------------------------------------------------------------------
+
+// Seen from off her port bow, a little above, rolled a quarter of the way toward the camera so that her bay shows
+// and her arm stands against the black: its upper arm nearly upright, its lower arm reaching aft over the satellite.
+group {
+    object ShuttleEnterprise(0.9)
+    object ShuttleArm(15, 82, -100, -45)
+    object SatelliteCradle(1) { translate [-4.6, -1.37, 0] }
+    rotate X 25
+    rotate Z 6
+    rotate Y -18
+}

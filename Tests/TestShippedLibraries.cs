@@ -4915,4 +4915,104 @@ public class TestShippedLibraries
         Assert.IsTrue(Red(90, 0, 230) > 0.12, $"astern of her turned a quarter was {Red(90, 0, 230):F3}");
         Assert.IsTrue(Red(90, -230, 0) < 0.05, $"where astern was before she was turned was {Red(90, -230, 0):F3}");
     }
+
+    /// <summary>
+    /// Copies the spacecraft library beside the scenes this class writes.
+    /// </summary>
+    private void UseSpacecraft()
+    {
+        File.Copy(Shipped.First(path => Path.GetFileName(path) == "spacecraft.igl"),
+            Path.Combine(_directory, "spacecraft.igl"), true);
+    }
+
+    [TestMethod]
+    public void TestTheShuttleEnterpriseIsAsLongAndAsBroadAsTheOrbiter()
+    {
+        // From straight above, a tenth of a meter to a pixel, her nose to the right and her port wing up: NASA gives
+        // the orbiter 37.24 m from her nose to her fin's tip and 23.79 m across her wings, and her origin is the
+        // middle of her length.
+        UseSpacecraft();
+        const double Size = 0.1;
+        Canvas top = OrthographicView("import 'spacecraft' { ShuttleEnterprise }", ["object ShuttleEnterprise()"],
+            (0, 0, 0), (0, 1, 0), "[0, 0, 1]", Size, 400, 260, "[0, -1, 0]");
+        (double aft, double nose, double starboard, double port) = ReachIn(top, 0, top.Width, Size);
+
+        Assert.AreEqual(18.6, nose, 0.25, "her nose");
+        Assert.AreEqual(37.24, nose - aft, 0.3, "her length");
+        Assert.AreEqual(23.79, port - starboard, 0.25, "her span");
+        Assert.AreEqual(0, port + starboard, 0.2, "her wings either side of her middle");
+    }
+
+    [TestMethod]
+    public void TestTheShuttleEnterprisesTailConeLengthensHer()
+    {
+        // The tail cone of her first three free flights stands in place of her engines, 11.5 m aft of her base: with
+        // it on, from her nose to its point is 44.1 m.
+        UseSpacecraft();
+        const double Size = 0.12;
+        Canvas top = OrthographicView("import 'spacecraft' { ShuttleEnterprise }", ["object ShuttleEnterprise(0, 1, 0)"],
+            (0, 0, 0), (0, 1, 0), "[0, 0, 1]", Size, 480, 240, "[0, -1, 0]");
+        (double aft, double nose, _, _) = ReachIn(top, 0, top.Width, Size);
+
+        Assert.AreEqual(-25.55, aft, 0.3, "the cone's point");
+        Assert.AreEqual(44.1, nose - aft, 0.4, "her length with the cone on");
+    }
+
+    [TestMethod]
+    public void TestTheShuttleEnterprisesBayDoorsOpenOutward()
+    {
+        // From her port side, a twentieth of a meter to a pixel, the column at her middle: shut, her doors are her
+        // top, 2.96 m over her middle; open, they lie out past her sills, and nothing there stands much above the
+        // hinge line 0.91 m up.
+        UseSpacecraft();
+        const double Size = 0.05;
+
+        double Highest(string doors)
+        {
+            Canvas side = OrthographicView("import 'spacecraft' { ShuttleEnterprise }",
+                [$"object ShuttleEnterprise({doors})"], (0, 0, 0), (0, 0, 1), "[0, 1, 0]", Size, 160, 160, "[0, 0, -1]");
+            (_, _, _, double up) = ReachIn(side, 78, 82, Size);
+
+            return up;
+        }
+
+        Assert.AreEqual(2.96, Highest("0"), 0.08, "her top, shut");
+        Assert.IsTrue(Highest("1") < 1.3, $"her top, open, was {Highest("1"):F2}");
+    }
+
+    [TestMethod]
+    public void TestTheShuttleArmIsFiftyFeetLong()
+    {
+        // Stowed, the arm lies aft along her port sill from its shoulder at 7.35 m forward of her middle; its end
+        // effector's tip is 15.28 m from the shoulder.  Raised straight up it stands from the shoulder, 1.37 m over her
+        // middle, to 16.65 m.
+        UseSpacecraft();
+        const double Size = 0.05;
+        Canvas top = OrthographicView("import 'spacecraft' { ShuttleArm }", ["object ShuttleArm()"],
+            (0, 0, 2.5), (0, 1, 0), "[0, 0, 1]", Size, 360, 60, "[0, -1, 0]");
+        (double tip, _, _, _) = ReachIn(top, 0, top.Width, Size);
+        Canvas side = OrthographicView("import 'spacecraft' { ShuttleArm }", ["object ShuttleArm(0, 90)"],
+            (7.35, 9, 0), (0, 0, 1), "[0, 1, 0]", Size, 60, 400, "[0, 0, -1]");
+        (_, _, _, double up) = ReachIn(side, 0, side.Width, Size);
+
+        Assert.AreEqual(15.28, 7.353 - tip, 0.1, "stowed, from shoulder to tip");
+        Assert.AreEqual(16.65, 9 + up, 0.1, "raised, the tip's height");
+    }
+
+    [TestMethod]
+    public void TestTheSatelliteCradleSpansHerBay()
+    {
+        // From ahead: the cradle rests on her sills by trunnions reaching 2.5 m either side of her middle, over the
+        // sills' 2.29 to 2.69 m, and the satellite in it, on its upper stage and spin table, stands 5.32 m over the
+        // cradle's floor.
+        UseSpacecraft();
+        const double Size = 0.025;
+        Canvas ahead = OrthographicView("import 'spacecraft' { SatelliteCradle }", ["object SatelliteCradle(1)"],
+            (0, 3, 0), (1, 0, 0), "[0, 1, 0]", Size, 240, 260, "[-1, -1, 0]");
+        (double left, double right, double bottom, double up) = ReachIn(ahead, 0, ahead.Width, Size);
+
+        Assert.AreEqual(5.0, right - left, 0.05, "its trunnions");
+        Assert.AreEqual(5.32, 3 + up, 0.05, "the satellite's top");
+        Assert.AreEqual(0, 3 + bottom, 0.05, "the cradle's floor");
+    }
 }
