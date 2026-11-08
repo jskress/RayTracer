@@ -2718,6 +2718,9 @@ object Satellite(6) { translate [0, 0, 60] }
 | --- | --- |
 | `Shuttle` | An orbiter: double-delta wing, a fin, three engines and a black belly. |
 | `Satellite` | A bus, two solar wings and a dish. |
+| `ShuttleEnterprise` | OV-101 at her own size, her doors open or shut, as in 1977 or as she would have flown. |
+| `ShuttleArm` | Her Remote Manipulator System, jointed, in her own frame. |
+| `SpinSatellite`, `SatelliteCradle` | A drum satellite of the 1980s and the sunshield cradle it rode in. |
 | `SpacecraftTile`, `SpacecraftBelly`, `SpacecraftHull` | What they are made of. |
 | `SpacecraftGlow`, `SpacecraftEmber` | And what glows. |
 
@@ -2776,6 +2779,56 @@ end up thin in `Z` — and makes it a slab as thick as the ship is long.
 so a plate leaned out at forty-eight degrees keeps only cos(48) of its height and spends the rest going
 outward.  A strut built to reach something above it and leaned stops short of it, ending in mid-air
 under what it was supposed to be holding up.
+
+##### The shuttle Enterprise
+
+```
+import 'spacecraft' { ShuttleEnterprise, ShuttleArm, SatelliteCradle }
+
+object ShuttleEnterprise(1)
+object ShuttleArm(15, 82, -100, -45)
+object SatelliteCradle(1) { translate [-4.6, -1.37, 0] }
+```
+
+OV-101, the first orbiter NASA built, named *Enterprise* after the starship by a write-in campaign: she flew only
+in 1977's Approach and Landing Tests, carried up on a 747 over the Mojave and let go to glide home, and never went
+to space.  She is drawn at her own size — 37.24 m from her nose to her fin's tip and 23.79 m across her wings — so
+she takes no length; she faces `+X` with her port side to `+Z`, and her origin is the middle of her length and of
+her fuselage's height, as the rest of this library's are.
+
+`ShuttleEnterprise(doors, cone, flown)`: `doors` swings her payload bay doors open, `1` fully (175.5°), their
+radiators on their inner faces; `cone` puts on the tail cone of her first three free flights in place of her
+three main engines and the pods' two; `flown` dresses her as she would have been had she gone to space, black
+tile over the top of her nose and round her windows as an orbiter wore it, and `0` as she was in 1977 — white
+but for her belly and her nose's lower front, with the air data boom ahead of her nose.  All three are `0`, `0`
+and `1` unless said.  Her name and her country's are lettered as she wore them in 1977, "United States" down
+each side with the flag forward of it, "USA" over the flag on her port wing and NASA's logotype on her starboard
+one, in Arimo, a face with Helvetica's proportions, which the renderer fetches for itself.
+
+Her outline is NASA's: half-widths, tops and bellies traced station by station from the Space Shuttle News
+Reference's dimension drawing, at the one scale that gives her length, her span and her bay alike; her thermal
+zones from NASA's drawing of the orbiter's tile and its photograph of *Challenger* from above on STS-7; her
+markings from NASA's photographs of her in 1977.
+
+**Every station is one shape.**  Each is two superellipses about one height — an oval at her nose, and along her
+bay a flat belly, straight sides and her doors' ellipse over the hinge line — sampled at the same angles at
+every station, so that a place on one runs to the same place on the next.  Built from separate pieces whose
+proportions changed along her, her forward fuselage came out with a crease down each side.
+
+**Her wings are two halves.**  The upper half is white and the lower black, each lofted from root to the
+glove's break to the tip: a decal laid from above paints whatever faces up within its reach, and a wing's two
+faces lie too close together for any reach to tell apart.
+
+`ShuttleArm(yaw, pitch, elbow, wristPitch, wristYaw, wristRoll)` is her Remote Manipulator System, Canada's arm,
+50 ft long and 13 in thick, in her own frame — place it as she is placed.  Its shoulder stands on her port sill,
+and with every angle nought it lies stowed aft along it.  `yaw` swings it inboard over the bay, `pitch` raises
+the upper arm, `elbow` turns the lower arm on in the same sense, so a negative elbow folds it back down, and the
+wrist pitches, yaws and rolls the end effector.
+
+`SpinSatellite()` is a spin-stabilized communications satellite of the early 1980s, a drum of cells on its
+upper stage, and `SatelliteCradle(open)` stands one in the clamshell sunshield cradle it rode up in, the
+sunshield's halves swung out by `open`.  Its origin is the cradle's floor; in her bay that is 1.37 m under her
+middle, so a cradle in the bay's aft half stands at `translate [-4.6, -1.37, 0]`.
 
 The ship that used to be part of this library now has one of her own, built in far more detail:
 see [Star Trek](#star-trek).
