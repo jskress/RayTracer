@@ -87,7 +87,14 @@ public class Triangle : Surface
 
     // The map from a place to where it lies in the picture, worked out once: across and down, as shares of the
     // picture, at the first corner, and how each changes with the place.
-    private (double S, double T, Vector Across, Vector Down)? _texture;
+    //
+    // **It is held in an object, published whole.**  It is worked out while rendering, by whichever thread first
+    // shades the triangle, and a nullable tuple of two numbers and two vectors is not written in one step: another
+    // thread could find it there with its vectors not yet in it, and throw.  An object's reference is, and the
+    // volatile write puts its fields there before it.
+    private TextureMap _texture;
+
+    private sealed record TextureMap(double S, double T, Vector Across, Vector Down);
 
     private const double ParallelTolerance = 1e-12;
 
@@ -102,14 +109,6 @@ public class Triangle : Surface
     private Vector _normal;
 
     /// <summary>
-    /// This method is used to reset our control information when one of our points change.
-    /// If any of the points is <c>null</c> (as will be during initial creation), we
-    /// silently no-op.
-    /// </summary>
-    /// <param name="point1">Point 1 of the triangle</param>
-    /// <param name="point2">Point 2 of the triangle</param>
-    /// <param name="point3">Point 3 of the triangle</param>
-    /// <summary>
     /// This method returns where a place in the triangle's plane lies in a picture laid by its texture coordinates:
     /// across and down, as shares of the picture (down, since a picture's rows run down where a model's coordinates
     /// run up), and how each changes along X, Y and Z.  Within a triangle that is one affine map, the same for every
@@ -123,7 +122,9 @@ public class Triangle : Surface
         if (TextureCoordinates is not var ((u1, v1), (u2, v2), (u3, v3)))
             return null;
 
-        if (_texture is null)
+        TextureMap map = Volatile.Read(ref _texture);
+
+        if (map is null)
         {
             // The dual of the two edges in the triangle's plane: a place p - Point1 = b e1 + c e2 + (off the plane) has
             // b = d1 . (p - Point1) and c = d2 . (p - Point1).
@@ -138,15 +139,24 @@ public class Triangle : Surface
             Vector across = d1 * (u2 - u1) + d2 * (u3 - u1);
             Vector up = d1 * (v2 - v1) + d2 * (v3 - v1);
 
-            _texture = (u1, 1 - v1, across, -up);
+            map = new TextureMap(u1, 1 - v1, across, -up);
+
+            Volatile.Write(ref _texture, map);
         }
 
-        (double s, double t, Vector rateAcross, Vector rateDown) = _texture.Value;
         Vector offset = point - Point1;
 
-        return (s + rateAcross.Dot(offset), t + rateDown.Dot(offset), rateAcross, rateDown);
+        return (map.S + map.Across.Dot(offset), map.T + map.Down.Dot(offset), map.Across, map.Down);
     }
 
+    /// <summary>
+    /// This method is used to reset our control information when one of our points change.
+    /// If any of the points is <c>null</c> (as will be during initial creation), we
+    /// silently no-op.
+    /// </summary>
+    /// <param name="point1">Point 1 of the triangle</param>
+    /// <param name="point2">Point 2 of the triangle</param>
+    /// <param name="point3">Point 3 of the triangle</param>
     private void PointChanged(Point point1, Point point2, Point point3)
     {
         _texture = null;

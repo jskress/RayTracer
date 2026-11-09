@@ -322,6 +322,9 @@ public class EmissionLight : Light
     /// </summary>
     private static List<Ball> BallsRound(Surface surface, Portals portals, int instants)
     {
+        if (Bent(surface, portals))
+            return BentBallsRound(surface, portals, instants);
+
         List<Ball> balls = [];
 
         foreach (Casing casing in surface.Casings())
@@ -376,6 +379,99 @@ public class EmissionLight : Light
                         : Math.Max(
                             Math.Max((step + one + other).Magnitude, (step + one - other).Magnitude),
                             Math.Max((step - one + other).Magnitude, (one + other - step).Magnitude)) / 2);
+                }
+
+                balls.Add(new Ball(middles, radii));
+            }
+        }
+
+        return balls;
+    }
+
+    /// <summary>
+    /// This method reports whether a surface is bent, or stands in something bent (see <see cref="Deformation"/>):
+    /// whether a box round it stays a box carried out to the world.
+    /// </summary>
+    private static bool Bent(Surface surface, Portals portals)
+    {
+        for (Surface here = surface; here is not null;)
+        {
+            if (here.Deformation is not null)
+                return true;
+
+            if (here.Parent is not null)
+                here = here.Parent;
+            else if (!portals.IsEmpty)
+            {
+                here = portals.Through;
+                portals = portals.Outward;
+            }
+            else
+                here = null;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// This method works out the balls round a bent surface, or one standing in something bent, at each instant.  A
+    /// box carried out through a bend is bent too, not skewed, so each box it lies within is cut into cells no longer
+    /// than an eighth of its longest edge (as few as keeps them to <see cref="MostPieces"/>), and each cell's ball is
+    /// worked out from where its corners and the middles of its edges land in the world, grown by a twentieth for the
+    /// bend between them.
+    /// </summary>
+    private static List<Ball> BentBallsRound(Surface surface, Portals portals, int instants)
+    {
+        List<Ball> balls = [];
+
+        foreach (Casing casing in surface.Casings())
+        {
+            Vector[] edges = [casing.First, casing.Second, casing.Third];
+            double[] lengths = edges.Select(edge => edge.Magnitude).ToArray();
+            double cell = lengths.Max() / 8;
+            int[] counts;
+
+            do
+            {
+                double size = cell;
+
+                counts = lengths.Select(length => Math.Max(1, (int) Math.Ceiling(length / size - 1e-9))).ToArray();
+                cell *= 1.25;
+            }
+            while (counts[0] * counts[1] * counts[2] > MostPieces);
+
+            for (int i = 0; i < counts[0]; i++)
+            for (int j = 0; j < counts[1]; j++)
+            for (int k = 0; k < counts[2]; k++)
+            {
+                Vector one = edges[0] * (1.0 / counts[0]);
+                Vector two = edges[1] * (1.0 / counts[1]);
+                Vector three = edges[2] * (1.0 / counts[2]);
+                Point corner = casing.Corner + one * i + two * j + three * k;
+                Point[] middles = new Point[instants];
+                double[] radii = new double[instants];
+
+                for (int instant = 0; instant < instants; instant++)
+                {
+                    Point middle = surface.SurfaceToWorld(corner + (one + two + three) * 0.5, instant, portals);
+                    double farthest = 0;
+
+                    // The cell's corners and the middles of its edges: every place three halves can make.
+                    for (int a = 0; a <= 2; a++)
+                    for (int b = 0; b <= 2; b++)
+                    for (int c = 0; c <= 2; c++)
+                    {
+                        Point there = surface.SurfaceToWorld(
+                            corner + one * (a * 0.5) + two * (b * 0.5) + three * (c * 0.5), instant, portals);
+
+                        farthest = Math.Max(farthest, (there - middle).Magnitude);
+                    }
+
+                    if (!double.IsFinite(middle.X + middle.Y + middle.Z + farthest))
+                        return [];
+
+                    middles[instant] = middle;
+                    radii[instant] = farthest * 1.05;
                 }
 
                 balls.Add(new Ball(middles, radii));

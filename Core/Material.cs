@@ -653,18 +653,20 @@ public class Material
     /// <param name="surface">The surface the footprint was found on, which wears this material.</param>
     /// <param name="footprint">The footprint, in the world's coordinate system.</param>
     /// <param name="portals">The instances it was found through, if it was.</param>
+    /// <param name="place">Where it is, in the world, for a footprint carried through a bend.</param>
     /// <returns>The footprint, in the space of the surface this material was written on.</returns>
-    public Footprint WorldToAnchor(Surface surface, Footprint footprint, Portals portals = default)
+    public Footprint WorldToAnchor(Surface surface, Footprint footprint, Portals portals = default, Point place = null)
     {
-        return ToAnchor(Anchor ?? surface, surface, footprint, portals);
+        return ToAnchor(Anchor ?? surface, surface, footprint, portals, place);
     }
 
     /// <summary>
     /// The same, for a footprint.
     /// </summary>
-    private static Footprint ToAnchor(Surface anchor, Surface surface, Footprint footprint, Portals portals)
+    private static Footprint ToAnchor(
+        Surface anchor, Surface surface, Footprint footprint, Portals portals, Point place)
     {
-        return anchor.WorldToSurface(footprint, Scene.ShadingTime, PortalTo(anchor, surface, portals));
+        return anchor.WorldToSurface(footprint, Scene.ShadingTime, PortalTo(anchor, surface, portals), place);
     }
 
     /// <summary>
@@ -964,8 +966,8 @@ public class Material
                 there = ToAnchor(anchor, surface, point, portals);
                 patch = footprint is null || footprint.IsEmpty
                     ? null
-                    : ToAnchor(anchor, surface, footprint, portals);
-                facing = normal is null ? null : NormalToAnchor(anchor, surface, normal, portals);
+                    : ToAnchor(anchor, surface, footprint, portals, point);
+                facing = normal is null ? null : NormalToAnchor(anchor, surface, normal, portals, point);
             }
 
             color = decal.LayerOver(color, there, patch, facing);
@@ -988,14 +990,16 @@ public class Material
     /// <param name="surface">The surface the normal was found on.</param>
     /// <param name="normal">The normal, in the world's coordinate system.</param>
     /// <param name="portals">The instances it was found through, if it was.</param>
+    /// <param name="place">Where it is, in the world, for a normal carried through a bend.</param>
     /// <returns>A normal in the anchor's space, of no particular length.</returns>
-    private static Vector NormalToAnchor(Surface anchor, Surface surface, Vector normal, Portals portals)
+    private static Vector NormalToAnchor(
+        Surface anchor, Surface surface, Vector normal, Portals portals, Point place)
     {
         Vector unit = normal.Unit;
         Vector aside = Math.Abs(unit.X) < 0.9
             ? unit.Cross(new Vector(1, 0, 0)).Unit
             : unit.Cross(new Vector(0, 1, 0)).Unit;
-        Footprint frame = ToAnchor(anchor, surface, new Footprint(aside, unit.Cross(aside)), portals);
+        Footprint frame = ToAnchor(anchor, surface, new Footprint(aside, unit.Cross(aside)), portals, place);
 
         return frame.Across.Cross(frame.Along);
     }

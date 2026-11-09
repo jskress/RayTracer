@@ -38,6 +38,7 @@ Whatever its shape, any surface accepts these:
 | `hair { }` | Grows hair over it; see [Hair](advanced-surfaces.md#hair). |
 | `weather { }` | The grime, dust, wear and snow of having stood out in the weather; see [Weathering a Model](materials.md#weathering-a-model). |
 | `motion { }` | Moves it while the camera's shutter is open; see [Setting a Surface Moving](transforms.md#setting-a-surface-moving). |
+| `deformed { }` | Bends it along a spline; see [below](#deformed). |
 | `body { }` | Moves it by gravity, the air and what it strikes, in an animation; see [Bodies](animation.md#bodies). |
 | `on`, `under`, `left of` and the rest | Places it against another named thing; see [Placing One Thing Against Another](transforms.md#placing-one-thing-against-another). |
 | `span from 'a' to 'b'` | Stands it between two named places; see [Marks and Spans](animation.md#marks-and-spans). |
@@ -162,6 +163,59 @@ passed over rather than refused.  A fire that has gone out is a reasonable thing
 Most surfaces work out a bounding box for themselves, so you can leave this alone.  It is
 there for the surfaces that cannot or when you can provide a better one than the default
 for a surface — see [Bounding](#bounding) below.
+
+#### `deformed`
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/deformedClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/deformedClause.svg">
+  <img alt="Deformed" src="images/surfaces/deformedClause.svg">
+</picture>
+
+A surface may be bent along a spline: a line through it, in its own space, is laid along the spline, and every
+slice square to that line is stood square to the spline the same distance along it, turned with it.  The slices
+keep their shape, so a bar bends as a bar does rather than leaning, and whatever is painted on it -- pigments,
+patterns, decals -- bends with it.  It works on any surface with an end: a primitive, a group, a combination, a
+whole model from a library.
+
+```
+Bow = spline {
+    move to 0, 0, 0
+    curve 0, 1.6569, 0, 1.3431, 3, 0 to 3, 3, 0
+    line to 6, 3, 0
+}
+
+object Column {
+    deformed { along Bow  centerline toward Y }
+    translate [0.5, 0, 0]
+}
+```
+
+| Property | What it does |
+| --- | --- |
+| `along` | The spline to bend along.  It must turn smoothly. |
+| `centerline [from P] toward V` | The line laid along the spline, in the surface's own space: from `P` (the origin if not said) the way `V` points, which may be `X`, `Y` or `Z`.  `P` goes to the spline's start. |
+| `twist` | How far the slices are turned about the spline by its end, turning evenly from none at its start.  A twisted bar with nothing bent is a spline running straight. |
+| `stretched` | Lays the centerline, from `P` to as far as the surface reaches along it, over the whole spline, so a shape of any length fills it.  Without it the shape is as long as it was, and goes on past the spline's end if it is longer. |
+
+Both `along` and `centerline` must be said.
+
+The bend is done to the surface as it is drawn, before its own transforms, wherever the block is written; the
+transforms then place the bent shape.  A spline running straight from `P` the way `V` points leaves the surface as it
+is.  Past either end of the spline the surface carries on straight, the way the spline heads there.  A spline may
+place the surface as well as bend it: it need not start at `P`.
+
+A bend tighter than the surface is thick on its inside -- its radius less than how far the surface reaches toward the
+inside of the bend from its centerline -- is refused, since the inside would pass through itself.  A shape folded in
+half must be bent round a radius at least as great as it is thick on the inside of the fold; its two halves may then
+lie side by side.  A deformed surface may not hold hair or strands, which are found by how wide a ray is, nor an
+opening for the sky (`portal`), which must be a box.  One `deformed` block to a surface: to bend something twice,
+deform a group holding it.
+
+A bent surface costs more to render than a straight one wherever it bends, since each ray through it is followed in
+short pieces, each asked of the shape: a few times as much for the rays that meet a simple shape, and as much as eight
+or ten times for one costly to meet, such as a lofted hull.  Where the spline runs straight it costs next to nothing
+more.
 
 ### The Primitives
 

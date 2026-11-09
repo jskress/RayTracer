@@ -253,6 +253,18 @@ public partial class Scene
 
         noCaustics |= surface.NoCaustics;
 
+        // A bent surface is aimed at whole, by the box it is bent into: what is inside it stands where the bend puts
+        // it, which no matrix carries.
+        if (surface.Deformation?.OuterBox is { } bent)
+        {
+            double within = noCaustics ? 0 : StrengthWithin(surface, portals);
+
+            if (within > 0 && !bent.IsEmpty)
+                found.Add((bent.TransformedBy(toWorld), within));
+
+            return;
+        }
+
         switch (surface)
         {
             case Instance instance:

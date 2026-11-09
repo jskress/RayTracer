@@ -454,6 +454,40 @@ thickness, a curve tighter than r (`d kappa >= 1`), a drawn-in outline that cros
 outline narrower than 2r; un-refused it overflowed the stack in path normalization), tapering.  Exact tubes cost:
 a rounded guitar body filling the frame ~4-5x a sharp one.
 
+A surface's `deformed { along S  centerline [from P] toward V  [twist a]  [stretched] }` (`Geometry/Deformation.cs`,
+`Surface.Deformation`) bends it along a spline in its OWN space, before its transforms (the user's calls, 2026-11-08: a
+child block, not a wrapper; one per surface): a place a along the centerline and x, y off it stands at C(sigma a) + x N
++ y B in the spline's rotation-minimizing frame, turned by the twist so far (sigma 1, or `stretched` the spline's
+length over how far the shape reaches past P), straight runs before and after.  Barr 1986 nonlinear ray tracing:
+`Surface.Intersect`, `IntersectWithin` and `IntersectReportingStart` hand the ray, past the surface's own transform, to
+`Deformation.Intersect`: the spline cut into pieces turning and twisting no more than 8 degrees, the ray clipped to each
+piece's slab between its end planes (holding its lower plane, not its upper; a ray lying in a plane is the upper
+piece's; at a curve join both pieces take the averaged heading -- the DSL allows a 1 degree kink, and its wedge lost or
+doubled crossings), the inverse by Newton between the piece's ends, chords halved until they stray under a quarter of
+the ray's width (1e-4 of the shape's size for a shadow ray), each asked of the shape (`AddIntersections`).  A crossing
+within 1e-10 of the size of a plane two pieces share is the piece's whose stretch of the ray begins there: a shape
+ending where its centerline starts lost its cap to rounding.  Each crossing is found again on the ray: Newton along it
+onto the plane touching the struck surface (its normal carried up through `Between`: parents, and the instances the
+crossing was stamped by where the walk runs out -- a primitive's call and a model's shared parts are instances -- the
+stamps copied back), one short chord asked of the struck surface ALONE, onto that plane again, cycling until the
+plane's crossing is within 1e-6 of the size; the chord's reach is the first step's error, d^2 / (0.02 size) / slope
+(sized from how far the step moved, a wide chord left 7e-8 errors).  Failing that, three ever-shorter chords; a
+crossing no shorter chord finds again was the chord's own and is dropped.  The frame inside a piece is turned by
+double reflection over the curve's displacement summed from its velocity (2-point Gauss-Legendre, exact for a cubic):
+the difference of two nearby places cancelled its digits and made a phantom crossing.  `WorldToSurface` undeforms (the
+last point cached per thread), `SurfaceToWorld` deforms; `NormalToWorld` and `DirectionToWorld` take an optional `at`
+(the place in the surface's own space, carried up, passed once `Deformation.AnyMade`) for the bend's Jacobian, and
+`WorldToSurface(Footprint, ..., place)` its inverse for pigments, blends, decals and picture bumps; brushed grooves
+and a smooth triangle's facet and rise pass it.  `BoxAround` takes `OuterBox`; caustics aim at a bent surface whole; a
+glow held by anything bent has its casings cut into cells (`EmissionLight.BentBallsRound`); a body measures `OuterBox`.
+Refused: a bend tighter than the shape's reach on its inside, strands and hair, sky openings, a shape without end, a
+stretched shape reaching nowhere past P.  `TestDeformation`: a tube bent round an arc is the torus to 2e-9.  Cost: the
+shuttle bowed and filling 60% of the frame 8x straight (its lofted hull is dear to ask, and is asked several times a
+ray); a checkered column 2x.  `gallery/Local/showcase/the-tower-that-turns.igl` deforms an in-scene grammar tower
+(`GlassTower`, glazed on every face -- the library's towers glaze only their fronts) along an eight-cubic sway with a
+120-degree twist, over ~240 library buildings in a 45 m-deep haze box (700 m deep it turned the sky white): the
+user's call, 2026-11-08, "more complex and realistic ... showy" (8 min 40 s at 1920x1080).
+
 Shading carries light in an `ISpectrum<TSelf>` struct (`Graphics/ISpectrum.cs`), not in `Color`:
 every shading method (`Scene`, `Light.ApplyPhong`, `Medium`, `Interior`/`Material` tints,
 `PixelRenderer.Trace`) is generic in it, `RgbSpectrum` mirrors `Color`'s arithmetic bit for bit, and

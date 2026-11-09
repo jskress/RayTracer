@@ -190,6 +190,9 @@ public partial class LanguageParser
             case "span":
                 resolver.SpanResolver = ParseSpanClause(clause);
                 break;
+            case "deformed":
+                resolver.DeformationResolver = ParseDeformedClause(clause);
+                break;
             default:
                 throw new Exception($"Internal error: unknown {noun} property found: {field}.");
         }

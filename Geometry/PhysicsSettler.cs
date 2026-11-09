@@ -124,7 +124,8 @@ internal static class PhysicsSettler
         {
             Matrix start = surface.Transform;
             Point center = start * Point.Zero;
-            BoundingBox box = surface.TrueBoundingBox() ?? new BoundingBox().Add(new Point(-1, -1, -1)).Add(new Point(1, 1, 1));
+            BoundingBox box = surface.Deformation?.OuterBox ?? surface.TrueBoundingBox() ??
+                              new BoundingBox().Add(new Point(-1, -1, -1)).Add(new Point(1, 1, 1));
             bool isABox = surface.Body.IsABox ?? surface is Cube;
             Vector[] corners = isABox ? CornersOf(box, start, center) : null;
             double radius = surface.Body.Radius ?? (isABox

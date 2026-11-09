@@ -727,7 +727,7 @@ public abstract class Light : NamedThing
             return 1;
 
         Point local = material.WorldToAnchor(surface, point, portals);
-        Footprint there = material.WorldToAnchor(surface, footprint, portals);
+        Footprint there = material.WorldToAnchor(surface, footprint, portals, point);
 
         return glints.ShareAt(local, footprint, there, normal, (eye + sample.Direction).Unit, alpha, SpreadOf(sample));
     }

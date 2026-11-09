@@ -1,0 +1,209 @@
+// A glass tower that sways and turns as it rises, over a town at golden hour.
+//
+// The tower is drawn straight, by a shape grammar: forty-four floors of glass between concrete slabs, the same on
+// all four faces, over a tall glazed lobby and under a crown, twenty-six meters square and a hundred and sixty-five
+// high.  Then it is **deformed**: its upright centerline is laid along `Sway`, a spline of eight cubics that leaves
+// the ground upright, swings ten meters out and back across the tower's height while it sways twice, more gently,
+// the other way, and comes upright again at the top -- and it is twisted a hundred and twenty degrees from its
+// lobby to its crown.  Each floor stays square to the curve, so where the tower sways its floors lean with it, and
+// the slab edges, catching the low sun, trace the turn all the way up.
+//
+// Its sister behind it, and the towers of the skyline, are the same grammar left straight.  The town is the
+// `buildings` library's terraces and blocks of flats, drawn from each block's number so it is the same town each
+// time.  A shallow layer of warm haze -- a box of absorbing, glowing air forty-five meters deep, casting no shadow --
+// fades the town into the horizon and leaves the sky overhead clear.
+
+import 'buildings'      { Terrace, Apartments }
+import 'roads'          { Road, Curb, Pavement, ParkingLot }
+import 'vehicles'       { Car, Van, Truck }
+import 'outdoor-lights' { StreetLamp }
+import 'daylight'       { GoldenHourFrom, GoldenHourLight }
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.2
+    angles are degrees
+    info {
+        title 'The Tower That Turns'
+        author 'J. Stephen Kress'
+        description 'A glass tower that sways and turns as it rises, over a town at golden hour.'
+        copyright true
+        software __software__
+    }
+}
+
+camera { location [-95, 46, -175]  look at [35, 70, 45]  field of view 70  exposure 1.5 }
+
+// The sun nine degrees up behind the camera's right shoulder.
+background GoldenHourFrom(18)
+light GoldenHourLight
+
+plane { material { pigment [0.32, 0.33, 0.30] }  translate Y -0.12 }
+
+// The air: a haze that thins the town toward the horizon and glows the color it fades to.  It casts no shadow, or
+// the sun would be dimmed for crossing it as well, and it is shallow, so a look up at the sky crosses little of it.
+cube {
+    material {
+        transparency 1
+        interior { medium { absorption 0.0003  emission [0.000075, 0.000064, 0.000048] } }
+    }
+    no shadow
+    scale [4000, 45, 4000]
+    translate Y 35
+}
+
+// -- The towers --------------------------------------------------------------------------------------------------
+
+TowerConcrete = material {
+    pigment granite { [0, [0.62, 0.60, 0.56], 1, [0.74, 0.72, 0.68]] scale 0.4 }
+    diffuse 0.85
+    specular 0.05
+}
+
+TowerGlass = material {
+    pigment [0.03, 0.05, 0.07]
+    diffuse 0.3
+    reflective 0.25
+    fresnel
+}
+
+TowerMetal = material {
+    pigment [0.16, 0.17, 0.18]
+    diffuse 0.6
+    specular 0.4
+    shininess 60
+}
+
+// A tower of glass between concrete slabs reaching past it all round, all four faces alike, over a tall glazed
+// lobby and under a crown: so many floors, so wide each way, its middle over the origin.
+primitive GlassTower(floors, wide) -> shapes {
+    return shapes {
+        axiom Lot
+        size [wide, 0, wide]
+        rules {
+            Lot -> extrude 7.5 + floors * 3.4 + 5.5 { Mass }
+            Mass -> split Y { 7.5 Lobby  ~1 Floors  5.5 Crown }
+            Floors -> repeat Y 3.4 index in floor { Floor }
+            Floor -> split Y { 0.34 Slab  ~1 Storey }
+            Slab -> move [-0.9, 0, -0.9] { size [width + 1.8, height, depth + 1.8] { fill material TowerConcrete } }
+            Storey -> faces depth 0.3 { sides: Glazing }
+            Glazing -> repeat X 1.55 { split X { 0.08 Mullion  ~1 Pane } }
+            Pane -> move [0, 0, 0.06] { size [width, height, depth - 0.06] { fill material TowerGlass } }
+            Mullion -> fill material TowerMetal
+            Lobby -> split Y { 7.1 { faces depth 0.4 { sides: LobbyFront } }  0.4 { fill material TowerConcrete } }
+            LobbyFront -> repeat X 3.1 {
+                              split X {
+                                  0.18 Mullion
+                                  ~1 { move [0, 0, 0.1] { size [width, height, depth - 0.1] { fill material TowerGlass } } }
+                              }
+                          }
+            Crown -> faces depth 0.5 { sides: CrownBand }
+                     roof flat material TowerConcrete
+            CrownBand -> split Y {
+                             0.5 { fill material TowerConcrete }
+                             ~1 { repeat X 0.9 { split X { 0.45 { fill material TowerMetal }  ~1 { } } } }
+                             0.8 { fill material TowerConcrete }
+                         }
+        }
+    }
+}
+
+// Upright at the ground and at the top: ten meters out and back in X across the tower's height, and four meters
+// twice the other way in Z, x = 10 (1 - cos(2 pi t)) / 2 and z = -4 (1 - cos(4 pi t)) / 2 up 170 meters, in eight
+// cubics matched to the curve's own heading at their ends.
+Sway = spline {
+    move to 0, 0, 0
+    curve 0.0000, 7.0833, -0.0000, 0.5389, 14.1667, -0.9528 to 1.4645, 21.2500, -2.0000
+    curve 2.3901, 28.3333, -3.0472, 3.6910, 35.4167, -4.0000 to 5.0000, 42.5000, -4.0000
+    curve 6.3090, 49.5833, -4.0000, 7.6099, 56.6667, -3.0472 to 8.5355, 63.7500, -2.0000
+    curve 9.4611, 70.8333, -0.9528, 10.0000, 77.9167, -0.0000 to 10.0000, 85.0000, -0.0000
+    curve 10.0000, 92.0833, 0.0000, 9.4611, 99.1667, -0.9528 to 8.5355, 106.2500, -2.0000
+    curve 7.6099, 113.3333, -3.0472, 6.3090, 120.4167, -4.0000 to 5.0000, 127.5000, -4.0000
+    curve 3.6910, 134.5833, -4.0000, 2.3901, 141.6667, -3.0472 to 1.4645, 148.7500, -2.0000
+    curve 0.5389, 155.8333, -0.9528, 0.0000, 162.9167, -0.0000 to 0.0000, 170.0000, -0.0000
+}
+
+object GlassTower(44, 26) {
+    deformed { along Sway  centerline toward Y  twist 120 }
+    translate [40, 0.125, 40]
+}
+
+// Its straight sister, behind it.
+object GlassTower(28, 22) { translate [-34, 0.125, 78] }
+
+// A skyline beyond, of straight towers.
+object GlassTower(22, 22) { translate [150, 0.125, 260] }
+object GlassTower(32, 24) { translate [-150, 0.125, 300] }
+object GlassTower(18, 20) { translate [-95, 0.125, 210] }
+object GlassTower(26, 22) { translate [95, 0.125, 330] }
+
+// -- The street --------------------------------------------------------------------------------------------------
+
+// The avenue, its curbs and pavements, and the plaza the tower stands in.
+object Road(400, 12, 'summer', 1) { translate [0, 0.11, 0] }
+object Curb(400)                  { translate [0, 0, 6.1] }
+object Curb(400)                  { rotate Y 180  translate [0, 0, -6.1] }
+object Pavement(400, 4)           { translate [0, 0, 8.3] }
+object Pavement(400, 4)           { translate [0, 0, -8.3] }
+object Pavement(60, 50)           { translate [40, 0, 35.3] }
+
+// The far side of the avenue, fronts to it.
+object Terrace(4, 'summer', 1)      { translate [-2, 0.125, 15.8] }
+object Apartments(8, 'summer', 2)   { translate [-27, 0.125, 17.3] }
+object Terrace(5, 'summer', 4)      { translate [-60, 0.125, 15.8] }
+object Apartments(11, 'summer', 14) { translate [-92, 0.125, 17.3] }
+object Terrace(4, 'summer', 15)     { translate [-122, 0.125, 15.8] }
+object Apartments(10, 'summer', 4)  { translate [84, 0.125, 17.3] }
+object Terrace(4, 'summer', 7)      { translate [112, 0.125, 15.8] }
+object Apartments(9, 'summer', 8)   { translate [138, 0.125, 17.3] }
+object Terrace(5, 'summer', 11)     { translate [170, 0.125, 15.8] }
+object Apartments(7, 'summer', 12)  { translate [205, 0.125, 17.3] }
+object Apartments(12, 'summer', 5)  { translate [-5, 0.125, 50] }
+
+// The near side: a car park.
+object ParkingLot(260, 40, 'summer', 1) { translate [40, 0.02, -32] }
+
+for bay in [0, 40] {
+    if (random(bay, 3) > 0.4) {
+        object Car(4.3 + random(bay, 4) * 0.4, 'summer', floor(random(bay, 5) * 6)) {
+            rotate Y 90  translate [-86 + bay * 6.3, 0.02, -16.5]
+        }
+    }
+}
+
+// The town behind, block on block, a street's width between: each building a terrace or a block of flats, drawn
+// from the block's number so the town is the same town each time it is built, and left clear round the tower's
+// plaza and its sister.
+for row in [0, 9] {
+    for column in [0, 23] {
+        x = -259 + column * 27
+        z = 92 + row * 26
+        i = row * 20 + column
+
+        if (!(row <= 1 && x > 5 && x < 75) && !(row == 0 && x > -50 && x < -18)) {
+            if (random(i, 1) < 0.4) {
+                object Terrace(3, 'summer', i) { translate [x, 0.125, z] }
+            }
+            else {
+                object Apartments(4 + floor(random(i, 3) * (row < 3 ? 7 : 10)), 'summer', i) {
+                    translate [x, 0.125, z]
+                }
+            }
+        }
+    }
+}
+
+// Lamps along both curbs, off, and traffic.
+for lamp in [0, 8] {
+    object StreetLamp(7, 'summer', 1) { translate [lamp * 24 - 90, 0.125, 6.7] }
+    object StreetLamp(7, 'summer', 1) { rotate Y 180  translate [lamp * 24 - 78, 0.125, -6.7] }
+}
+
+object Car(4.4, 'summer', 1)   { translate [-12, 0.08, -3] }
+object Van(5.6, 'summer', 3)   { rotate Y 180  translate [9, 0.08, 3] }
+object Car(4.5, 'summer', 0)   { rotate Y 180  translate [30, 0.08, 3] }
+object Truck(8.5, 'summer', 2) { translate [52, 0.08, -3] }
+object Car(4.4, 'summer', 5)   { translate [-40, 0.08, -3] }

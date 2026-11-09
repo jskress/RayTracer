@@ -153,7 +153,7 @@ public sealed class MaterialBlend
         if (pattern is ImagePattern)
         {
             Footprint patch = intersection.Footprint is { IsEmpty: false } footprint
-                ? surface.WorldToSurface(footprint, intersection.TimeIndex, intersection.Portals)
+                ? surface.WorldToSurface(footprint, intersection.TimeIndex, intersection.Portals, intersection.Point)
                 : null;
 
             return pattern.ValueFor(point, inverse is null ? patch : patch?.TransformedBy(inverse));

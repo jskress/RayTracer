@@ -86,6 +86,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public SpanResolver SpanResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how the surface is bent along a spline, or null.
+    /// </summary>
+    public DeformationResolver DeformationResolver { get; set; }
+
+    /// <summary>
     /// This property notes whether this resolver would make the surface give light.
     /// </summary>
     public bool GivesLight => GivesLightResolver is not null;
@@ -124,6 +129,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         WeatherResolver.AssignTo(value, target => target.Weather, context, variables);
         BodyResolver.AssignTo(value, target => target.Body, context, variables);
         SpanResolver.AssignTo(value, target => target.Span, context, variables);
+        DeformationResolver.AssignTo(value, target => target.Deformation, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
 
