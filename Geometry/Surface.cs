@@ -136,6 +136,12 @@ public abstract class Surface : NamedThing
     public Hair Hair { get; private set; }
 
     /// <summary>
+    /// This property holds how the surface is bent along a spline, or <c>null</c> if it is not.  The bend is done in
+    /// the surface's own space, before its transforms: they place the bent shape.  See <see cref="Geometry.Deformation"/>.
+    /// </summary>
+    public Deformation Deformation { get; set; }
+
+    /// <summary>
     /// This property holds the transform for the surface for converting from world to
     /// surface space.
     /// </summary>
@@ -286,6 +292,9 @@ public abstract class Surface : NamedThing
 
         BoundingBox?.Expand();
 
+        // The bend is measured on the shape's own box.
+        Deformation?.Prepare(this);
+
         // Last, since growing hair asks the surface where rays cross it, and that takes everything
         // above.  Once only: a surface readied again keeps the hair it has.
         if (HairGrowth is not null && Hair is null)
@@ -335,6 +344,7 @@ public abstract class Surface : NamedThing
 
         BoundingBox = GetDefaultBoundingBox();
         BoundingBox?.Expand();
+        Deformation?.Prepare(this);
     }
 
     // Whether the box was worked out from the surface rather than written for it.
@@ -420,8 +430,9 @@ public abstract class Surface : NamedThing
             {
                 // Taken back to the surface's real extent, and taken back *here* rather than
                 // afterward, since the padding goes on before the transform and is stretched by it.
-                BoundingBox mine = trueExtent
-                    ? surface.TrueBoundingBox()
+                // A bent shape occupies the box it is bent into.
+                BoundingBox mine = surface.Deformation?.OuterBox is { } bent ? bent
+                    : trueExtent ? surface.TrueBoundingBox()
                     : surface.BoundingBox;
 
                 box.Add(mine.TransformedBy(transform));
@@ -725,6 +736,14 @@ public abstract class Surface : NamedThing
     {
         ray = InverseTransformAt(ray.TimeIndex).Transform(ray);
 
+        // A bent shape is followed along the ray only as far as a shadow ray can want.
+        if (Deformation is not null)
+        {
+            Deformation.Intersect(this, ray, intersections, 0, maxDistance);
+
+            return;
+        }
+
         // The hair reaches beyond the surface's own box, so it is asked before that box can turn the
         // ray away.
         Hair?.IntersectWithin(ray, intersections, maxDistance);
@@ -769,6 +788,13 @@ public abstract class Surface : NamedThing
         // wide enough to cover everywhere it goes.
         ray = InverseTransformAt(ray.TimeIndex).Transform(ray);
 
+        if (Deformation is not null)
+        {
+            Deformation.Intersect(this, ray, intersections);
+
+            return;
+        }
+
         if (BoundingBox == null || BoundingBox.IsHitBy(ray))
             AddIntersections(ray, intersections);
 
@@ -788,6 +814,14 @@ public abstract class Surface : NamedThing
     internal bool IntersectReportingStart(Ray ray, List<Intersection> intersections)
     {
         ray = InverseTransformAt(ray.TimeIndex).Transform(ray);
+
+        // A bent shape has a box, so it ends somewhere.
+        if (Deformation is not null)
+        {
+            Deformation.Intersect(this, ray, intersections);
+
+            return false;
+        }
 
         Hair?.Intersect(ray, intersections);
 
@@ -896,7 +930,8 @@ public abstract class Surface : NamedThing
                 normal = roughening.PerturbAt(normal, surfacePoint);
         }
 
-        return NormalToWorld(normal, timeIndex, portals);
+        // A bend turns a normal by how it bends the shape where the normal is, so the place goes along with it.
+        return NormalToWorld(normal, timeIndex, portals, Deformation.AnyMade ? surfacePoint : null);
     }
 
     /// <summary>
@@ -916,7 +951,9 @@ public abstract class Surface : NamedThing
 
         Vector facing = NormalToWorld(normal, timeIndex, portals);
 
-        return WorldToSurface(Footprint.For(intersection.FootprintRadius, -intersection.Eye, facing), timeIndex, portals);
+        return WorldToSurface(
+            Footprint.For(intersection.FootprintRadius, -intersection.Eye, facing), timeIndex, portals,
+            intersection.Point);
     }
 
     /// <summary>
@@ -945,7 +982,9 @@ public abstract class Surface : NamedThing
         else if (!portals.IsEmpty)
             point = portals.Through.WorldToSurface(point, timeIndex, portals.Outward);
 
-        return InverseTransformAt(timeIndex) * point;
+        point = InverseTransformAt(timeIndex) * point;
+
+        return Deformation is null ? point : Deformation.Undeform(point);
     }
 
     /// <summary>
@@ -959,18 +998,25 @@ public abstract class Surface : NamedThing
     /// </summary>
     /// <param name="footprint">The footprint to convert.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to place the surface at.</param>
+    /// <param name="portals">The instances the footprint was found through, if it was.</param>
+    /// <param name="place">Where the footprint is, in the world, which a bent surface needs to know how it is bent
+    /// there; without it, a bend leaves a footprint as it is.</param>
     /// <returns>The converted footprint.</returns>
-    public Footprint WorldToSurface(Footprint footprint, int timeIndex = 0, Portals portals = default)
+    public Footprint WorldToSurface(Footprint footprint, int timeIndex = 0, Portals portals = default, Point place = null)
     {
         if (footprint is null || footprint.IsEmpty)
             return Footprint.None;
 
         if (Parent != null)
-            footprint = Parent.WorldToSurface(footprint, timeIndex, portals);
+            footprint = Parent.WorldToSurface(footprint, timeIndex, portals, place);
         else if (!portals.IsEmpty)
-            footprint = portals.Through.WorldToSurface(footprint, timeIndex, portals.Outward);
+            footprint = portals.Through.WorldToSurface(footprint, timeIndex, portals.Outward, place);
 
-        return footprint.TransformedBy(InverseTransformAt(timeIndex));
+        footprint = footprint.TransformedBy(InverseTransformAt(timeIndex));
+
+        return Deformation is null || place is null
+            ? footprint
+            : Deformation.FootprintIn(footprint, WorldToSurface(place, timeIndex, portals));
     }
 
     /// <summary>
@@ -990,6 +1036,9 @@ public abstract class Surface : NamedThing
     {
         Matrix forward = _movingTransforms is null ? Transform : _movingTransforms[timeIndex];
 
+        if (Deformation is not null)
+            point = Deformation.Deform(point);
+
         point = forward * point;
 
         if (Parent != null)
@@ -1007,17 +1056,28 @@ public abstract class Surface : NamedThing
     /// <param name="direction">The direction to convert.</param>
     /// <param name="timeIndex">Which instant to convert at.</param>
     /// <param name="portals">The instances the surface was found through, if it was.</param>
+    /// <param name="at">Where the direction is, in the surface's own space, which a bent surface needs to know how
+    /// it is bent there; without it, a bend leaves a direction as it is.</param>
     /// <returns>The direction, in the world's coordinate system.</returns>
-    public Vector DirectionToWorld(Vector direction, int timeIndex = 0, Portals portals = default)
+    public Vector DirectionToWorld(Vector direction, int timeIndex = 0, Portals portals = default, Point at = null)
     {
         Matrix forward = _movingTransforms is null ? Transform : _movingTransforms[timeIndex];
 
+        if (Deformation is not null)
+        {
+            direction = Deformation.DirectionOut(direction, at);
+            at = at is null ? null : Deformation.Deform(at);
+        }
+
         direction = forward * direction;
+        at = at is null ? null : forward * at;
 
         if (Parent != null)
-            return Parent.DirectionToWorld(direction, timeIndex, portals);
+            return Parent.DirectionToWorld(direction, timeIndex, portals, at);
 
-        return portals.IsEmpty ? direction : portals.Through.DirectionToWorld(direction, timeIndex, portals.Outward);
+        return portals.IsEmpty
+            ? direction
+            : portals.Through.DirectionToWorld(direction, timeIndex, portals.Outward, at);
     }
 
     /// <summary>
@@ -1026,16 +1086,28 @@ public abstract class Surface : NamedThing
     /// </summary>
     /// <param name="normal">The normal to convert.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to place the surface at.</param>
+    /// <param name="portals">The instances the surface was found through, if it was.</param>
+    /// <param name="at">Where the normal is, in the surface's own space, which a bent surface needs to know how it
+    /// is bent there; without it, a bend leaves a normal as it is.</param>
     /// <returns>The converted normal.</returns>
-    public Vector NormalToWorld(Vector normal, int timeIndex = 0, Portals portals = default)
+    public Vector NormalToWorld(Vector normal, int timeIndex = 0, Portals portals = default, Point at = null)
     {
+        if (Deformation is not null)
+        {
+            normal = Deformation.NormalOut(normal, at);
+            at = at is null ? null : Deformation.Deform(at);
+        }
+
         normal = TransposedInverseTransformAt(timeIndex) * normal;
         normal = normal.Clean().Unit;
 
+        // Carried up only when asked for: nothing but a bend further out needs it.
+        at = at is null ? null : TransformAt(timeIndex) * at;
+
         if (Parent != null)
-            normal = Parent.NormalToWorld(normal, timeIndex, portals);
+            normal = Parent.NormalToWorld(normal, timeIndex, portals, at);
         else if (!portals.IsEmpty)
-            normal = portals.Through.NormalToWorld(normal, timeIndex, portals.Outward);
+            normal = portals.Through.NormalToWorld(normal, timeIndex, portals.Outward, at);
 
         return normal;
     }

@@ -194,7 +194,9 @@ public abstract class Pigment
         {
             return GetTransformedColorFor(
                 surface.WorldToSurface(point, Scene.ShadingTime, portals),
-                footprint is null || footprint.IsEmpty ? Footprint.None : surface.WorldToSurface(footprint, Scene.ShadingTime, portals),
+                footprint is null || footprint.IsEmpty
+                    ? Footprint.None
+                    : surface.WorldToSurface(footprint, Scene.ShadingTime, portals, point),
                 viewing);
         }
 
@@ -202,7 +204,7 @@ public abstract class Pigment
             ? GetTransformedColorFor(surface.WorldToSurface(point, Scene.ShadingTime, portals))
             : GetTransformedColorFor(
                 surface.WorldToSurface(point, Scene.ShadingTime, portals),
-                surface.WorldToSurface(footprint, Scene.ShadingTime, portals));
+                surface.WorldToSurface(footprint, Scene.ShadingTime, portals, point));
     }
 
     /// <summary>

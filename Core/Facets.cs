@@ -121,15 +121,20 @@ public sealed class Facets
 
         Vector world;
 
+        // A bent surface turns its grooves with it, so where they are goes along with them.
+        Point at = material.BrushedAround is not null || Deformation.AnyMade
+            ? surface.WorldToSurface(point, timeIndex, portals)
+            : null;
+
         if (strand?.Tangent is { } tangent && material.BrushedAround is null && material.BrushedAlong is null)
-            world = surface.DirectionToWorld(tangent, timeIndex, portals).Cross(normal);
+            world = surface.DirectionToWorld(tangent, timeIndex, portals, at).Cross(normal);
         else
         {
             Vector local = material.BrushedAround is { } axis
-                ? axis.Cross(surface.WorldToSurface(point, timeIndex, portals) - Point.Zero)
+                ? axis.Cross(at - Point.Zero)
                 : material.BrushedAlong ?? new Vector(1, 0, 0);
 
-            world = surface.DirectionToWorld(local, timeIndex, portals);
+            world = surface.DirectionToWorld(local, timeIndex, portals, at);
         }
 
         Vector along = world - normal * world.Dot(normal);

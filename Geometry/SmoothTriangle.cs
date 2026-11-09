@@ -78,9 +78,15 @@ public class SmoothTriangle : Triangle
     {
         int time = intersection.TimeIndex;
         Portals portals = intersection.Portals;
-        Vector flat = NormalToWorld((Point2 - Point1).Cross(Point3 - Point1), time, portals).Unit;
-        Vector corners = NormalToWorld(Normal1, time, portals).Unit + NormalToWorld(Normal2, time, portals).Unit +
-                         NormalToWorld(Normal3, time, portals).Unit;
+
+        // A bent triangle is compared as the bend stands at its middle.
+        Point at = Deformation.AnyMade
+            ? new Point((Point1.X + Point2.X + Point3.X) / 3, (Point1.Y + Point2.Y + Point3.Y) / 3,
+                (Point1.Z + Point2.Z + Point3.Z) / 3)
+            : null;
+        Vector flat = NormalToWorld((Point2 - Point1).Cross(Point3 - Point1), time, portals, at).Unit;
+        Vector corners = NormalToWorld(Normal1, time, portals, at).Unit + NormalToWorld(Normal2, time, portals, at).Unit +
+                         NormalToWorld(Normal3, time, portals, at).Unit;
         double side = flat.Dot(corners) / 3;
 
         return Math.Abs(side) < 0.1 ? null : side < 0 ? -flat : flat;
@@ -130,7 +136,10 @@ public class SmoothTriangle : Triangle
         if (flat.Dot(SurfaceNormalAt(place, intersection)) < 0)
             flat = -flat;
 
-        flat = NormalToWorld(flat, time, portals);
+        // A bent triangle rises as the bend stands where it was met.
+        Point at = Deformation.AnyMade ? place : null;
+
+        flat = NormalToWorld(flat, time, portals, at);
 
         Vector rise = RiseTo(Point1, Normal1, 1 - u - v) + RiseTo(Point2, Normal2, u) + RiseTo(Point3, Normal3, v);
 
@@ -140,8 +149,8 @@ public class SmoothTriangle : Triangle
         // lies below it, weighed by how much that corner counts there.
         Vector RiseTo(Point corner, Vector normal, double weight)
         {
-            Vector unit = NormalToWorld(normal, time, portals);
-            double below = DirectionToWorld(corner - place, time, portals).Dot(unit);
+            Vector unit = NormalToWorld(normal, time, portals, at);
+            double below = DirectionToWorld(corner - place, time, portals, at).Dot(unit);
 
             return below > 0 && unit.Dot(flat) > 0 ? unit * (below * weight) : new Vector(0, 0, 0);
         }

@@ -44,7 +44,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `align` | Lines one edge of a surface up with the matching edge of another. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `all` | Field: `all over '<name>'`, covering the whole of that surface with its copies.  Grown tree: `all over '<name>'`, climbing that surface in place of a crown. | [Advanced Surfaces](advanced-surfaces.md#covering-a-surface-all-over), [Climbing a surface](advanced-surfaces.md#climbing-a-surface) |
-| `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline.  Material: which way a brushed surface's grooves run.  Transform: `along <spline> at|by <amount>` puts a thing on a spline, turned to run with it. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path), [Brushed metal](materials.md#brushed-metal), [Along a Spline](animation.md#along-a-spline) |
+| `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline.  Material: which way a brushed surface's grooves run.  Transform: `along <spline> at|by <amount>` puts a thing on a spline, turned to run with it.  Deformed: the spline a surface is bent along. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path), [Brushed metal](materials.md#brushed-metal), [Along a Spline](animation.md#along-a-spline), [Deformed](surfaces.md#deformed) |
 | `alpha` | Image pattern: `channel alpha`, how much of each place the picture covers. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `ambient` | Finish: color shown with no light on it; in a context block, `scale ambient by`. | [Materials](materials.md#ambient-diffuse-and-specular), [Context](context.md#ambient) |
 | `amplitude` | Turbulence: how far it stirs.  Swells: how tall one train of waves is, in place of its `steepness`. | [Pigments & Patterns](pigments-and-patterns.md#turbulence), [Swells](surfaces.md#swells) |
@@ -106,6 +106,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `cell` | Tiles: how big a cell of the grid is, a number or a vector. | [Tiles](advanced-surfaces.md#tiles) |
 | `center` | Blob sphere or disc: its center.  Text layout: center the block or a line; also `no center` on a sweep. | [Blob](surfaces.md#blob), [Disc](surfaces.md#disc), [Text](advanced-surfaces.md#text), [Sweep](advanced-surfaces.md#sweep) |
 | `centered` | With `on`, says what a placement's remaining directions are middled on. | [Transforms](transforms.md#placing-one-thing-against-another) |
+| `centerline` | The line in a deformed surface's own space laid along its spline. | [Surfaces](surfaces.md#deformed) |
 | `chain` | Surface: oval links along a spline, each through the next and turned a quarter from it, sized by its `link`, `wire` and `width`. | [Chain](advanced-surfaces.md#chain) |
 | `channel` | Image pattern: which of the picture's channels it reads — `red`, `green`, `blue` or `alpha` — rather than its gray. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `checker` | Pattern: a checkerboard of two colors. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -142,6 +143,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `cylindrical` | Pattern/image map: value around a cylinder; also image mapping, and a decal wrapped around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `decal` | A marking painted over a material's pigment, inside an outline. | [Materials](materials.md#decals) |
 | `default` | The last way out of a [selection](scene-files.md#choosing-inside-a-body); required. | [Scene Files](scene-files.md#choosing-inside-a-body) |
+| `deformed` | Bends a surface along a spline. | [Surfaces](surfaces.md#deformed) |
 | `degrees` | Angle unit: `angles are degrees`.  Also the postfix operator, `90 degrees`, turning an angle in degrees into the radians the functions take. | [Context](context.md#angles), [Scene Files](scene-files.md#angles-are-radians) |
 | `denoise` | Context: smooths the grain out of the picture once it is rendered, by Intel's denoiser or the renderer's own `filter`. | [Context](context.md#denoising) |
 | `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern).  What a medium's `emission by density` reads its map at.  Also hair: how many strands grow on each unit of area. | [Scene Files](scene-files.md#giving-a-medium-a-shape), [Hair](advanced-surfaces.md#hair), [Light by Density](scene-files.md#a-medium-whose-light-follows-its-density) |
@@ -212,7 +214,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `fresnel` | Finish: mirror more at a slant, square-on share from `reflective`. | [Materials](materials.md#fresnel) |
 | `friction` | Body or swarm: how hard it grips what it slides or rolls on. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `frizz` | Hair: how far strands wander. | [Advanced Surfaces](advanced-surfaces.md#hair) |
-| `from` | Blob cylinder: its start point; where a catenary hangs from; a decal's `fade from`; where a field's patches begin, `from <a> to <b>`; where a swarm throws its copies from; the first place a `span` stands between. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Swarms](animation.md#swarms), [Marks and Spans](animation.md#marks-and-spans) |
+| `from` | Blob cylinder: its start point; where a catenary hangs from; a decal's `fade from`; where a field's patches begin, `from <a> to <b>`; where a swarm throws its copies from; the first place a `span` stands between; where a deformed surface's centerline starts. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Swarms](animation.md#swarms), [Marks and Spans](animation.md#marks-and-spans), [Deformed](surfaces.md#deformed) |
 | `front` | With `of`, places a surface in front of another, touching; `align front with`, its `-Z` edge level with another's.  Tile: what lies on its `-Z` side. | [Transforms](transforms.md#placing-one-thing-against-another), [Tiles](advanced-surfaces.md#tiles) |
 | `function` | Declares a function of your own.  Also an isosurface's arithmetic, and a medium's `density function`. | [Scene Files](scene-files.md#functions-of-your-own), [Advanced Surfaces](advanced-surfaces.md#isosurface), [Media](scene-files.md#giving-a-medium-a-shape) |
 | `gable` | Shape grammar: a `roof` of two slopes meeting at a ridge, its gable ends in the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -470,7 +472,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `strand` | Surface: a single fiber running smoothly through a series of points, or along a spline. | [Advanced Surfaces](advanced-surfaces.md#strand) |
 | `strands` | Rope: how many strands it is laid from. | [Rope](advanced-surfaces.md#rope) |
 | `strength` | Blob component: how strongly it pulls. | [Surfaces](surfaces.md#blob) |
-| `stretched` | Fracture: how much longer the pieces come out along each axis.  Span: scaled along X by the distance between its places. | [Advanced Surfaces](advanced-surfaces.md#fracture), [Marks and Spans](animation.md#marks-and-spans) |
+| `stretched` | Fracture: how much longer the pieces come out along each axis.  Span: scaled along X by the distance between its places.  Deformed: the shape laid over the whole spline. | [Advanced Surfaces](advanced-surfaces.md#fracture), [Marks and Spans](animation.md#marks-and-spans), [Deformed](surfaces.md#deformed) |
 | `stripes` | Pattern: parallel bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `subsurface` | Material: light that wanders under the surface before coming out; `radius` and `thickness` go in it.  Context: `subsurface samples`, how many walks a place takes. | [Light under the surface](materials.md#light-under-the-surface), [Context](context.md#subsurface-samples) |
 | `sun` | `physical sky`: introduces `sun elevation` or `sun azimuth`. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
@@ -502,7 +504,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `toroidal` | Image map: wrap the image around a torus; also a decal wrapped around a ring. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Materials](materials.md#projections) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |
 | `toVertical` | L-system turtle: level back to vertical. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `toward` | `facing` pattern: the direction, in the world, a surface faces to give it its most.  Fracture: the point its pieces grow smaller toward.  Swarm: the way it throws its copies. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Fracture](advanced-surfaces.md#fracture), [Swarms](animation.md#swarms) |
+| `toward` | `facing` pattern: the direction, in the world, a surface faces to give it its most.  Fracture: the point its pieces grow smaller toward.  Swarm: the way it throws its copies.  Deformed: the way a centerline runs. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Fracture](advanced-surfaces.md#fracture), [Swarms](animation.md#swarms), [Deformed](surfaces.md#deformed) |
 | `trace` | Context: `trace depth`, how many surfaces a ray from the eye is mirrored or bent at before it is followed no further. | [Context](context.md#trace-depth) |
 | `transform` | Applies a named transform to a surface. | [Transforms](transforms.md#naming-a-transform) |
 | `translate` | Transform: move a surface or a 2D path. | [Transforms](transforms.md#translate) |
@@ -525,7 +527,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turns` | Tile: it may be laid in any of four quarter turns about Y, its sides turning with it. | [Tiles](advanced-surfaces.md#tiles) |
 | `twig` | Grown tree: how thick the end of a twig is. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
-| `twist` | How far a ribbon turns about its own length, end to end. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
+| `twist` | How far a ribbon turns about its own length, end to end.  Deformed: how far a bent surface's slices are turned about the spline by its end. | [Advanced Surfaces](advanced-surfaces.md#ribbon), [Deformed](surfaces.md#deformed) |
 | `u` | Parametric surface: the span the first parameter runs over. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `ultraWide` | Camera projection: a rectangular wide-angle view. | [Cameras](cameras.md#projections) |
 | `uncached` | Image pigment: re-read the image rather than share a cached copy. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |

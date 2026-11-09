@@ -76,12 +76,12 @@ public partial class LanguageParser
         _keywords: 'absorption', 'accuracy', 'agate', 'agx', 'alignment', 'all', 'along', 'ambient', 'amplitude', 'and',
             'above', 'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'antialiasing', 'apart', 'are', 'around', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
-            'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blades', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
+            'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'centerline', 'black', 'blades', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'coat', 'color', 'crevices', 'crown',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
-            'decal', 'default', 'degrees', 'denoise', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
+            'decal', 'default', 'deformed', 'degrees', 'denoise', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'dust', 'east', 'edge', 'edges', 'egg', 'else', 'emission', 'environment', 'error', 'exposure', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file', 'flat', 'fracture',
             'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'glare', 'gradient', 'granite', 'grime',
             'grain', 'grayscale', 'group', 'hair', 'hanging', 'height', 'heightfield', 'hexagon', 'hole', 'horizontal',
@@ -952,11 +952,26 @@ public partial class LanguageParser
                 { length > _expression }{?}
             }
         ] ?? 'Expecting a body property here.'
+        // A shape bent along a spline, its centerline -- a line in its own space -- laid along it.
+        startDeformedClause:
+        {
+            deformed > openBrace ?? 'Expecting an open brace to follow "deformed" here.'
+        }
+        deformedEntryClause:
+        [
+            { along > _expression } |
+            {
+                centerline > { from > _expression }{?} >
+                toward ?? 'Expecting "toward" and the way the centerline runs here.' > [ X | Y | Z | _expression ]
+            } |
+            { twist > _expression } | stretched
+        ] ?? 'Expecting a deformation property here.'
         surfaceEntryClause:
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause | portalClause |
             givesLightClause | boundedByClause | withSeedClause | startMotionClause |
-            startHairClause | placementClause | startWeatherClause | startBodyClause | spanClause
+            startHairClause | placementClause | startWeatherClause | startBodyClause | spanClause |
+            startDeformedClause
         ]
         // A surface stretched between two named places: its origin at the first, its +X running toward the second,
         // and, stretched, its X scaled by the distance between them.

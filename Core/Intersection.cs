@@ -15,9 +15,11 @@ public class Intersection : IComparable<Intersection>
     public Surface Surface { get; }
 
     /// <summary>
-    /// This holds the distance along the ray where the intersection happened.
+    /// This holds the distance along the ray where the intersection happened.  A bent shape (see
+    /// <see cref="Deformation"/>) finds its crossings along chords in its own space and sets this to where along the
+    /// ray each lies.
     /// </summary>
-    public double Distance { get; }
+    public double Distance { get; internal set; }
 
     /// <summary>
     /// This holds the instances this hit was found through, innermost first, or none when the surface
