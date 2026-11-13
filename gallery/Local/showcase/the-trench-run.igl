@@ -1,0 +1,282 @@
+// The trench run: Red Five down the Death Star's trench, its S-foils locked in attack position, its engines lit,
+// the Empire's green turbolaser fire streaking past and its own red bolts going on ahead.
+//
+// The X-wing is the `star-wars` library's, as the studio model was built and weathered, with Luke's markings and
+// R2-D2 in his socket.  The camera rides with it, a little above and behind and off its port side, and the trench
+// slides back past both while the shutter is open: four meters of it, a ship at about four hundred meters a second
+// caught at a hundredth of a second, so the walls streak and the ship stays sharp.
+//
+// The trench is fifty meters wide and fifty deep and runs three kilometers, every sixteen-meter length of its walls,
+// floor and rims one of four of each, drawn once from a seeded scatter of plates, ledges, pipes, dark slots and lamps
+// and stood wherever it falls.  The sun stands high, ahead and to starboard, across the trench, so that the port
+// wall is in light and the starboard one in shadow, lit back a little by the other; turbolaser emplacements stand
+// along the rims.
+//
+// The fire is as the films have it: the Empire's green and the Rebellion's red, each bolt a core burning nearly white
+// in a glow of its color.
+
+import 'star-wars' { XWing }
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 1
+    antialiasing threshold 0.25
+    angles are degrees
+    info {
+        title 'The Trench Run'
+        author 'J. Stephen Kress'
+        description 'Red Five down the Death Star trench, its S-foils locked in attack position.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-27, 25, 3.5]
+    look at [45, 15, -1]
+    field of view 58
+    glare 0.035
+    shutter 1
+    blur samples 12
+}
+
+// The starfield over the trench (high-orbit.igl's measured map).
+background granite {
+    [0, Black, 0.515, Black, 0.552, [0.30, 0.32, 0.40], 0.60, White, 1, White]
+    scale [0.05, 0.05, 0.05]
+}
+
+// The sun; the sunlit wall's light thrown back across the trench; and a faint light from the plates round about.
+distant light { direction [-0.35, -1, 0.6]  color [1.0, 0.97, 0.92] }
+distant light { direction [0.15, -0.35, -1]  color [0.16, 0.16, 0.17] }
+distant light { direction [-0.2, 0.6, -0.4]  color [0.05, 0.055, 0.07] }
+
+// -- The Death Star --------------------------------------------------------------------------------------------
+
+DSPlate = material { pigment [0.29, 0.30, 0.31]  diffuse 0.85  specular 0.15  shininess 30 }
+DSPlateDark = material { pigment [0.18, 0.185, 0.19]  diffuse 0.85  specular 0.1  shininess 30 }
+DSPlateLight = material { pigment [0.38, 0.39, 0.40]  diffuse 0.85  specular 0.15  shininess 30 }
+DSHole = material { pigment [0.03, 0.03, 0.035]  diffuse 0.6 }
+DSLamp = material { pigment [1.0, 0.92, 0.75]  emission 6  diffuse 0.2 }
+
+TrenchLong = 16
+TrenchWide = 50
+TrenchDeep = 50
+
+// A length of wall, 16 along X and 50 high, its face on z = 0 looking +Z: a plate, a buttress at its end, ledges
+// across it, a field of boxes standing off it, dark slots, pipes and a few lamps, all drawn from `variant`.
+primitive TrenchWall(variant) -> group {
+    return group {
+        cube { scale [8, 25, 0.5]  translate [8, 25, -0.5] }
+        cube { material DSPlateDark  scale [0.7, 25, 1.1]  translate [0.7, 25, 0] }
+        for k in [0, 3] {
+            cube {
+                scale [8, 0.4 + random(variant * 40 + k, 1) * 0.8, 0.4 + random(variant * 40 + k, 2) * 0.7]
+                translate [8, 4 + k * 12 + random(variant * 40 + k, 3) * 8, 0]
+            }
+        }
+        for k in [0, 29] {
+            cube {
+                scale [0.4 + random(variant * 90 + k, 1) * 2.4, 0.4 + random(variant * 90 + k, 2) * 2.0,
+                       0.15 + random(variant * 90 + k, 3) * 0.9]
+                translate [random(variant * 90 + k, 4) * 16, random(variant * 90 + k, 5) * 50, 0]
+            }
+        }
+        for k in [0, 9] {
+            cube {
+                material DSPlateDark
+                scale [0.4 + random(variant * 91 + k, 1) * 2.4, 0.4 + random(variant * 91 + k, 2) * 2.0,
+                       0.15 + random(variant * 91 + k, 3) * 0.9]
+                translate [random(variant * 91 + k, 4) * 16, random(variant * 91 + k, 5) * 50, 0]
+            }
+        }
+        for k in [0, 5] {
+            cube {
+                material DSPlateLight
+                scale [0.4 + random(variant * 92 + k, 1) * 2.4, 0.4 + random(variant * 92 + k, 2) * 2.0,
+                       0.15 + random(variant * 92 + k, 3) * 0.9]
+                translate [random(variant * 92 + k, 4) * 16, random(variant * 92 + k, 5) * 50, 0]
+            }
+        }
+        for k in [0, 7] {
+            cube {
+                material DSHole
+                scale [0.6 + random(variant * 30 + k, 1) * 2.5, 0.25 + random(variant * 30 + k, 2) * 0.6, 0.06]
+                translate [random(variant * 30 + k, 3) * 16, random(variant * 30 + k, 4) * 50, 0]
+            }
+        }
+        for k in [0, 2] {
+            cylinder {
+                min Y 0  max Y 16
+                scale [0.25 + random(variant * 20 + k, 1) * 0.35, 1, 0.25 + random(variant * 20 + k, 1) * 0.35]
+                rotate Z -90
+                translate [0, 2 + random(variant * 20 + k, 2) * 46, 0.4]
+            }
+        }
+        for k in [0, 3] {
+            cube {
+                material DSLamp
+                scale [0.22, 0.22, 0.05]
+                translate [random(variant * 10 + k, 1) * 16, 3 + random(variant * 10 + k, 2) * 44, 0.05]
+            }
+        }
+    }
+}
+
+// A length of floor, 16 along X and the trench's width across, facing up: a plate, a channel down its middle
+// between two kerbs, low boxes and conduits.
+primitive TrenchFloor(variant) -> group {
+    return group {
+        cube { scale [8, 0.5, 25]  translate [8, -0.5, 0] }
+        cube { scale [8, 0.6, 0.8]  translate [8, 0.6, -4.5] }
+        cube { scale [8, 0.6, 0.8]  translate [8, 0.6, 4.5] }
+        cube { material DSPlateDark  scale [8, 0.05, 3.7]  translate [8, 0.05, 0] }
+        for k in [0, 23] {
+            cube {
+                scale [0.4 + random(variant * 70 + k, 1) * 2.2, 0.1 + random(variant * 70 + k, 2) * 0.6,
+                       0.4 + random(variant * 70 + k, 3) * 1.6]
+                translate [random(variant * 70 + k, 4) * 16, 0,
+                           (floor(random(variant * 70 + k, 5) * 2) * 2 - 1) * (6 + random(variant * 70 + k, 6) * 18)]
+            }
+        }
+        for side in [0, 1] {
+            cylinder {
+                min Y 0  max Y 16  scale [0.4, 1, 0.4]  rotate Z -90
+                translate [0, 0.4, (side * 2 - 1) * (22 + random(variant, side + 3) * 2)]
+            }
+        }
+    }
+}
+
+// A length of the surface along the trench's rim, 16 along X and 40 out from the edge, facing up: plates and low
+// boxes, thinning away from the edge.
+primitive TrenchRim(variant) -> group {
+    return group {
+        for k in [0, 17] {
+            cube {
+                scale [0.6 + random(variant * 50 + k, 1) * 3, 0.15 + random(variant * 50 + k, 2) * 1.2,
+                       0.6 + random(variant * 50 + k, 3) * 3]
+                translate [random(variant * 50 + k, 4) * 16, 0,
+                           1 + random(variant * 50 + k, 5) * random(variant * 50 + k, 6) * 40]
+            }
+        }
+    }
+}
+
+// A turbolaser emplacement: a squat base, a turret and its twin barrels, aimed `aim` degrees across the trench.
+primitive TrenchTurret(aim) -> group {
+    return group {
+        cube { scale [3, 2, 3]  translate Y 2 }
+        cylinder { min Y 4  max Y 6  scale [2.4, 1, 2.4] }
+        sphere { scale [2.4, 1.6, 2.4]  translate Y 6 }
+        for barrel in [0, 1] {
+            cylinder { min Y 0  max Y 6  scale [0.3, 1, 0.3]  rotate X 90  translate [barrel * 1.4 - 0.7, 6.5, 0] }
+        }
+        rotate Y aim
+    }
+}
+
+// The trench, three kilometers of it from behind the camera, every length one of four of each kind, built once and
+// stood where it falls.  It all slides back past the ship while the shutter is open.
+group {
+    for i in [0, 187] {
+        x = -300 + i * TrenchLong
+        object TrenchWall(floor(random(i, 1) * 4)) { translate [x, 0, -TrenchWide / 2] }
+        object TrenchWall(floor(random(i, 2) * 4)) { rotate Y 180  translate [x + TrenchLong, 0, TrenchWide / 2] }
+        object TrenchFloor(floor(random(i, 3) * 4)) { translate [x, 0, 0] }
+        object TrenchRim(floor(random(i, 4) * 4)) { translate [x, TrenchDeep, TrenchWide / 2] }
+        object TrenchRim(floor(random(i, 5) * 4)) { scale [1, 1, -1]  translate [x, TrenchDeep, -TrenchWide / 2] }
+    }
+    // The plates beyond, out to the horizon either side.
+    cube { scale [4000, 10, 2000]  translate [3000, TrenchDeep - 10, TrenchWide / 2 + 2000] }
+    cube { scale [4000, 10, 2000]  translate [3000, TrenchDeep - 10, -TrenchWide / 2 - 2000] }
+    for t in [0, 8] {
+        object TrenchTurret(random(t, 9) * 60 - 30) {
+            translate [40 + t * 120, TrenchDeep, ((t - 2 * floor(t / 2)) * 2 - 1) * (TrenchWide / 2 + 6)]
+        }
+    }
+    material DSPlate
+    motion { translate X -4 }
+}
+
+// -- The fire --------------------------------------------------------------------------------------------------
+
+// The Empire's fire is green and the Rebellion's red.
+ImperialFire = color [0.02, 1, 0.04]
+RebelFire = color [1, 0.035, 0.02]
+
+// What a bolt's glow is held in: seen through entirely, casting nothing.
+BoltShell = material {
+    pigment White
+    ambient 0
+    diffuse 0
+    specular 0
+    transparency 1
+}
+
+// A bolt of laser fire `long` from end to end, at `at`, headed `yaw` degrees round from +X (toward -Z) and `pitch` up,
+// in `hue`: a thin core burning nearly white, in a glow of the hue, thickest along its axis and fading to nothing 0.6
+// out and toward its ends.  The core alone, as bright as a glow must be to show, came out nearly white whatever its
+// hue: every channel of it went past where the film curve eases toward white.
+primitive Bolt(at, yaw, pitch, hue, long = 10) -> group {
+    return group {
+        sphere {
+            material { pigment 0.3 * hue + color [0.7, 0.7, 0.7]  ambient 0  diffuse 0  specular 0  emission 3 }
+            scale [0.09, long / 2 - 0.3, 0.09]
+        }
+        sphere {
+            material BoltShell {
+                interior {
+                    ior 1.0
+                    medium {
+                        absorption 0.001
+                        density function { pow(max(0, 1 - x * x - y * y - z * z), 2) }
+                        emission 6 * hue
+                    }
+                }
+            }
+            no shadow
+            scale [0.6, long / 2, 0.6]
+        }
+        rotate Z -90
+        rotate Z pitch
+        rotate Y yaw
+        translate at
+    }
+}
+
+// The turbolasers' fire, coming up the trench at the ship.
+object Bolt([34, 26, -9], 160, -7, ImperialFire)
+object Bolt([62, 34, 6], 192, -14, ImperialFire)
+object Bolt([18, 12, 14], 205, 3, ImperialFire)
+object Bolt([95, 41, -14], 165, -18, ImperialFire)
+object Bolt([130, 22, 10], 200, 6, ImperialFire)
+
+// A volley from Red Five's four cannons, its middle `ahead` meters on past their tips in its own frame (the cannons'
+// axes lie 5.224 out and 1.716 up and down), drawn `in` toward the middle as their aim brings them together.  Its
+// bolts are long, since the camera sees them from behind: ten meters long, they shortened to red blobs.
+primitive Volley(ahead, in = 0) -> group {
+    return group {
+        for side in [0, 1] {
+            for level in [0, 1] {
+                object Bolt([2.82 + ahead, (level * 2 - 1) * 1.716 * (1 - in), (side * 2 - 1) * 5.224 * (1 - in)], 0,
+                            0, RebelFire, 24)
+            }
+        }
+    }
+}
+
+// -- Red Five --------------------------------------------------------------------------------------------------
+
+// S-foils open, gear up, canopy shut, weathered, Red Five, engines lit; banked a little and nose down, with the
+// volley it has just fired and the one before going on ahead of it.
+group {
+    object XWing(1, 0, 0, 0.7, 5, 1)
+    object Volley(16)
+    object Volley(75, 0.15)
+    rotate X 9
+    rotate Z -3
+    translate [0, 19, -1.5]
+}

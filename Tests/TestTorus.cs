@@ -148,4 +148,47 @@ public class TestTorus
 
         Assert.AreEqual(0, intersections.Count);
     }
+
+    /// <summary>
+    /// A thin tube seen from far off, as an orthographic camera 200 m from an X-wing sees the 5 cm lip round its engine
+    /// intake: every ray down the axis across the tube crosses it twice, at the places the tube's round gives.  Solved
+    /// from where the ray sets off, the quartic's roots lay 4000 tube radii out, found up to 9e-5 off the tube -- as far
+    /// as a ray is set off a surface -- and the lip came out speckled with its own shadow.
+    /// </summary>
+    [TestMethod]
+    public void TestAThinTubeFarOffIsFoundWhereverARayCrossesIt()
+    {
+        Torus torus = new () { MajorRadius = 0.505, MinorRadius = 0.05 };
+        int missed = 0;
+        double worst = 0;
+
+        for (int step = 1; step < 100; step++)
+        {
+            // Out from the axis across the tube, a little round it each time.
+            double ring = 0.455 + 0.1 * step / 100;
+            double turn = 0.01 * step;
+            double off = ring - torus.MajorRadius;
+            double half = Math.Sqrt(torus.MinorRadius * torus.MinorRadius - off * off);
+            Ray ray = new (new Point(ring * Math.Cos(turn), 200, ring * Math.Sin(turn)), new Vector(0, -1, 0));
+            List<Intersection> intersections = [];
+
+            torus.AddIntersections(ray, intersections);
+
+            List<double> found = intersections.Select(intersection => intersection.Distance)
+                .OrderBy(distance => distance)
+                .ToList();
+
+            if (found.Count != 2)
+            {
+                missed++;
+
+                continue;
+            }
+
+            worst = Math.Max(worst, Math.Max(Math.Abs(found[0] - (200 - half)), Math.Abs(found[1] - (200 + half))));
+        }
+
+        Assert.AreEqual(0, missed, $"every ray across the tube should cross it twice ({missed} did not)");
+        Assert.IsTrue(worst < 1e-9, $"the crossings should lie on the tube, but one was {worst} off");
+    }
 }

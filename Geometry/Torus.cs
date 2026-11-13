@@ -57,18 +57,30 @@ public class Torus : Surface
     /// This method is used to determine whether the given ray intersects the torus and,
     /// if so, where.
     /// </summary>
+    /// <remarks>
+    /// The quartic is solved from the place where the ray comes nearest the torus's middle, not from where it sets
+    /// off: from far off its roots lie far out and only a tube's width apart, and solved there they came out as far
+    /// off the tube as a ray is set off a surface (a 5 cm lip seen from 200 m was speckled with its own shadow).  A
+    /// ray passing farther from the middle than the torus reaches misses it.
+    /// </remarks>
     /// <param name="ray">The ray to test.</param>
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
         double length = ray.Direction.Magnitude;
         Vector direction = ray.Direction.Unit;
-        double ox = ray.Origin.X;
-        double oy = ray.Origin.Y;
-        double oz = ray.Origin.Z;
         double dx = direction.X;
         double dy = direction.Y;
         double dz = direction.Z;
+        double nearest = -(ray.Origin.X * dx + ray.Origin.Y * dy + ray.Origin.Z * dz);
+        double ox = ray.Origin.X + nearest * dx;
+        double oy = ray.Origin.Y + nearest * dy;
+        double oz = ray.Origin.Z + nearest * dz;
+        double reach = MajorRadius + MinorRadius;
+
+        if (ox * ox + oy * oy + oz * oz > reach * reach)
+            return;
+
         double oySquared = oy * oy;
         double dySquared = dy * dy;
         double crossY = oy * dy;
@@ -85,13 +97,12 @@ public class Torus : Surface
             1.0
         ];
         Polynomial polynomial = new (coefficients);
-        (double start, double end) = SpanWithin(
-            MajorRadius + MinorRadius, k2, k1 + _majorSquared + _minorSquared);
+        (double start, double end) = SpanWithin(reach, k2, k1 + _majorSquared + _minorSquared);
 
         // A ray from the torus's centre that grazes its tube makes both +/- pairs of roots double,
         // which is the exact solver's worst case; the span is where to look if it gives up.
         intersections.AddRange(RootFinding.RealRootsOf(polynomial, start, end)
-            .Select(root => new Intersection(this, root / length)));
+            .Select(root => new Intersection(this, (root + nearest) / length)));
     }
 
     /// <summary>
