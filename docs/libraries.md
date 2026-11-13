@@ -2945,7 +2945,7 @@ never sees that frame.  It is there for a scene that wants one part on its own:
 
 #### Star Wars
 
-Star Wars' machines.  For now that is the astromech droid R2-D2.
+Star Wars' machines: the astromech droid R2-D2, and Luke's X-wing, Red Five, with him in its socket.
 
 ```
 import 'star-wars' { R2D2 }
@@ -3000,6 +3000,57 @@ His white is a gloss paint, so from the front with the light behind him it shows
 `gallery/Local/showcase/tatooine.igl`, with two suns low behind him, lights him for that the way a
 photographer would: the suns' light given again a little stronger, and a spotlight behind him narrowed
 to his dome and shoulders with a steep `fade` so that its cone dies before reaching the sand beyond him.
+
+##### Red Five
+
+```
+import 'star-wars' { XWing }
+
+object XWing(1, 0, 0, 0.6) { scale 0.3 }
+```
+
+| | |
+| --- | --- |
+| `XWing` | Luke's T-65B X-wing as it flew in A New Hope: S-foils, landing gear, canopy, the squadron's markings, R2-D2 in his socket and a pilot under the glass. |
+| `XWingWing`, `XWingEngine`, `XWingCannon` | One wing with its engine and cannon, built as the upper port wing and turned open, and the engine and laser cannon on their own, each along `X`. |
+| `XWingFuselage`, `XWingCanopy`, `XWingPilot` | The body from nose cone to rear plate, the framed canopy hinged at its back, and the pilot in his seat. |
+| `XWingGround` | How far under its middle the ship stands on its gear: 2.05. |
+
+**It is written in meters**, unlike the droid -- 13.4 from the tip of its nose to the ends of its exhausts, the length
+StarWars.com gives -- with **`+X` its nose, `+Y` up and `+Z` its port side**, and its origin the middle of its
+length on the plane its wings fold to.  R2-D2 stands in the socket behind the canopy at his true size.
+
+`XWing(foils, gear, canopy, weathered, red, thrust)` takes six numbers, every one of them optional, and all but `red`
+running from 0 to 1, so that each may be turned part way in an animation:
+
+- **`foils`** opens the S-foils: 0 folds the wings flat in pairs, their engine housings touching; 1, the default,
+  locks them in attack position, 11.8 degrees from the level.
+- **`gear`** lowers the landing gear, 0 by default.  Each leg drops out of a bay closed by split doors cut from the
+  hull itself, so that up, the hull shows no seam: the main legs from under the lower engines and the nose leg from
+  under the fuselage.  The doors swing open over the first third of the way, and the legs then telescope down onto
+  long, narrow skids, their leading ends turned up; down, they stand the ship on `y = -2.05`, whatever its wings,
+  so `translate Y XWingGround` stands it on the ground.
+- **`canopy`** opens the canopy, its front swinging up about its back to 40 degrees.
+- **`weathered`** is how long it has flown: grime gathered in its seams and round its fittings, the paint worn to the
+  metal on its edges, streaks of dirt run aft over its wings and fuselage, and soot darkens its exhausts.  At 0 it
+  is factory clean and costs nothing; at 0.7 a picture of it takes about seven times as long.
+- **`red`** is its number in Red Squadron, 5 by default: as many short stripes as that stand behind the L on each
+  wing.  On screen the count changed from shot to shot, two, three or five, as the models stood in for one another.
+- **`thrust`** lights its engines, the pink-orange glow in their throats of a ship in flight.
+
+##### Measured from photographs of the studio model
+
+There is no published drawing of the filming model, so its shape was measured from Heritage Auctions' photographs of
+the Red Leader hero model, one of the four built for the film and unaltered since: from above, below, behind, ahead
+and to one side.  The five were measured together -- each photograph's camera, its place, its turn, its lens and the
+middle of its picture, and the ship's layout, fitted at once to seventy-odd features seen in them -- to two and a half
+pixels.  All five show one setting of the S-foils, which is the attack position here.  Where the wings turn about,
+which no photograph of open wings can say, comes from a drawing in the reference books' style, which draws the closed
+wings lying flat together, and from the Empire Strikes Back miniature photographed nearly closed.  The landing gear,
+which the filming model never had, is the full-sized prop's, from StarWars.com's still of it on Dagobah; the markings
+are the trench run's, from StarWars.com's still of the studio model seen from above.  None of them is reproduced here.
+
+`gallery/Local/showcase/the-trench-run.igl` flies it down the Death Star's trench.
 
 #### Hogwarts
 

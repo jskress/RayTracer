@@ -442,7 +442,10 @@ only a ray of no direction along it: a ray truly along the axis finds its crossi
 turns away, and judged against the whole direction a cylinder scaled [5e8, 1, 5e8] lost its wall (only an endless
 one is still judged so).  A `Sphere` is solved without cancelling (Ray Tracing Gems ch. 7: the discriminant from the ray's
 nearest approach to the middle, the near root from the product of the roots): the book's b^2 - 4ac lost the square of
-the ray's distance in radii, and the Earth seen from the Moon was speckled the same way.  A faulty bound (the smaller sampled value) lit
+the ray's distance in radii, and the Earth seen from the Moon was speckled the same way.  A `Torus`'s quartic is
+solved from the ray's nearest approach to its middle (a ray passing beyond its reach misses): solved from where the
+ray set off, the 5 cm lip of an X-wing's intake seen from 200 m was found 9e-5 off and speckled with its own
+shadow (until 2026-11-09).  A faulty bound (the smaller sampled value) lit
 grazed shadows, caught only by rays grazing the degenerate sphere.
 `extrusion { ... rounded r }` (`Extrusion.Rounded`, an `IAssembled` like `Tube`: the five places that walk into a
 tube's union walk into any `IAssembled`) is the CSG union of the outline drawn in by r (`Graphics/PathOffset.cs`:
@@ -787,6 +790,104 @@ and came out a dotted line (17 s at 1920x1080).
 0)`, as she glided in 1977) and the 1701 on one sea at their TRUE sizes, the camera 4.5 m over the water so that forced
 perspective makes the near two large (the user's call, 2026-11-08: low over the water, late afternoon).  Looking down
 -Z, screen right is -X (47 min at 1920x1080).
+
+The `star-wars` library's `XWing(foils, gear, canopy, weathered, red, thrust)` is Red Five, the ANH T-65B, in METERS
+(+X nose, +Y up, +Z port, origin mid-length on the plane the wings fold to; nose tip X 6.70, exhausts -6.70), R2-D2's
+dome at true size in the socket.  Measured by one joint fit of five Heritage photos of the Red Leader hero model, every
+camera with a free principal point (a cut-out on a canvas keeps no middle); in the plan views the FAR wing pair's
+leading edge and engine show past the near pair by parallax, and were first taken for the near wing's.  A wing is the
+upper port wing built CLOSED in the frame of the line it turns about (z -0.238, y 0.19: closed, the pairs lie flat at
++-0.19, housings touching), turned by `rotate X -open`; the other three are it mirrored, so the lower wings' main gear
+is built up +Y, counter-turned upright and as long as the angle leaves it to reach `XWingGround` (2.05).  Markings are
+decals in the parts' own materials (the stripes five decals at alpha `red >= k`; `number` is a keyword, so `red`); the
+dirt streaks are three layered decals at alpha weathered x 0.22 whose streaks never touch within a layer (even-odd
+overlaps are holes).  `weather { dust }` is not used: its hard two-tone mottle read as camouflage at every radius.
+The cannons' muzzles are A New Hope's, from the user's close-up (2026-11-09): a turned vase (`XWingMuzzle`, a lathe)
+with a half-tube flash suppressor 0.58 tall standing hollow-forward at its drum, sized by the tip's measured length
+rather than by the barrel, whose width varies from model to model; open, the suppressors are the ship's highest and
+lowest points (2.02), which is why it stands 2.05 up on its gear.  The engines are the hero model's close-ups' (the
+user's call, 2026-11-10): the housing ONE lathe (`XWingHousing`), a thin wall with a rounded lip opening on a bowl
+0.69 deep, crossed by three plate vanes (one standing away from the wing, two along it); the exhaust a ribbed can
+(`XWingNozzle`) whose broad face holds a milky ring round a throat with two stars of spikes about a red
+dome, face, ring, throat and dome 1, 0.65, 0.52 and 0.27 of the can across, as the photograph of its end measures;
+`thrust` lights the ring, the throat's back and the dome (bright, the ring came out white past the film curve).  The
+nacelles (2026-11-12, the top, under, front and side photos' silhouettes and seams): the can r 0.34 from -6.70 to
+-5.95 (the nacelle 0.31), its face scaled with it, ninety ribs on its FORWARD end only (-6.18 on, standing 1.2 cm
+proud: from behind they knurl the can's outline, the exhaust close-up's bumpy rim), soot toward the end by
+`weathered`; collars at -5.95..-5.80 and -4.975..-4.905; two kit parts on the back away from the wing (A -5.66..-5.12,
+B -4.80..-4.30), curved skin pieces (`XWingSkin`, a ring sector) with recesses cut as ring sectors so their floors
+stay dark.  Features on top of a nacelle seen by the top camera (24 degrees off vertical there) stand 0.14 m aft of
+where the axis's projection puts them: read seams off the SIDES' silhouette, or project the top line.  The pylon is
+NOT a solid web (the tail photo shows dark between): two legs 0.24 apart over a block on the root plate (X
+-5.20..-4.40) whose after face holds a rust panel with three pipes' ends, centered under the nacelle -- the rust the
+wing round had taken for an S-foil drive beside it.  The
+wings likewise (2026-11-10): the root, out to 2.88 in the wing's frame, wears a plate on the face turned out with the
+radiator on its trailing edge from the plate's edge in to the housing -- a block whose top lies LEVEL in the world at
+attack (the tail photo's silhouette), cut by six slots open only at the top (solid from behind, slotted from above),
+`shear`ed to follow the trailing edge; the face turned in has a rib on that line, two vents (the inner one's forward
+outboard corner cut) and a rod along the trailing edge; the S-foil drive sits on the face turned OUT behind the
+housing (the tail photo shows nothing between the wings at the root).  The stripes moved outboard of the plate (centered
+at 3.50) so they no longer run under the radiator.  From the stern views (the user's notes, 2026-11-11): the leading
+edge is at -2.40, not the fit's -2.18 -- the top, under and front photos put BOTH wings' edges there (near and far
+by parallax), the L's square on it -- so it lies behind the cannon housing's front; the tip runs past the cannon to
+5.8, the cannon on two plates 9 cm thick, and its housing has a slot ringed with ribs; the rear body is seven-sided
+(a top, two faces each side, a keel), its end cut 0.6 deep inside a rim with a machinery panel 0.3 in and a dark gap
+round it; the exhaust steps down twice to a throat 20 cm deep, its ring dark when cold (the bright close-up had the
+model's lamps lit: from behind all within the step is dark); the intake's bowl and the housing's back are dark gray.
+The forward fuselage's section is a hexagon (the user's look at the photos, 2026-11-11): each side two faces meeting
+at a knee 2 cm under the red stripe, the stripe's face leaning in 20 degrees to the top -- from above the stripe shows
+as a band 0.11 wide in the top and front photos alike, which an upright side cannot give -- and the face below it 11
+degrees in to the flat bottom (a band 8 cm wide from below).  Under the canopy the upper face turns in at a chine 0.46
+up, where the canopy's lower panels now drop straight down from their sills to meet the hull (the side photo's canopy
+frame reaches 0.46; a plain 20-degree face passed 5-8 cm inside the canopy's measured sills).  Before, it was boxy
+(upright to a chine 0.78 up, a chamfer to a top 0.56 as wide), and before that a roof whose chamfer fell away under
+the canopy.  The same round put the torpedo slot where the side photo has it (a lens sunk 4 cm into the lower face,
+y -0.13 to -0.29; the old box at -0.33 stuck out past the hull from above), widened the hull at X 3.1-3.6 by 4 cm
+(top and under photos), lowered the bottom near the nose to -0.39 (it had risen to -0.32), grew the nose cone to the
+side and under photos' size (0.78 tall at its seam, not 0.60; blunt from below), moved the sensor window onto the
+cone, and cut the seam at 4.67 where the nose's underside begins.  The next (2026-11-12): the nose is a CAP, its seam
+(5.40) a lip 3 cm proud of everything all round; a raised panel 0.62 across runs along the nose's top from 3.15 into
+the cap (a `straight` loft of its own, its back corners bevelled, the dark wedge the side photo shows there), and
+behind it the upper side turns in just above the stripe to a top narrowing to 0.36 across (the front photo); the
+sensor window is a recess as light as the cap (from above its floor is lighter than the cap), its floor level, so
+deepest aft (16 cm, 1.5 at its front), as the torpedo slots' are: their
+floors are parallel (z = +-0.50), so each is deepest at its after end, 17 cm there and 1 cm at its front; the canopy's
+frame is `XWingFrame`, the model's blue-gray.  The rear body (2026-11-12) ends at -5.47, not
+-5.85: the top, under and side photos agree within 0.1 once each is read where it looks (from above-ahead a flat
+end's knee corners show 16 px forward of its top edge, which first read as a wedge); its end recess is 0.34 deep, the
+machinery in it pressed in to match; down its back a channel 0.72 across holds the photo's ribbed block, box, wheel
+0.68 across and round fitting; either flank between the wing roots is a dark bay (the side photo's is near black)
+with pipes and the S-foil actuator; R2 and his socket stand at -1.815 (top and front photos), not -1.95.  The side
+photo's square recess with a round hole at the knee (-1.8) and the belly's at -1.70 look like the studio model's
+mounting points, and were left off (the user's call); the belly's two blue-gray patches aft, either side of the
+keel, are decals.  The canopy's sills lie on the hull, its cockpit cut
+is a `straight` loft of rectangles at the canopy's own stations, 2 cm INSIDE the sill line, so the canopy rises out of
+solid hull wherever the hull strays (up to 4 mm) from the straight sill line -- cut on the line, a hairline groove
+showed the cockpit along the nose.  Behind
+its post the solid top lies LEVEL (the user's call), a rear window sloping from it to the deck, the hinge at that
+window's foot; ahead, one plane falls to the hull's top at the tip (1.45), the top window glass to 1.10; each side
+window is a TRIANGLE (the user's call): the post, the top's edge straight down to the top window's leading corner,
+and a straight lower edge from the post's foot to that corner; below it an opaque panel from the sill up to that
+edge, and ahead the nose, opaque lofts in the canopy's own surface, so it runs into the hull.  Every window is FLAT
+(a rear pane is the plane through the post and the solid top's side, its corner on the deck put in it: 0.435 out,
+not 0.38, or it was 5 cm out of true) and is one group stood on its plane by `matrix`: its frame ONE plate, the
+outline less the opening (each side inset by its own width, so corners are mitered), lying INWARD of the plane, and
+its glass two triangles 14 mm in, reaching half way under the frame.  Inward, two plates at a crease meet at the
+crease line on the outside, convex or concave, with no notch, and the solid parts and the deck (its top run on in
+the rear pane's plane) meet them flush.  Before, struts laid on the panes (cubes placed by `matrix`) had square
+ends, left the rear window's edges unframed seen from the side, fought where coplanar and poked past each other at
+the apex; and the old side glass ran past the post into a sliver behind it, the rear pane 5 cm out of true.
+The landing gear (2026-11-12, the user's description): every foot a long, narrow skid (`XWingSkid`) its
+leading end turned up 22 degrees; every leg's bay closed by doors split down its middle and hinged at their outer
+edges, each the hull's own piece -- the hull's loft (hoisted as `XWingForeHull`) or the nacelle's skin and kit
+part, intersected with half the bay -- so that up, the hull is pixel-identical to one with no bays.  An `if` is
+refused inside a CSG, so the nose bay's cutter stands 60 m off while shut (`doors > 0 ? -0.43 : -60`).  The doors
+open over gear 0-0.35 (`XWingDoors`), the legs drop over 0.25-1 (`XWingLegsOut`); the main leg stands at -5.43,
+the stretch between the nacelle's collars being the only one a skid's bay fits, the after kit part its doors.
+`gallery/Local/showcase/the-trench-run.igl` blurs a 3 km instanced trench sliding past (shutter 1, 12 samples); its
+fire is the films' (the Empire's green, the Rebellion's red), each bolt a nearly white core in a glow of its color held
+as an emitting medium in a clear `no shadow` ellipsoid -- a bright core alone came out white whatever its hue, every
+channel past the film curve's shoulder (19 min at 1920x1080).
 
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with

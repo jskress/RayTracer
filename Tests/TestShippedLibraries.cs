@@ -5015,4 +5015,96 @@ public class TestShippedLibraries
         Assert.AreEqual(5.32, 3 + up, 0.05, "the satellite's top");
         Assert.AreEqual(0, 3 + bottom, 0.05, "the cradle's floor");
     }
+
+    /// <summary>
+    /// Renders X-wings from the star-wars library through <see cref="OrthographicView"/>, lit dimly from above.
+    /// </summary>
+    private Canvas XWingView(IEnumerable<string> things, (double X, double Y, double Z) at,
+        (double X, double Y, double Z) back, string up, double size, int wide, int high)
+    {
+        UseDroids();
+
+        return OrthographicView("import 'star-wars' { XWing }", things, at, back, up, size, wide, high, "[0.3, -1, 0.2]");
+    }
+
+    [TestMethod]
+    public void TestAnXWingOnItsGearStandsOnTheGroundWhateverItsWings()
+    {
+        // Down, its three legs reach XWingGround, 2.05 under its middle, whether its S-foils are folded or open: the main
+        // legs hang from the lower wings' engines, upright, as long as the wings' angle leaves them to be.  Up, nothing of
+        // it reaches so low; open, its lower cannons hang lowest, their flash suppressors 2.02 down.  Seen from port,
+        // side by side, two centimeters to a pixel.
+        const double Size = 0.02;
+        const double Apart = 20;
+        string[] ships = ["XWing(0, 1)", "XWing(1, 1)", "XWing(1, 0)"];
+        double[] lowest = [-2.05, -2.05, -2.018];
+        int across = (int) Math.Round(Apart / Size);
+        double middle = (ships.Length - 1) * Apart / 2;
+        Canvas picture = XWingView(ships.Select((ship, k) => $"group {{ object {ship}  translate X {k * Apart} }}"),
+            (middle, 0, 0), (0, 0, 1), "[0, 1, 0]", Size, ships.Length * across, (int) Math.Round(5 / Size));
+
+        for (int k = 0; k < ships.Length; k++)
+        {
+            // Seen from port, +X runs to the picture's left, so the first ship stands at its right.
+            int from = (ships.Length - 1 - k) * across;
+            (_, _, double bottom, _) = ReachIn(picture, from, from + across, Size);
+
+            Assert.AreEqual(lowest[k], bottom, 0.03, $"{ships[k]}'s lowest point");
+        }
+    }
+
+    [TestMethod]
+    public void TestAnXWingFoldsItsWingsFlatInPairs()
+    {
+        // Closed, each side's wings lie flat together, 0.19 above and below its middle, and their cannons, 0.38 out from
+        // the wings' planes, stand 0.57 above and below it, 5.42 out, their flash suppressors reaching 0.29 farther, to
+        // 0.86; locked in attack position, the cannons are 1.716 up and 5.224 out, and their suppressors, tilted with the
+        // wings, the highest and lowest of anything, 2.02 up and down.  Seen from behind, a centimeter to a pixel.
+        const double Size = 0.01;
+        Canvas closed = XWingView(["object XWing(0)"], (0, 0, 0), (-1, 0, 0), "[0, 1, 0]", Size, 1200, 500);
+
+        foreach ((int first, int last) in new[] { ColumnsOf(1200, Size, 5.30, 5.60), ColumnsOf(1200, Size, -5.60, -5.30) })
+        {
+            (_, _, double bottom, double top) = ReachIn(closed, first, last, Size);
+
+            Assert.AreEqual(0.857, top, 0.02, "closed, the upper suppressor's top");
+            Assert.AreEqual(-0.857, bottom, 0.02, "closed, the lower suppressor's bottom");
+        }
+
+        Canvas open = XWingView(["object XWing(1)"], (0, 0, 0), (-1, 0, 0), "[0, 1, 0]", Size, 1200, 500);
+        (double left, double right, double low, double high) = ReachIn(open, 0, open.Width, Size);
+
+        Assert.AreEqual(2.018, high, 0.02, "open, the upper suppressors' tops");
+        Assert.AreEqual(-2.018, low, 0.02, "open, the lower suppressors' bottoms");
+        Assert.AreEqual(2 * (5.224 + 0.215), right - left, 0.04, "open, from cannon to cannon");
+    }
+
+    [TestMethod]
+    public void TestAnXWingCarriesAsManyStripesAsItsNumber()
+    {
+        // Behind the L on each wing, as many red stripes as its number in Red Squadron: from above, along a line across
+        // the upper port wing through their middles, as many red runs as `red` says.  A centimeter to a pixel.
+        const double Size = 0.01;
+
+        foreach (int red in new[] { 1, 3, 5 })
+        {
+            Canvas top = XWingView([$"object XWing(1, 0, 0, 0, {red})"], (-3.97, 0, 3.1), (0, 1, 0), "[1, 0, 0]",
+                Size, 200, 40);
+            int runs = 0;
+            bool inside = false;
+
+            for (int x = 0; x < top.Width; x++)
+            {
+                Color pixel = top.GetPixel(x, top.Height / 2);
+                bool painted = pixel.Red > 0.05 && pixel.Red > 3 * pixel.Green;
+
+                if (painted && !inside)
+                    runs++;
+
+                inside = painted;
+            }
+
+            Assert.AreEqual(red, runs, $"Red {red} should carry {red} stripes");
+        }
+    }
 }

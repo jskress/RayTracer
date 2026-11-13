@@ -1,12 +1,16 @@
-// Star Wars: R2-D2, built part by part from published measurements and the plans that agree with them.
+// Star Wars: R2-D2, built part by part from published measurements and the plans that agree with them, and Luke's
+// X-wing, Red Five, measured from photographs of the studio model (its own section, below, says how).
 //
-//     import 'star-wars' { R2D2 }
+//     import 'star-wars' { R2D2, XWing }
 //
 //     object R2D2()             // standing on his two outer legs
 //     object R2D2(3, 40)        // on three, as he rolls, his dome turned 40 degrees to his right
 //     object R2D2(2, 0, 0.6)    // after a few days in the desert
+//     object XWing()            // Red Five, its S-foils locked in attack position
+//     object XWing(0, 1, 1)     // folded, standing on its gear, the canopy up
 //
 // | `R2D2` | The astromech droid: dome, body, the two outer legs and the center leg and foot. |
+// | `XWing` | Red Five, the T-65B X-wing of A New Hope, in meters, R2-D2 in its socket, a pilot under its glass. |
 //
 // **`legs` is two or three.**  On two he stands upright with his center foot tucked up under him; on
 // three his body tips back eighteen degrees about his shoulders -- the angle builders set, there being no
@@ -1906,6 +1910,1379 @@ primitive R2D2(legs = 2, dome = 0, weathered = 0) -> group {
             wear weathered * 0.5 to R2Aluminum
             splash 16 * weathered
             radius 0.25
+        }
+    }
+}
+
+// -- The X-wing ----------------------------------------------------------------------------------------
+//
+// Red Five, Luke's T-65B in A New Hope, as the 1977 studio model was built.  **It is written in meters**, unlike
+// the droid: 13.4 m from the tip of its nose to the end of its exhausts, the length StarWars.com gives.  **+X is
+// its nose, +Y up and +Z its port side**; the origin is the middle of its length, on the plane the wings fold
+// to.  R2-D2 stands in the socket behind the canopy, his dome showing, scaled by 0.0254.
+//
+// Where the shape comes from: Heritage Auctions' photographs of the Red Leader hero model (one of the four
+// built for the film, unaltered since; it stood in for Red Five as well), from above, below, behind, ahead and
+// above, and the port side from below, as auction #7278 lot 89464 shows them.  They were measured together:
+// each photograph's camera -- where it stood, how it was turned, its lens, and the middle of its picture, which
+// a cut-out on a canvas does not keep -- and the ship's layout fitted to the places of seventy-odd features in
+// all five at once, to two and a half pixels.  All five show one setting of the S-foils, 11.8 degrees open,
+// which is taken as the attack position; none of them says where the wings turn about.  For that, a drawing of
+// the ship from the reference books, which shows the closed wings dashed behind the open ones and draws them
+// lying flat together, and the ESB Red Five miniature photographed nearly closed (lot 89513, July 2025), its
+// cannons drawn together far closer than its engines.  The drawing names the parts -- the proton torpedo
+// launchers low on the nose, the nose cone, the sensor window, the generators on the back, the S-foil
+// actuators -- and is otherwise not followed: its views do not agree with one another, nor with the model.
+// None of these is reproduced here.
+
+XWingWhite = material { pigment [0.80, 0.80, 0.77]  diffuse 0.85  specular 0.12  shininess 25 }
+XWingPale = material { pigment [0.70, 0.71, 0.70]  diffuse 0.85  specular 0.12  shininess 25 }
+XWingGray = material { pigment [0.47, 0.48, 0.49]  diffuse 0.85  specular 0.15  shininess 30 }
+XWingDark = material { pigment [0.17, 0.17, 0.18]  diffuse 0.8  specular 0.2  shininess 30 }
+XWingIntake = material { pigment [0.26, 0.26, 0.27]  diffuse 0.85  specular 0.15  shininess 30 }
+XWingFrame = material { pigment [0.60, 0.65, 0.68]  diffuse 0.85  specular 0.12  shininess 25 }
+XWingRust = material { pigment [0.36, 0.20, 0.11]  diffuse 0.8  specular 0.1 }
+XWingHole = material { pigment [0.03, 0.03, 0.035]  diffuse 0.6  specular 0.05 }
+XWingMetal = material { pigment [0.32, 0.32, 0.33]  metallic 0.5  diffuse 0.6  specular 0.5  shininess 60 }
+XWingGlass = material {
+    pigment [0.08, 0.11, 0.11]
+    transparency 0.55
+    reflective 0.12
+    specular 0.8
+    shininess 200
+}
+XWingSuit = material { pigment [0.80, 0.33, 0.09]  diffuse 0.85  specular 0.05 }
+XWingHelmet = material { pigment [0.86, 0.86, 0.84]  diffuse 0.8  specular 0.4  shininess 60 }
+XWingBare = material { metal 'aluminum'  roughness 0.35 }
+XWingVisor = material { pigment [0.06, 0.06, 0.07]  diffuse 0.4  specular 0.8  shininess 120  reflective 0.1 }
+
+// -- Red Five's markings --
+//
+// The squadron's red, the same on every Red Squadron ship: a stripe down either side of the fuselage, just above
+// its chine, from the wing roots to behind the nose cone, and on the outer face of every wing an L near its tip, a
+// square at the leading edge with a bar running inboard along its back.  Behind the bar, just outboard of the
+// engine, short stripes say which ship of the squadron it is -- StarWars.com: "painted stripes at the back of each
+// S-foil to distinguish the starfighters from one another" -- as many as its number.  The proportions are those
+// of the studio model seen from above in the trench, a still on StarWars.com, and of the Red Leader hero model,
+// and the stripe down the fuselage of the Heritage photographs.  On screen the count changed from shot to shot,
+// two, three or five, as the models stood in for one another; five is Luke's by the rule.  A few panel seams are
+// drawn on the wings.
+XWingRed = [0.50, 0.06, 0.04]
+XWingSeam = [0.42, 0.42, 0.42]
+
+// The L, in the wing's own X/Z: the square from the leading edge 1.2 back and 1.2 across, out to 4.53, and the bar
+// 0.14 deep along its back, 1.1 further in.
+XWingWingL = path {
+    move to -2.40, 3.33  line to -2.40, 4.53  line to -3.60, 4.53  line to -3.60, 2.23  line to -3.46, 2.23
+    line to -3.46, 3.33  close
+}
+
+// One of the squadron's stripes, 0.7 long and 0.16 across, about z = 0; they stand 0.26 apart.
+XWingStripe = path { move to -4.45, -0.08  line to -3.75, -0.08  line to -3.75, 0.08  line to -4.45, 0.08  close }
+
+// The wings' panel seams: two along the span, two across the chord.
+XWingWingSeams = path {
+    move to -2.94, 0.9  line to -2.92, 0.9  line to -2.92, 5.40  line to -2.94, 5.40  close
+    move to -3.96, 0.9  line to -3.94, 0.9  line to -3.94, 5.40  line to -3.96, 5.40  close
+    move to -4.80, 2.29  line to -2.40, 2.29  line to -2.40, 2.31  line to -4.80, 2.31  close
+    move to -4.42, 4.59  line to -2.40, 4.59  line to -2.40, 4.61  line to -4.42, 4.61  close
+}
+
+// The stripe down the fuselage's side, as (X, -y): 0.25 deep, 0.02 above the chine, its front cut aslant.
+XWingHullStripe = path {
+    move to -1.10, -0.228  line to 1.15, -0.228  line to 1.93, -0.224  line to 2.69, -0.195  line to 2.95, -0.186
+    line to 3.08, -0.180  line to 3.63, -0.154  line to 4.36, -0.152  line to 4.80, -0.155  line to 5.05, 0.090
+    line to 4.36, 0.098  line to 3.63, 0.096  line to 3.08, 0.070  line to 2.95, 0.064  line to 2.69, 0.055
+    line to 1.93, 0.026  line to 1.15, 0.022  line to -1.10, 0.022  close
+}
+
+// Dirt the `weathered` model carries as well as the weather's: streaks run aft over the wings and along the
+// fuselage, as they did on the studio model.  Each is drawn three times, whole and two thirds and a third as
+// wide, each layer a little dark over the last, so that it darkens toward its middle rather than ending in a
+// painted edge; no two streaks of a layer touch, or their overlap would read as a hole.  Laid out once by a
+// seeded draw.
+// The wings' dirt streaks, layer 1 of three.
+XWingWingGrime1 = path {
+    move to -2.74, 2.80  line to -2.78, 3.16  line to -4.42, 2.99  line to -4.39, 2.79  close
+    move to -2.53, 4.61  line to -2.57, 5.16  line to -3.86, 5.00  line to -3.83, 4.70  close
+    move to -3.16, 3.72  line to -3.20, 3.91  line to -4.43, 3.86  line to -4.40, 3.75  close
+    move to -3.39, 1.63  line to -3.43, 2.02  line to -4.39, 2.01  line to -4.36, 1.80  close
+    move to -3.15, 0.82  line to -3.19, 1.23  line to -3.96, 1.25  line to -3.93, 1.02  close
+    move to -2.22, 2.30  line to -2.26, 2.56  line to -4.39, 2.62  line to -4.36, 2.48  close
+    move to -3.12, 4.29  line to -3.16, 4.54  line to -3.98, 4.44  line to -3.95, 4.30  close
+    move to -2.73, 3.18  line to -2.77, 3.38  line to -3.47, 3.42  line to -3.44, 3.31  close
+    move to -2.25, 1.12  line to -2.29, 1.58  line to -2.99, 1.59  line to -2.96, 1.34  close
+    move to -2.44, 1.90  line to -2.48, 2.09  line to -3.29, 2.02  line to -3.26, 1.92  close
+}
+
+// The wings' dirt streaks, layer 2 of three.
+XWingWingGrime2 = path {
+    move to -2.74, 2.86  line to -2.78, 3.10  line to -4.42, 2.95  line to -4.39, 2.83  close
+    move to -2.53, 4.71  line to -2.57, 5.07  line to -3.86, 4.95  line to -3.83, 4.75  close
+    move to -3.16, 3.75  line to -3.20, 3.88  line to -4.43, 3.84  line to -4.40, 3.77  close
+    move to -3.39, 1.70  line to -3.43, 1.95  line to -4.39, 1.98  line to -4.36, 1.84  close
+    move to -3.15, 0.89  line to -3.19, 1.15  line to -3.96, 1.21  line to -3.93, 1.06  close
+    move to -2.22, 2.35  line to -2.26, 2.52  line to -4.39, 2.59  line to -4.36, 2.50  close
+    move to -3.12, 4.33  line to -3.16, 4.50  line to -3.98, 4.42  line to -3.95, 4.33  close
+    move to -2.73, 3.22  line to -2.77, 3.35  line to -3.47, 3.40  line to -3.44, 3.33  close
+    move to -2.25, 1.20  line to -2.29, 1.50  line to -2.99, 1.55  line to -2.96, 1.38  close
+    move to -2.44, 1.93  line to -2.48, 2.06  line to -3.29, 2.00  line to -3.26, 1.93  close
+}
+
+// The wings' dirt streaks, layer 3 of three.
+XWingWingGrime3 = path {
+    move to -2.74, 2.92  line to -2.78, 3.04  line to -4.42, 2.93  line to -4.39, 2.86  close
+    move to -2.53, 4.79  line to -2.57, 4.98  line to -3.86, 4.90  line to -3.83, 4.80  close
+    move to -3.16, 3.78  line to -3.20, 3.85  line to -4.43, 3.82  line to -4.40, 3.79  close
+    move to -3.39, 1.76  line to -3.43, 1.89  line to -4.39, 1.94  line to -4.36, 1.87  close
+    move to -3.15, 0.95  line to -3.19, 1.09  line to -3.96, 1.18  line to -3.93, 1.10  close
+    move to -2.22, 2.39  line to -2.26, 2.48  line to -4.39, 2.57  line to -4.36, 2.52  close
+    move to -3.12, 4.37  line to -3.16, 4.46  line to -3.98, 4.40  line to -3.95, 4.35  close
+    move to -2.73, 3.25  line to -2.77, 3.32  line to -3.47, 3.39  line to -3.44, 3.35  close
+    move to -2.25, 1.27  line to -2.29, 1.43  line to -2.99, 1.51  line to -2.96, 1.42  close
+    move to -2.44, 1.96  line to -2.48, 2.03  line to -3.29, 1.99  line to -3.26, 1.95  close
+}
+
+// The fuselage's side streaks, as (X, -y), layer 1 of three.
+XWingSideGrime1 = path {
+    move to 4.17, 0.22  line to 4.12, 0.31  line to 3.13, 0.31  line to 3.13, 0.22  close
+    move to -0.07, -0.12  line to -0.12, -0.09  line to -0.88, -0.09  line to -0.88, -0.12  close
+    move to 0.80, 0.29  line to 0.75, 0.34  line to -0.37, 0.34  line to -0.37, 0.29  close
+    move to 4.69, 0.02  line to 4.64, 0.06  line to 2.53, 0.06  line to 2.53, 0.02  close
+    move to 0.45, 0.10  line to 0.40, 0.19  line to -1.10, 0.19  line to -1.10, 0.10  close
+    move to 3.50, -0.35  line to 3.45, -0.26  line to 0.98, -0.26  line to 0.98, -0.35  close
+    move to 1.75, 0.00  line to 1.70, 0.06  line to 1.01, 0.06  line to 1.01, 0.00  close
+    move to 0.49, -0.32  line to 0.44, -0.27  line to -1.10, -0.27  line to -1.10, -0.32  close
+    move to 2.56, 0.12  line to 2.51, 0.17  line to 1.50, 0.17  line to 1.50, 0.12  close
+    move to 2.80, -0.12  line to 2.75, -0.08  line to 1.20, -0.08  line to 1.20, -0.12  close
+    move to 1.54, -0.20  line to 1.49, -0.17  line to 0.45, -0.17  line to 0.45, -0.20  close
+    move to 4.50, -0.07  line to 4.45, -0.04  line to 3.74, -0.04  line to 3.74, -0.07  close
+    move to 4.76, -0.28  line to 4.71, -0.23  line to 3.86, -0.23  line to 3.86, -0.28  close
+    move to 2.56, 0.30  line to 2.51, 0.35  line to 0.94, 0.35  line to 0.94, 0.30  close
+    move to 0.07, -0.04  line to 0.02, 0.01  line to -1.08, 0.01  line to -1.08, -0.04  close
+    move to 0.69, -0.43  line to 0.64, -0.38  line to -1.10, -0.38  line to -1.10, -0.43  close
+    move to 4.51, -0.38  line to 4.46, -0.35  line to 3.62, -0.35  line to 3.62, -0.38  close
+    move to 4.88, 0.12  line to 4.83, 0.15  line to 2.59, 0.15  line to 2.59, 0.12  close
+}
+
+// The fuselage's side streaks, as (X, -y), layer 2 of three.
+XWingSideGrime2 = path {
+    move to 4.17, 0.24  line to 4.12, 0.30  line to 3.13, 0.30  line to 3.13, 0.24  close
+    move to -0.07, -0.11  line to -0.12, -0.10  line to -0.88, -0.10  line to -0.88, -0.11  close
+    move to 0.80, 0.30  line to 0.75, 0.33  line to -0.37, 0.33  line to -0.37, 0.30  close
+    move to 4.69, 0.03  line to 4.64, 0.05  line to 2.53, 0.05  line to 2.53, 0.03  close
+    move to 0.45, 0.12  line to 0.40, 0.18  line to -1.10, 0.18  line to -1.10, 0.12  close
+    move to 3.50, -0.34  line to 3.45, -0.28  line to 0.98, -0.28  line to 0.98, -0.34  close
+    move to 1.75, 0.01  line to 1.70, 0.05  line to 1.01, 0.05  line to 1.01, 0.01  close
+    move to 0.49, -0.31  line to 0.44, -0.28  line to -1.10, -0.28  line to -1.10, -0.31  close
+    move to 2.56, 0.13  line to 2.51, 0.16  line to 1.50, 0.16  line to 1.50, 0.13  close
+    move to 2.80, -0.11  line to 2.75, -0.08  line to 1.20, -0.08  line to 1.20, -0.11  close
+    move to 1.54, -0.19  line to 1.49, -0.17  line to 0.45, -0.17  line to 0.45, -0.19  close
+    move to 4.50, -0.06  line to 4.45, -0.04  line to 3.74, -0.04  line to 3.74, -0.06  close
+    move to 4.76, -0.27  line to 4.71, -0.24  line to 3.86, -0.24  line to 3.86, -0.27  close
+    move to 2.56, 0.31  line to 2.51, 0.34  line to 0.94, 0.34  line to 0.94, 0.31  close
+    move to 0.07, -0.03  line to 0.02, 0.00  line to -1.08, 0.00  line to -1.08, -0.03  close
+    move to 0.69, -0.42  line to 0.64, -0.39  line to -1.10, -0.39  line to -1.10, -0.42  close
+    move to 4.51, -0.38  line to 4.46, -0.36  line to 3.62, -0.36  line to 3.62, -0.38  close
+    move to 4.88, 0.13  line to 4.83, 0.15  line to 2.59, 0.15  line to 2.59, 0.13  close
+}
+
+// The fuselage's side streaks, as (X, -y), layer 3 of three.
+XWingSideGrime3 = path {
+    move to 4.17, 0.25  line to 4.12, 0.28  line to 3.13, 0.28  line to 3.13, 0.25  close
+    move to -0.07, -0.11  line to -0.12, -0.10  line to -0.88, -0.10  line to -0.88, -0.11  close
+    move to 0.80, 0.31  line to 0.75, 0.32  line to -0.37, 0.32  line to -0.37, 0.31  close
+    move to 4.69, 0.03  line to 4.64, 0.05  line to 2.53, 0.05  line to 2.53, 0.03  close
+    move to 0.45, 0.13  line to 0.40, 0.16  line to -1.10, 0.16  line to -1.10, 0.13  close
+    move to 3.50, -0.32  line to 3.45, -0.29  line to 0.98, -0.29  line to 0.98, -0.32  close
+    move to 1.75, 0.02  line to 1.70, 0.04  line to 1.01, 0.04  line to 1.01, 0.02  close
+    move to 0.49, -0.30  line to 0.44, -0.28  line to -1.10, -0.28  line to -1.10, -0.30  close
+    move to 2.56, 0.14  line to 2.51, 0.15  line to 1.50, 0.15  line to 1.50, 0.14  close
+    move to 2.80, -0.10  line to 2.75, -0.09  line to 1.20, -0.09  line to 1.20, -0.10  close
+    move to 1.54, -0.19  line to 1.49, -0.18  line to 0.45, -0.18  line to 0.45, -0.19  close
+    move to 4.50, -0.06  line to 4.45, -0.05  line to 3.74, -0.05  line to 3.74, -0.06  close
+    move to 4.76, -0.26  line to 4.71, -0.24  line to 3.86, -0.24  line to 3.86, -0.26  close
+    move to 2.56, 0.32  line to 2.51, 0.34  line to 0.94, 0.34  line to 0.94, 0.32  close
+    move to 0.07, -0.02  line to 0.02, -0.01  line to -1.08, -0.01  line to -1.08, -0.02  close
+    move to 0.69, -0.41  line to 0.64, -0.39  line to -1.10, -0.39  line to -1.10, -0.41  close
+    move to 4.51, -0.37  line to 4.46, -0.36  line to 3.62, -0.36  line to 3.62, -0.37  close
+    move to 4.88, 0.13  line to 4.83, 0.14  line to 2.59, 0.14  line to 2.59, 0.13  close
+}
+
+// The streaks along the top, layer 1 of three.
+XWingTopGrime1 = path {
+    move to 2.94, -0.03  line to 2.89, 0.10  line to 2.17, 0.07  line to 2.17, -0.00  close
+    move to 2.83, 0.24  line to 2.78, 0.36  line to 0.75, 0.33  line to 0.75, 0.26  close
+    move to 3.33, -0.35  line to 3.28, -0.23  line to 1.64, -0.25  line to 1.64, -0.33  close
+    move to 4.40, -0.15  line to 4.35, -0.01  line to 3.40, -0.04  line to 3.40, -0.12  close
+    move to 0.56, 0.02  line to 0.51, 0.11  line to -0.02, 0.09  line to -0.02, 0.04  close
+    move to 1.23, -0.14  line to 1.18, -0.08  line to -0.17, -0.09  line to -0.17, -0.12  close
+    move to 4.12, -0.31  line to 4.07, -0.19  line to 3.42, -0.21  line to 3.42, -0.28  close
+    move to 4.73, 0.19  line to 4.68, 0.27  line to 3.61, 0.25  line to 3.61, 0.20  close
+    move to 0.23, 0.18  line to 0.18, 0.29  line to -1.10, 0.27  line to -1.10, 0.20  close
+    move to 2.75, -0.20  line to 2.70, -0.12  line to 1.49, -0.14  line to 1.49, -0.19  close
+    move to 0.60, -0.37  line to 0.55, -0.23  line to -0.09, -0.26  line to -0.09, -0.34  close
+    move to 5.00, 0.08  line to 4.95, 0.14  line to 4.25, 0.13  line to 4.25, 0.09  close
+    move to 1.53, 0.00  line to 1.48, 0.07  line to 0.73, 0.06  line to 0.73, 0.01  close
+    move to 4.87, -0.31  line to 4.82, -0.25  line to 4.18, -0.26  line to 4.18, -0.29  close
+}
+
+// The streaks along the top, layer 2 of three.
+XWingTopGrime2 = path {
+    move to 2.94, -0.01  line to 2.89, 0.07  line to 2.17, 0.06  line to 2.17, 0.01  close
+    move to 2.83, 0.26  line to 2.78, 0.34  line to 0.75, 0.32  line to 0.75, 0.27  close
+    move to 3.33, -0.33  line to 3.28, -0.25  line to 1.64, -0.26  line to 1.64, -0.32  close
+    move to 4.40, -0.12  line to 4.35, -0.03  line to 3.40, -0.05  line to 3.40, -0.10  close
+    move to 0.56, 0.04  line to 0.51, 0.09  line to -0.02, 0.08  line to -0.02, 0.05  close
+    move to 1.23, -0.13  line to 1.18, -0.09  line to -0.17, -0.09  line to -0.17, -0.12  close
+    move to 4.12, -0.29  line to 4.07, -0.21  line to 3.42, -0.22  line to 3.42, -0.27  close
+    move to 4.73, 0.20  line to 4.68, 0.25  line to 3.61, 0.24  line to 3.61, 0.21  close
+    move to 0.23, 0.20  line to 0.18, 0.27  line to -1.10, 0.26  line to -1.10, 0.22  close
+    move to 2.75, -0.19  line to 2.70, -0.13  line to 1.49, -0.14  line to 1.49, -0.18  close
+    move to 0.60, -0.34  line to 0.55, -0.25  line to -0.09, -0.27  line to -0.09, -0.33  close
+    move to 5.00, 0.09  line to 4.95, 0.13  line to 4.25, 0.12  line to 4.25, 0.10  close
+    move to 1.53, 0.01  line to 1.48, 0.06  line to 0.73, 0.05  line to 0.73, 0.02  close
+    move to 4.87, -0.29  line to 4.82, -0.26  line to 4.18, -0.27  line to 4.18, -0.29  close
+}
+
+// The streaks along the top, layer 3 of three.
+XWingTopGrime3 = path {
+    move to 2.94, 0.01  line to 2.89, 0.05  line to 2.17, 0.05  line to 2.17, 0.02  close
+    move to 2.83, 0.28  line to 2.78, 0.32  line to 0.75, 0.31  line to 0.75, 0.28  close
+    move to 3.33, -0.31  line to 3.28, -0.27  line to 1.64, -0.28  line to 1.64, -0.30  close
+    move to 4.40, -0.10  line to 4.35, -0.05  line to 3.40, -0.06  line to 3.40, -0.09  close
+    move to 0.56, 0.05  line to 0.51, 0.08  line to -0.02, 0.07  line to -0.02, 0.06  close
+    move to 1.23, -0.12  line to 1.18, -0.10  line to -0.17, -0.10  line to -0.17, -0.11  close
+    move to 4.12, -0.27  line to 4.07, -0.23  line to 3.42, -0.23  line to 3.42, -0.26  close
+    move to 4.73, 0.21  line to 4.68, 0.24  line to 3.61, 0.24  line to 3.61, 0.22  close
+    move to 0.23, 0.22  line to 0.18, 0.26  line to -1.10, 0.25  line to -1.10, 0.22  close
+    move to 2.75, -0.18  line to 2.70, -0.15  line to 1.49, -0.15  line to 1.49, -0.17  close
+    move to 0.60, -0.32  line to 0.55, -0.28  line to -0.09, -0.28  line to -0.09, -0.31  close
+    move to 5.00, 0.10  line to 4.95, 0.12  line to 4.25, 0.12  line to 4.25, 0.11  close
+    move to 1.53, 0.02  line to 1.48, 0.05  line to 0.73, 0.04  line to 0.73, 0.03  close
+    move to 4.87, -0.29  line to 4.82, -0.27  line to 4.18, -0.27  line to 4.18, -0.28  close
+}
+
+// How far the S-foils open, in degrees: the wing's plane against the level.
+XWingAttack = 11.8
+
+// A round part along X, from `from` to `to`, and one tapering from radius `r0` to `r1`.
+primitive XWingRod(from, to, radius) -> cylinder {
+    return cylinder { min Y from  max Y to  scale [radius, 1, radius]  rotate Z -90 }
+}
+
+primitive XWingTaper(from, to, r0, r1) -> conic {
+    way = r1 > r0 ? 1 : -1
+    stretch = (to - from) / abs(r1 - r0)
+    return conic {
+        min Y min(r0, r1)  max Y max(r0, r1)
+        scale [1, stretch, 1]
+        rotate Z -90 * way
+        translate X from - stretch * r0 * way
+    }
+}
+
+// A ring along X: a tube's wall from `from` to `to`, between two radii.
+primitive XWingRing(from, to, outer, inner) -> difference {
+    return difference {
+        object XWingRod(from, to, outer)
+        object XWingRod(from - 0.01, to + 0.01, inner)
+    }
+}
+
+// A piece of a nacelle's skin over its back, along X from `from` to `to`: the tube's wall from `inner` out to
+// `outer`, `wide` across, square at its sides.
+primitive XWingSkin(from, to, inner, outer, wide) -> intersection {
+    return intersection {
+        object XWingRing(from, to, outer, inner)
+        cube { scale [(to - from) / 2 + 0.01, 0.25, wide / 2]  translate [(from + to) / 2, 0.25, 0] }
+    }
+}
+
+// -- An engine and a cannon --
+//
+// The engine is drawn about its nacelle's axis along X.  From the back: the exhaust, a can 0.34 in radius with a
+// broad face, stepping down twice into it -- to a milky ring that the engine's light shines through, then to a
+// dark throat holding a star of fourteen spikes, and a smaller one behind it, round a red dome -- and ninety ribs
+// round its forward end, standing out past its rim, so that from behind they knurl its edge; the nacelle, 0.31 in
+// radius, in two lengths, each with a collar at its after end and a kit part on its back, held off the wing by
+// two legs, open between them, over a block whose after face is a rust panel holding three pipes' ends; and the
+// housing, 0.55 in radius, its axis 0.34 nearer the wing, squared off behind and open in front, a thin wall with a
+// rounded lip, its mouth a deep bowl with three vanes across it, one standing away from the wing and two along
+// it, dark gray inside as its back is.  Measured: the exhaust ends at -6.70 and the can at -5.95, its ribs run
+// from -6.18 to there, the collars stand at -5.95 and -4.98, the block from -5.20 to -4.40, and the housing runs
+// from -4.20 to the intake's face at -1.99; the face's opening, the step inside it, the ring, the throat and the
+// dome are 0.69, 0.64, 0.62, 0.50 and 0.27 of the can across, as the photographs of its end have them; seen from
+// behind in a studio's light, cold, all within the step is dark, the throat 20 cm deep.  `thrust` lights the
+// ring, the throat and the dome, from nought, cold, to one, the pink-orange glow of a ship in flight,
+// `weathered` darkens the can toward its end with soot, and `doors`, given only to a lower wing's engine, opens
+// the after kit part, split down its middle, to that many degrees: the doors of the main gear's bay.
+//
+// The housing, turned (radius, X) about its own axis: from its squared-off back round to the lip at -1.99, and
+// its mouth, the wall running straight back 0.31 inside it and curving in to the bowl's bottom, cut from it.
+XWingHousing = path {
+    move to 0, -4.20  line to 0.51, -4.20  quad 0.55, -4.20 to 0.55, -4.16  line to 0.55, -2.0075
+    quad 0.55, -1.99 to 0.5325, -1.99  quad 0.515, -1.99 to 0.515, -2.0075  line to 0, -2.0075  close
+}
+XWingIntakeBowl = path {
+    move to 0, -1.95  line to 0.515, -1.95  line to 0.515, -2.30  quad 0.515, -2.68 to 0, -2.68  close
+}
+
+// The exhaust's can, turned likewise, its face rounded at the rim; and the steps cut into it, the shelf the ring
+// sits on and the throat.
+XWingNozzle = path {
+    move to 0, -5.95  line to 0.34, -5.95  line to 0.34, -6.65  quad 0.34, -6.70 to 0.29, -6.70  line to 0, -6.70
+    close
+}
+XWingExhaustStep = path { move to 0, -6.71  line to 0.234, -6.71  line to 0.234, -6.675  line to 0, -6.675  close }
+XWingExhaust = path {
+    move to 0, -6.71  line to 0.218, -6.71  line to 0.218, -6.64  line to 0.17, -6.64  line to 0.17, -6.54
+    line to 0, -6.54  close
+}
+
+// One of the spikes of the star in the throat, in its plane across the axis: a tapering point from the dome's
+// collar out nearly to the throat's wall.
+XWingSpike = path {
+    move to -0.0935, -0.0138  line to -0.1721, -0.0043  line to -0.1785, 0  line to -0.1721, 0.0043
+    line to -0.0935, 0.0138  close
+}
+
+// The kit part on the nacelle's back over the main gear's bay, a curved panel crossed by grooves: on a lower
+// wing, split down its middle, it is the bay's two doors.
+primitive XWingGearCover() -> difference {
+    return difference {
+        object XWingSkin(-5.66, -5.12, 0.30, 0.33, 0.32)
+        object XWingSkin(-5.60, -5.57, 0.318, 0.34, 0.24) { material XWingDark  rotate X -6 }
+        object XWingSkin(-5.50, -5.30, 0.318, 0.34, 0.09) { material XWingDark  rotate X 13 }
+        object XWingSkin(-5.50, -5.30, 0.318, 0.34, 0.09) { material XWingDark  rotate X -13 }
+        object XWingSkin(-5.23, -5.20, 0.318, 0.34, 0.24) { material XWingDark  rotate X 6 }
+        material XWingPale
+    }
+}
+
+primitive XWingEngine(thrust = 0, weathered = 0, doors = 0) -> group {
+    soot = 1 - 0.55 * weathered
+    return group {
+        difference {
+            lathe { path XWingNozzle  rotate Z -90 }
+            lathe { path XWingExhaustStep  material XWingGray  rotate Z -90 }
+            lathe { path XWingExhaust  material XWingHole  rotate Z -90 }
+            material {
+                pigment linear Y gradient {
+                    [0, [0.70 * soot, 0.71 * soot, 0.70 * soot], 0.25, [0.70 * soot, 0.71 * soot, 0.70 * soot],
+                     0.58, [0.70, 0.71, 0.70], 1, [0.70, 0.71, 0.70]]
+                    scale 1.2  translate Y -7.0
+                }
+                diffuse 0.85  specular 0.12  shininess 25
+            }
+        }
+        for rib in [0, 89] {
+            cube {
+                material XWingPale  scale [0.115, 0.008, 0.005]  translate [-6.065, 0.344, 0]  rotate X rib * 4
+            }
+        }
+        object XWingRing(-6.645, -6.635, 0.2125, 0.172) {
+            material {
+                pigment [0.10 + 0.90 * thrust, 0.10 + 0.22 * thrust, 0.11 + 0.11 * thrust]
+                diffuse 0.7 - 0.5 * thrust
+                specular 0.4
+                shininess 80
+                emission 1.6 * thrust
+            }
+        }
+        object XWingRod(-6.545, -6.535, 0.167) {
+            material {
+                pigment [0.03 + 0.97 * thrust, 0.03 + 0.42 * thrust, 0.035 + 0.315 * thrust]
+                diffuse 0.6 - 0.4 * thrust
+                specular 0.05
+                emission 7 * thrust
+            }
+        }
+        for spike in [0, 13] {
+            extrusion {
+                path XWingSpike  min Y -6.60  max Y -6.575  material XWingDark  scale [0.92, 1, 1]  rotate Z -90
+                rotate X spike * 360 / 14
+            }
+            extrusion {
+                path XWingSpike  min Y -6.56  max Y -6.545  material XWingHole  scale [0.85, 1, 0.7]  rotate Z -90
+                rotate X (spike + 0.5) * 360 / 14
+            }
+        }
+        object XWingRing(-6.575, -6.55, 0.104, 0.090) { material XWingMetal }
+        sphere {
+            material {
+                pigment [0.26 + 0.64 * thrust, 0.02 + 0.13 * thrust, 0.02 + 0.09 * thrust]
+                diffuse 0.6
+                reflective 0.12
+                specular 0.9
+                shininess 150
+                emission 1.2 * thrust
+            }
+            scale [0.075, 0.0956, 0.0956]
+            translate X -6.565
+        }
+
+        object XWingRod(-5.95, -5.80, 0.323) { material XWingPale }
+        object XWingRod(-4.975, -4.905, 0.322) { material XWingPale }
+        if (doors > 0) {
+            difference {
+                object XWingRod(-5.96, -4.18, 0.31)
+                cube { material XWingHole  scale [0.4025, 0.18, 0.16]  translate [-5.3875, 0.33, 0] }
+                material XWingPale
+            }
+            intersection {
+                union {
+                    object XWingRing(-5.79, -4.985, 0.31, 0.28)
+                    object XWingGearCover()
+                }
+                cube { scale [0.41, 0.25, 0.0805]  translate [-5.3875, 0.25, 0.0805] }
+                material XWingPale
+                translate [0, -0.27, -0.16]  rotate X doors  translate [0, 0.27, 0.16]
+            }
+            intersection {
+                union {
+                    object XWingRing(-5.79, -4.985, 0.31, 0.28)
+                    object XWingGearCover()
+                }
+                cube { scale [0.41, 0.25, 0.0805]  translate [-5.3875, 0.25, -0.0805] }
+                material XWingPale
+                translate [0, -0.27, 0.16]  rotate X -doors  translate [0, 0.27, -0.16]
+            }
+        }
+        else {
+            object XWingRod(-5.96, -4.18, 0.31) { material XWingPale }
+            object XWingGearCover()
+        }
+        difference {
+            object XWingSkin(-4.80, -4.30, 0.30, 0.33, 0.34)
+            object XWingSkin(-4.74, -4.71, 0.318, 0.34, 0.24) { material XWingDark  rotate X 6 }
+            object XWingSkin(-4.62, -4.59, 0.318, 0.34, 0.24) { material XWingDark  rotate X 6 }
+            object XWingSkin(-4.50, -4.47, 0.318, 0.34, 0.24) { material XWingDark  rotate X 6 }
+            object XWingSkin(-4.74, -4.36, 0.318, 0.34, 0.04) { material XWingDark  rotate X -24 }
+            material XWingPale
+        }
+        cube { material XWingGray  scale [0.04, 0.02, 0.05]  translate [-4.38, 0.335, 0.06] }
+
+        cube { material XWingPale  scale [0.40, 0.08, 0.19]  translate [-4.80, -0.52, 0] }
+        cube { material XWingRust  scale [0.01, 0.045, 0.17]  translate [-5.21, -0.54, 0] }
+        for pipe in [0, 2] {
+            object XWingRing(-5.25, -5.215, 0.042, 0.026) {
+                material XWingRust  translate [0, -0.54, (pipe - 1) * 0.11]
+            }
+            object XWingRod(-5.24, -5.21, 0.027) { material XWingHole  translate [0, -0.54, (pipe - 1) * 0.11] }
+        }
+        cube { material XWingPale  scale [0.30, 0.07, 0.0225]  translate [-4.80, -0.37, 0.12] }
+        cube { material XWingPale  scale [0.30, 0.07, 0.0225]  translate [-4.80, -0.37, -0.12] }
+        cube { material XWingPale  scale [0.35, 0.0175, 0.18]  translate [-4.80, -0.3175, 0] }
+
+        group {
+            difference {
+                lathe { path XWingHousing  rotate Z -90 }
+                lathe { path XWingIntakeBowl  material XWingIntake  rotate Z -90 }
+                material XWingWhite
+            }
+            disc { center [-4.2005, 0, 0]  normal [-1, 0, 0]  radius 0.52  material XWingIntake }
+            object XWingRod(-3.62, -3.58, 0.556) { material XWingGray }
+            object XWingRod(-2.82, -2.78, 0.556) { material XWingGray }
+            cube { material XWingGray  scale [0.08, 0.012, 0.53]  translate X -2.18 }
+            cube { material XWingGray  scale [0.08, 0.265, 0.012]  translate [-2.18, 0.265, 0] }
+            object XWingRod(-2.24, -2.11, 0.08) { material XWingGray }
+            sphere { material XWingGray  scale [0.035, 0.05, 0.05]  translate X -2.11 }
+            translate [0, -0.3398, 0.0322]
+        }
+    }
+}
+
+// The muzzle at the end of a laser cannon's barrel, as A New Hope's model has it: turned in one piece, (radius,
+// X) about the barrel's axis, from inside the barrel's end -- spreading out from the barrel to a drum twice its
+// width, tapering quickly to just narrower than the barrel, then gently, a meter on, to the bulb whose point is at
+// 2.82.
+XWingMuzzle = path {
+    move to 0, 1.50
+    line to 0.06, 1.50
+    line to 0.06, 1.55
+    quad 0.10, 1.58 to 0.12, 1.66
+    line to 0.12, 1.79
+    quad 0.12, 1.85 to 0.082, 1.87
+    quad 0.044, 1.89 to 0.042, 1.93
+    line to 0.022, 2.66
+    quad 0.058, 2.67 to 0.058, 2.735
+    quad 0.058, 2.80 to 0, 2.822
+    close
+}
+
+// The laser cannon, about its axis along X: the housing from its capped back at -4.37, a slot round it from -2.66
+// to -2.53 showing ten ribs inside, the cooling sleeve with ten more at its front, -2.14, the barrel stepping down
+// past its ring, and the muzzle, with a dark band round its drum
+// and the flash suppressor standing at the drum's front: half a tube 0.18 wide and 0.58 tall, upright across the
+// barrel and hollow forward, its ends cut square level with its axis.
+primitive XWingCannon() -> group {
+    return group {
+        object XWingRod(-4.37, -2.66, 0.20) { material XWingWhite }
+        object XWingRod(-4.28, -4.22, 0.204) { material XWingDark }
+        object XWingRod(-3.40, -3.36, 0.204) { material XWingGray }
+        object XWingRod(-4.39, -4.37, 0.05) { material XWingDark }
+
+        object XWingRod(-2.67, -2.52, 0.15) { material XWingHole }
+        for rib in [0, 9] {
+            cube { material XWingWhite  scale [0.065, 0.015, 0.0225]  translate [-2.595, 0, 0.1725]
+                   rotate X rib * 36 }
+        }
+        object XWingRod(-2.53, -2.15, 0.215) { material XWingWhite }
+        object XWingRod(-2.15, -2.13, 0.205) { material XWingHole }
+        for rib in [0, 9] {
+            cube { material XWingWhite  scale [0.02, 0.015, 0.055]  translate [-2.14, 0, 0.155]
+                   rotate X rib * 36 }
+        }
+
+        object XWingRod(-2.13, -1.15, 0.11) { material XWingWhite }
+        object XWingRod(-1.15, -1.03, 0.15) { material XWingGray }
+        object XWingRod(-1.03, 1.57, 0.065) { material XWingWhite }
+        object XWingRod(0.20, 0.26, 0.08) { material XWingGray }
+
+        lathe { path XWingMuzzle  material XWingPale  rotate Z -90 }
+        object XWingRod(1.70, 1.73, 0.1215) { material XWingDark }
+        difference {
+            cylinder { min Y -0.09  max Y 0.09  scale [0.29, 1, 0.29]  rotate X 90 }
+            cylinder { min Y -0.1  max Y 0.1  scale [0.25, 1, 0.25]  rotate X 90 }
+            cube { scale [0.35, 0.35, 0.2]  translate X 0.35 }
+            material XWingGray
+            translate X 2.12
+        }
+    }
+}
+
+// -- The landing gear --
+//
+// Three legs, which the filming model never had and the full-sized ships built for the hangars and Dagobah did:
+// the main legs drop from under the lower engines near their exhausts, the nose leg from under the fuselage a
+// quarter of the ship's length back from its tip, all three as long as it takes to stand the ship with its middle
+// 2.05 above the ground -- where the ladder and Luke beside it put the cockpit's sill, two and a half meters up,
+// in StarWars.com's still from Dagobah, and high enough that with its S-foils open the lower cannons' flash
+// suppressors, 2.02 down, clear it.  Each stands on a long, narrow skid whose leading end turns up 22 degrees, and
+// drops out of a bay closed by two doors split down its middle and hinged at their outer edges, cut from the hull
+// itself so that, shut, they are the hull without a seam: the nose leg's from the fuselage's flat bottom (2.88 to
+// 3.88 along it, 0.36 across), a main leg's from its nacelle between the collars, the kit part on its back with
+// them (-5.79 to -4.985, 0.32 across; a long skid fits nowhere else on it).  The doors open first and the legs
+// then telescope: `out` is how far one is down, and nothing shows when it is up.
+XWingGround = 2.05
+
+// How far the doors over a leg stand open, in degrees, and how far the leg is down, as the gear goes from up,
+// nought, to down, one: the doors swing open over the first third, and the legs drop once the doors are most of
+// the way open.
+function XWingDoors(gear) -> number {
+    return 95 * min(1, gear / 0.35)
+}
+function XWingLegsOut(gear) -> number {
+    return max(0, (gear - 0.25) / 0.75)
+}
+
+// A foot, a skid: a flat pad, `aft` behind the leg and `fore` ahead of it, its leading end turned up 22 degrees
+// for `toe` more, `thick` deep and `wide` across, standing on y = 0.
+primitive XWingSkid(aft, fore, toe, thick, wide) -> extrusion {
+    up = 22 degrees
+    return extrusion {
+        path {
+            move to -aft, 0  line to fore, 0  line to fore + toe * cos(up), toe * sin(up)
+            line to fore + toe * cos(up) - thick * sin(up), toe * sin(up) + thick * cos(up)
+            line to fore - thick * tan(up / 2), thick  line to -aft, thick  close
+        }
+        min Y -wide / 2  max Y wide / 2
+        rotate X -90
+    }
+}
+
+// A main leg, built up +Y from its top at the origin, since it hangs from a lower wing, which is the upper wing
+// mirrored: its oleo, reaching up into the bay, its piston, a brace forward into the bay, and its skid, 0.72
+// long, the pad 0.30 behind the leg and 0.20 ahead.
+primitive XWingMainGear(long, out) -> group {
+    reach = long * out
+    return group {
+        cylinder { min Y -0.15  max Y reach * 0.55  material XWingGray  scale [0.09, 1, 0.09] }
+        cylinder {
+            min Y reach * 0.45  max Y max(reach * 0.45 + 0.01, reach - 0.10)  material XWingMetal
+            scale [0.06, 1, 0.06]
+        }
+        tube {
+            radius 0.035 at [0, reach * 0.4, 0]  radius 0.035 at [0.38, -0.08, 0]
+            material XWingMetal
+        }
+        cube { material XWingGray  scale [0.08, 0.025, 0.07]  translate Y reach - 0.095 }
+        object XWingSkid(0.30, 0.20, 0.24, 0.07, 0.24) { material XWingDark  scale [1, -1, 1]  translate Y reach }
+    }
+}
+
+// The nose leg, down -Y from its top at the origin: a heavier oleo, and a longer skid, 0.88, its pad kept level
+// as the leg is leaned six degrees aft.
+primitive XWingNoseGear(long, out) -> group {
+    reach = long * out
+    return group {
+        cylinder { min Y -reach * 0.55  max Y 0.18  material XWingGray  scale [0.11, 1, 0.11] }
+        cylinder {
+            min Y min(-reach * 0.45 - 0.01, -reach + 0.10)  max Y -reach * 0.45  material XWingMetal
+            scale [0.07, 1, 0.07]
+        }
+        tube {
+            radius 0.04 at [0, -reach * 0.42, 0]  radius 0.04 at [-0.38, 0.10, 0]
+            material XWingMetal
+        }
+        cube { material XWingGray  scale [0.09, 0.025, 0.08]  translate Y 0.105  rotate Z 6  translate Y -reach }
+        object XWingSkid(0.36, 0.24, 0.30, 0.08, 0.28) { material XWingDark  rotate Z 6  translate Y -reach }
+    }
+}
+
+// -- A wing --
+//
+// The upper port wing, built closed in the frame of the line it turns about, the wing's plane y = 0 and its span
+// out along +Z, then turned `open` degrees and set where that line is: 0.19 up and 0.238 to starboard of the
+// middle, so that closed the four lie flat in pairs at y = +-0.19 with their engines' housings touching.  The
+// others are it mirrored.  Its leading edge runs straight across at X -2.40, behind the front of the cannon's
+// housing, its trailing edge from -5.05 at the root to -4.22 at the tip, 5.0 out from the body's side and past the
+// cannon's axis, and it is 0.1 thick.  As the Heritage photographs have it: the root, out to 2.88 (0.55 past the
+// engine's housing), wears a plate 0.08 thick on the face turned out, and on its trailing edge between the housing
+// and the plate's edge stands the radiator, a block 0.64 long whose top lies level when the S-foils are open (0.2
+// over the wing at its outer end), cut from above by six slots that leave seven fins; a rib across the face turned
+// in marks the same line.  Beyond it two vents are sunk in that face, the inner one with its forward outboard
+// corner cut away, 8 cm deep in their forward part and half that aft, and a rod runs along the trailing edge.  The
+// S-foil's drive, a dark box and two rods, lies on the plate behind the housing either side of the nacelle's
+// pylon, and the cannon stands over the tip, 0.38 out from its plane, on two plates 9 cm thick, a long one forward
+// and a short one aft.  A lower wing is given the `gear` and lowers its main leg from under its engine, held
+// upright whatever the S-foils' angle, as long as it must be to reach the ground.
+primitive XWingWing(open, gear = 0, red = 5, weathered = 0, thrust = 0) -> group {
+    drop = XWingGround - 0.19 - 1.03 * cos(open degrees) - 1.66 * sin(open degrees)
+    return group {
+        difference {
+            union {
+                extrusion {
+                    path {
+                        move to -5.0463, 0.8  line to -2.40, 0.8  line to -2.40, 5.8  line to -4.2156, 5.8
+                        close
+                    }
+                    min Y -0.05  max Y 0.05
+                }
+                extrusion {
+                    path {
+                        move to -5.0463, 0.8  line to -2.40, 0.8  line to -2.40, 2.88  line to -4.7007, 2.88  close
+                    }
+                    min Y 0.04  max Y 0.13
+                }
+                extrusion {
+                    path {
+                        move to -4.7007, 2.88  line to -2.40, 2.88  line to -2.40, 2.93  line to -4.6924, 2.93
+                        close
+                    }
+                    min Y -0.075  max Y -0.04
+                }
+            }
+            extrusion {
+                path {
+                    move to -4.32, 3.04  line to -3.01, 3.04  line to -3.01, 3.30  line to -3.50, 3.58
+                    line to -4.32, 3.58  close
+                }
+                min Y -0.1  max Y -0.005  material XWingGray
+            }
+            extrusion {
+                path {
+                    move to -3.85, 3.04  line to -3.01, 3.04  line to -3.01, 3.30  line to -3.50, 3.58
+                    line to -3.85, 3.58  close
+                }
+                min Y -0.1  max Y 0.03  material XWingGray
+            }
+            cube { material XWingGray  scale [0.42, 0.0475, 0.28]  translate [-3.62, -0.0525, 4.43] }
+            cube { material XWingGray  scale [0.275, 0.065, 0.28]  translate [-3.475, -0.035, 4.43] }
+            material {
+                pigment [0.80, 0.80, 0.77]  diffuse 0.85  specular 0.12  shininess 25
+                decal { path XWingWingSeams  color XWingSeam  planar  min Y -0.1  max Y 0.1 }
+                decal { path XWingWingL  color XWingRed  planar  min Y 0  max Y 0.2 }
+                decal { path XWingStripe  color [0.50, 0.06, 0.04, red >= 1 ? 1 : 0]  planar  min Y 0  max Y 0.1
+                        translate Z 3.50 + (1 - (red + 1) / 2) * 0.26 }
+                decal { path XWingStripe  color [0.50, 0.06, 0.04, red >= 2 ? 1 : 0]  planar  min Y 0  max Y 0.1
+                        translate Z 3.50 + (2 - (red + 1) / 2) * 0.26 }
+                decal { path XWingStripe  color [0.50, 0.06, 0.04, red >= 3 ? 1 : 0]  planar  min Y 0  max Y 0.1
+                        translate Z 3.50 + (3 - (red + 1) / 2) * 0.26 }
+                decal { path XWingStripe  color [0.50, 0.06, 0.04, red >= 4 ? 1 : 0]  planar  min Y 0  max Y 0.1
+                        translate Z 3.50 + (4 - (red + 1) / 2) * 0.26 }
+                decal { path XWingStripe  color [0.50, 0.06, 0.04, red >= 5 ? 1 : 0]  planar  min Y 0  max Y 0.1
+                        translate Z 3.50 + (5 - (red + 1) / 2) * 0.26 }
+                decal { path XWingWingGrime1
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y -0.2  max Y 0.2 }
+                decal { path XWingWingGrime2
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y -0.2  max Y 0.2 }
+                decal { path XWingWingGrime3
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y -0.2  max Y 0.2 }
+            }
+        }
+        difference {
+            extrusion {
+                path { move to 0.12, 2.1  line to 0.363, 2.1  line to 0.2, 2.88  line to 0.12, 2.88  close }
+                min Y -0.64  max Y 0
+                rotate Z 90
+            }
+            cube { scale [0.28, 0.25, 0.03]  translate [0.32, 0.4, 2.19] }
+            cube { scale [0.28, 0.25, 0.03]  translate [0.32, 0.4, 2.31] }
+            cube { scale [0.28, 0.25, 0.03]  translate [0.32, 0.4, 2.43] }
+            cube { scale [0.28, 0.25, 0.03]  translate [0.32, 0.4, 2.55] }
+            cube { scale [0.28, 0.25, 0.03]  translate [0.32, 0.4, 2.67] }
+            cube { scale [0.28, 0.25, 0.03]  translate [0.32, 0.4, 2.79] }
+            material XWingGray
+            shear [0, 0.16614, 0, 0, 0, 0]
+            translate X -5.1792
+        }
+        cylinder {
+            min Y 0.8718  max Y 5.8288  material XWingPale
+            scale [0.02, 1, 0.02]  rotate X 90  rotate Y 9.433  translate [-5.1492, -0.07, 0]
+        }
+        object XWingEngine(thrust, weathered, XWingDoors(gear)) { translate [0, 0.7187, 1.6601] }
+        object XWingCannon() { translate [0, 0.3768, 5.6586] }
+        cube { material XWingWhite  scale [0.45, 0.1384, 0.045]  translate [-3.17, 0.1184, 5.6586] }
+        cube { material XWingWhite  scale [0.175, 0.1384, 0.045]  translate [-3.995, 0.1184, 5.6586] }
+        cube { material XWingDark  scale [0.17, 0.05, 0.08]  translate [-4.66, 0.18, 1.94] }
+        object XWingRod(-4.95, -4.50, 0.05) { material XWingDark  translate [0, 0.26, 1.40] }
+        object XWingRod(-4.92, -4.55, 0.045) { material XWingMetal  translate [0, 0.27, 1.90] }
+        if (XWingLegsOut(gear) > 0) {
+            object XWingMainGear(drop, XWingLegsOut(gear)) { rotate X open  translate [-5.43, 1.03, 1.66] }
+        }
+        rotate X -open
+        translate [0, 0.19, -0.238]
+    }
+}
+
+// -- The body --
+//
+// Forward of the wings, the fuselage is lofted through sections measured from the photographs: flat under, and
+// each side two faces meeting at a knee just under the red stripe -- the face the stripe lies on leaning in 20
+// degrees, so that from above the stripe shows as a band a tenth of a meter wide, and the face below it 11
+// degrees, in to the bottom.  Under the canopy the upper face turns in at a chine 0.46 up, where the canopy's
+// lower panel meets it; between the canopy and the nose panel it turns in just above the stripe, to a top
+// narrowing from 0.56 across to 0.36; under the panel it runs straight on to the top.  Flat under at -0.46 aft of
+// X 2.9, the bottom rising to -0.39 at the nose cap's seam, 5.40; the top level at 0.70 under the canopy, falling
+// to 0.345 there.  The cap is a loft of its own, a lip standing proud of the fuselage all round its seam, the knee
+// running on to its blunt tip.
+
+// The proton torpedo launcher's slot, in (X, y): long and low on either lower face, its rounded end aft.
+XWingTorpedoSlot = path {
+    move to 0.96, -0.185  quad 0.98, -0.13 to 1.15, -0.128  line to 2.30, -0.14  quad 2.95, -0.15 to 3.14, -0.235
+    quad 2.95, -0.29 to 2.30, -0.282  line to 1.15, -0.242  quad 0.98, -0.24 to 0.96, -0.185  close
+}
+
+// The rear body's end, in meters, seven-sided as the photograph from behind has it: 1.28 across its top at 0.87,
+// each side two faces meeting 1.74 apart at 0.09, and the bottom two meeting in a keel at -1.09, 1.52 across where
+// they leave the sides at -0.85.  Its end is cut in round a rim 0.18 wide across the top and 0.12 to 0.13
+// elsewhere.
+XWingRearBody = path {
+    move to 0.64, 0.87  line to -0.64, 0.87  line to -0.87, 0.09  line to -0.76, -0.85  line to 0, -1.09
+    line to 0.76, -0.85  line to 0.87, 0.09  close
+}
+XWingRearRecess = path {
+    move to 0.5575, 0.69  line to -0.5575, 0.69  line to -0.7378, 0.0787  line to -0.6394, -0.7622
+    line to 0, -0.9642  line to 0.6394, -0.7622  line to 0.7378, 0.0787  close
+}
+XWingRearPanel = path {
+    move to 0.5052, 0.62  line to -0.5052, 0.62  line to -0.6666, 0.0726  line to -0.5751, -0.7091
+    line to 0, -0.8908  line to 0.5751, -0.7091  line to 0.6666, 0.0726  close
+}
+
+// Two patches of blue-gray paint under the rear body, either side of its keel, in (X, Z), as the photograph from
+// below has them.
+XWingBellyPatches = path {
+    move to -5.13, 0.20  line to -4.11, 0.20  line to -4.11, 0.58  line to -5.13, 0.58  close
+    move to -5.13, -0.58  line to -4.11, -0.58  line to -4.11, -0.20  line to -5.13, -0.20  close
+}
+
+// The fuselage forward of the wings, lofted.
+XWingForeHull = loft {
+    section { path { move to 0.493, 0.7  line to -0.493, 0.7  line to -0.698, 0.46
+                     line to -0.88, -0.04  line to -0.798, -0.46  line to 0.798, -0.46
+                     line to 0.88, -0.04  line to 0.698, 0.46  close }  translate Z -1.1 }
+    section { path { move to 0.442, 0.7  line to -0.442, 0.7  line to -0.608, 0.46
+                     line to -0.79, -0.04  line to -0.708, -0.46  line to 0.708, -0.46
+                     line to 0.79, -0.04  line to 0.608, 0.46  close }  translate Z -0.27 }
+    section { path { move to 0.4, 0.7  line to -0.4, 0.7  line to -0.533, 0.46
+                     line to -0.715, -0.04  line to -0.633, -0.46  line to 0.633, -0.46
+                     line to 0.715, -0.04  line to 0.533, 0.46  close }  translate Z 0.65 }
+    section { path { move to 0.421, 0.7  line to -0.421, 0.7  line to -0.508, 0.46
+                     line to -0.69, -0.04  line to -0.608, -0.46  line to 0.608, -0.46
+                     line to 0.69, -0.04  line to 0.508, 0.46  close }  translate Z 1.15 }
+    section { path { move to 0.28, 0.69  line to -0.28, 0.69  line to -0.525, 0.244
+                     line to -0.63, -0.044  line to -0.549, -0.46  line to 0.549, -0.46
+                     line to 0.63, -0.044  line to 0.525, 0.244  close }  translate Z 1.93 }
+    section { path { move to 0.22, 0.61  line to -0.22, 0.61  line to -0.475, 0.215
+                     line to -0.58, -0.073  line to -0.505, -0.46  line to 0.505, -0.46
+                     line to 0.58, -0.073  line to 0.475, 0.215  close }  translate Z 2.69 }
+    section { path { move to 0.19, 0.585  line to -0.19, 0.585  line to -0.45, 0.206
+                     line to -0.555, -0.082  line to -0.482, -0.46  line to 0.482, -0.46
+                     line to 0.555, -0.082  line to 0.45, 0.206  close }  translate Z 2.95 }
+    section { path { move to 0.18, 0.56  line to -0.18, 0.56  line to -0.44, 0.2
+                     line to -0.545, -0.088  line to -0.474, -0.455  line to 0.474, -0.455
+                     line to 0.545, -0.088  line to 0.44, 0.2  close }  translate Z 3.08 }
+    section { path { move to 0.296, 0.46  line to -0.296, 0.46  line to -0.348, 0.317
+                     line to -0.505, -0.114  line to -0.442, -0.44  line to 0.442, -0.44
+                     line to 0.505, -0.114  line to 0.348, 0.317  close }  translate Z 3.63 }
+    section { path { move to 0.264, 0.4  line to -0.264, 0.4  line to -0.311, 0.271
+                     line to -0.452, -0.116  line to -0.39, -0.435  line to 0.39, -0.435
+                     line to 0.452, -0.116  line to 0.311, 0.271  close }  translate Z 4.36 }
+    section { path { move to 0.265, 0.345  line to -0.265, 0.345  line to -0.306, 0.232
+                     line to -0.43, -0.108  line to -0.369, -0.42  line to 0.369, -0.42
+                     line to 0.43, -0.108  line to 0.306, 0.232  close }  translate Z 5.08 }
+    section { path { move to 0.253, 0.345  line to -0.253, 0.345  line to -0.294, 0.234
+                     line to -0.415, -0.1  line to -0.359, -0.39  line to 0.359, -0.39
+                     line to 0.415, -0.1  line to 0.294, 0.234  close }  translate Z 5.44 }
+    rotate Y 90
+}
+
+primitive XWingFuselage(weathered = 0, doors = 0) -> group {
+    return group {
+        // Forward of the wings, with the cockpit cut in under the canopy, its walls standing on the canopy's
+        // sills, from its tip at 1.45 back to the deck; either torpedo slot sunk into its lower face, their floors
+        // parallel, so that each is deepest at its after end; and the seam at 4.67 where the nose's underside
+        // begins, below the knee.  The cockpit's floor and instrument panel, dark.
+        difference {
+            object XWingForeHull
+            loft {
+                section { path { move to 0.25, 0.1  line to 0.25, 1.3  line to -0.25, 1.3  line to -0.25, 0.1
+                                 close }
+                          translate Z 1.45 }
+                section { path { move to 0.37, 0.1  line to 0.37, 1.3  line to -0.37, 1.3  line to -0.37, 0.1
+                                 close }
+                          translate Z 1.1 }
+                section { path { move to 0.5, 0.1  line to 0.5, 1.3  line to -0.5, 1.3  line to -0.5, 0.1  close }
+                          translate Z 0.75 }
+                section { path { move to 0.545, 0.1  line to 0.545, 1.3  line to -0.545, 1.3  line to -0.545, 0.1
+                                 close }
+                          translate Z 0.1 }
+                section { path { move to 0.56, 0.1  line to 0.56, 1.3  line to -0.56, 1.3  line to -0.56, 0.1
+                                 close }
+                          translate Z -0.7 }
+                section { path { move to 0.56, 0.1  line to 0.56, 1.3  line to -0.56, 1.3  line to -0.56, 0.1
+                                 close }
+                          translate Z -0.72 }
+                straight
+                rotate Y 90
+            }
+            extrusion {
+                path XWingTorpedoSlot  min Y -1.3  max Y -0.50
+                material XWingIntake
+                rotate X -90
+            }
+            extrusion {
+                path XWingTorpedoSlot  min Y -1.3  max Y -0.50
+                material XWingIntake
+                rotate X -90  scale [1, 1, -1]
+            }
+            cube { material XWingHole  scale [0.006, 0.2, 1]  translate [4.67, -0.32, 0] }
+            cube { material XWingHole  scale [0.50, 0.18, 0.18]  translate [3.38, doors > 0 ? -0.43 : -60, 0] }
+            material {
+                pigment [0.80, 0.80, 0.77]  diffuse 0.85  specular 0.12  shininess 25
+                decal { path XWingHullStripe  color XWingRed  planar  min Y 0  max Y 1.2  rotate X 90 }
+                decal { path XWingHullStripe  color XWingRed  planar  min Y 0  max Y 1.2
+                        scale [1, 1, -1]  rotate X -90 }
+                decal { path XWingSideGrime1
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y 0  max Y 1.2
+                        rotate X 90 }
+                decal { path XWingSideGrime2
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y 0  max Y 1.2
+                        rotate X 90 }
+                decal { path XWingSideGrime3
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y 0  max Y 1.2
+                        rotate X 90 }
+                decal { path XWingSideGrime1
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y 0  max Y 1.2
+                        scale [1, 1, -1]  rotate X -90 }
+                decal { path XWingSideGrime2
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y 0  max Y 1.2
+                        scale [1, 1, -1]  rotate X -90 }
+                decal { path XWingSideGrime3
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y 0  max Y 1.2
+                        scale [1, 1, -1]  rotate X -90 }
+                decal { path XWingTopGrime1
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y 0  max Y 1.2 }
+                decal { path XWingTopGrime2
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y 0  max Y 1.2 }
+                decal { path XWingTopGrime3
+                        color [0.30, 0.29, 0.27, weathered * 0.22]  planar  min Y 0  max Y 1.2 }
+            }
+        }
+        cube { material XWingDark  scale [0.925, 0.02, 0.56]  translate [0.225, 0.11, 0] }
+        cube { material XWingDark  scale [0.14, 0.27, 0.4]  translate [0.42, 0.37, 0] }
+
+        // The nose leg's bay, and its doors, each the hull's own bottom over its half, hinged at its outer edge.
+        if (doors > 0) {
+            intersection {
+                object XWingForeHull
+                cube { material XWingGray  scale [0.50, 0.10, 0.09]  translate [3.38, -0.52, 0.09] }
+                material XWingWhite
+                translate [0, 0.45, -0.18]  rotate X -doors  translate [0, -0.45, 0.18]
+            }
+            intersection {
+                object XWingForeHull
+                cube { material XWingGray  scale [0.50, 0.10, 0.09]  translate [3.38, -0.52, -0.09] }
+                material XWingWhite
+                translate [0, 0.45, 0.18]  rotate X doors  translate [0, -0.45, -0.18]
+            }
+        }
+
+        // Behind the canopy's post, the deck it closes down onto: rising from the sills under the rear panes to
+        // the rear window's foot, 0.92 up at -1.25, and running on, 0.90, to the rear body, its sides the canopy's
+        // own sides carried down.  Under the rear window it lies well below the glass.
+        loft {
+            section { path { move to 0.53, 0.12  line to 0.5857, 0.6121  line to 0.58, 0.6227
+                             line to -0.58, 0.6227  line to -0.5857, 0.6121  line to -0.53, 0.12  close }
+                      translate Z -0.7 }
+            section { path { move to 0.5, 0.12  line to 0.5656, 0.663  line to 0.5087, 0.7687
+                             line to -0.5087, 0.7687  line to -0.5656, 0.663  line to -0.5, 0.12  close }
+                      translate Z -0.97 }
+            section { path { move to 0.5, 0.12  line to 0.5012, 0.7967  line to 0.4348, 0.92
+                             line to -0.4348, 0.92  line to -0.5012, 0.7967  line to -0.5, 0.12  close }
+                      translate Z -1.25 }
+            section { path { move to 0.55, 0.12  line to 0.66, 0.763  line to 0.42, 0.9  line to -0.42, 0.9
+                             line to -0.66, 0.763  line to -0.55, 0.12  close }
+                      translate Z -1.8 }
+            straight
+            material XWingWhite
+            rotate Y 90
+        }
+
+        // The nose cap, standing 3 cm proud of the fuselage and its panel all round at its seam, 5.40, and the
+        // sensor window, a recess in its top whose floor lies level, so that it is deepest at its after end.
+        difference {
+            loft {
+                section { path { move to 0.34, 0.385  line to -0.34, 0.385  line to -0.385, 0.065
+                                 line to -0.445, -0.1  line to -0.385, -0.41  line to 0.385, -0.41
+                                 line to 0.445, -0.1  line to 0.385, 0.065  close }  translate Z 5.4 }
+                section { path { move to 0.226, 0.3  line to -0.226, 0.3  line to -0.262, 0.201
+                                 line to -0.37, -0.095  line to -0.298, -0.365  line to 0.298, -0.365
+                                 line to 0.37, -0.095  line to 0.262, 0.201  close }  translate Z 5.79 }
+                section { path { move to 0.207, 0.21  line to -0.207, 0.21  line to -0.235, 0.132
+                                 line to -0.32, -0.1  line to -0.261, -0.32  line to 0.261, -0.32
+                                 line to 0.32, -0.1  line to 0.235, 0.132  close }  translate Z 6.14 }
+                section { path { move to 0.199, 0.05  line to -0.199, 0.05  line to -0.213, 0.011
+                                 line to -0.255, -0.105  line to -0.215, -0.255  line to 0.215, -0.255
+                                 line to 0.255, -0.105  line to 0.213, 0.011  close }  translate Z 6.49 }
+                section { path { move to 0.185, -0.07  line to -0.185, -0.07  line to -0.189, -0.08
+                                 line to -0.2, -0.11  line to -0.181, -0.18  line to 0.181, -0.18
+                                 line to 0.2, -0.11  line to 0.189, -0.08  close }  translate Z 6.7 }
+                section { path { move to 0.126, -0.105  line to -0.126, -0.105  line to -0.127, -0.107
+                                 line to -0.13, -0.115  line to -0.126, -0.13  line to 0.126, -0.13
+                                 line to 0.13, -0.115  line to 0.127, -0.107  close }  translate Z 6.75 }
+                rotate Y 90
+            }
+            cube { material { pigment [0.66, 0.64, 0.58]  diffuse 0.85  specular 0.1 }
+                   scale [0.30, 0.125, 0.09]  translate [5.80, 0.33, 0] }
+            material XWingPale
+        }
+
+        // The raised panel along the nose's top, from 3.15 into the cap: 0.62 across, a centimeter over the
+        // fuselage's top, its sides steep down onto the fuselage's faces; its back corners bevelled out from 0.34
+        // across at 3.15 to its full width at 3.30, over the narrower top behind it.
+        loft {
+            section { path { move to 0.17, 0.557  line to -0.17, 0.557  line to -0.174, 0.532
+                             line to -0.074, 0.532  line to 0.074, 0.532  line to 0.174, 0.532  close }
+                      translate Z 3.15 }
+            section { path { move to 0.31, 0.53  line to -0.31, 0.53  line to -0.337, 0.338
+                             line to -0.237, 0.338  line to 0.237, 0.338  line to 0.337, 0.338  close }
+                      translate Z 3.3 }
+            section { path { move to 0.31, 0.47  line to -0.31, 0.47  line to -0.323, 0.379
+                             line to -0.223, 0.379  line to 0.223, 0.379  line to 0.323, 0.379  close }
+                      translate Z 3.63 }
+            section { path { move to 0.31, 0.41  line to -0.31, 0.41  line to -0.343, 0.176
+                             line to -0.243, 0.176  line to 0.243, 0.176  line to 0.343, 0.176  close }
+                      translate Z 4.36 }
+            section { path { move to 0.31, 0.355  line to -0.31, 0.355  line to -0.342, 0.126
+                             line to -0.242, 0.126  line to 0.242, 0.126  line to 0.342, 0.126  close }
+                      translate Z 5.08 }
+            section { path { move to 0.31, 0.355  line to -0.31, 0.355  line to -0.349, 0.074
+                             line to -0.249, 0.074  line to 0.249, 0.074  line to 0.349, 0.074  close }
+                      translate Z 5.42 }
+            straight
+            material XWingWhite
+            rotate Y 90
+        }
+
+        // The rear body, a seven-sided box from its end at -5.47 to -1.80, its end cut 0.34 deep inside its rim;
+        // down its back a channel of machinery 0.72 across and 8 cm deep, and in either flank between the wing
+        // roots a dark bay, the S-foils' works, its floor 0.72 out; under it, aft, a blue-gray patch either side
+        // of the keel.  Its flank is eased into the fuselage by -1.10.
+        difference {
+            loft {
+                section { path XWingRearBody  translate Z -5.47 }
+                section { path XWingRearBody  translate Z -1.80 }
+                straight
+                rotate Y 90
+            }
+            loft {
+                section { path XWingRearRecess  translate Z -5.57 }
+                section { path XWingRearRecess  translate Z -5.13 }
+                straight
+                material XWingHole
+                rotate Y 90
+            }
+            cube { material XWingDark  scale [1.515, 0.1, 0.36]  translate [-3.585, 0.89, 0] }
+            cube { material XWingDark  scale [1.31, 0.55, 0.25]  translate [-3.77, 0, 0.97] }
+            cube { material XWingDark  scale [1.31, 0.55, 0.25]  translate [-3.77, 0, -0.97] }
+            material {
+                pigment [0.70, 0.71, 0.70]  diffuse 0.85  specular 0.12  shininess 25
+                decal { path XWingBellyPatches  color [0.56, 0.59, 0.61]  planar  min Y -1.2  max Y -0.75 }
+            }
+        }
+        loft {
+            section { path XWingRearBody  translate Z -1.80 }
+            section { path { move to 0.493, 0.7  line to -0.493, 0.7  line to -0.698, 0.46
+                             line to -0.88, -0.04  line to -0.798, -0.46  line to 0.798, -0.46
+                             line to 0.88, -0.04  line to 0.698, 0.46  close }  translate Z -1.1 }
+            material XWingPale
+            rotate Y 90
+        }
+
+        // In the channel down its back, from aft: a ribbed block, a box, a wheel 0.68 across, a few small fittings
+        // and a round one, and the socket the astromech stands in, as the photograph from above has them.
+        cube { material XWingGray  scale [0.23, 0.035, 0.30]  translate [-4.85, 0.825, 0] }
+        for rib in [0, 5] {
+            cube { material XWingMetal  scale [0.012, 0.02, 0.30]  translate [-5.04 + rib * 0.08, 0.875, 0] }
+        }
+        cube { material XWingGray  scale [0.32, 0.04, 0.27]  translate [-4.26, 0.83, 0] }
+        cube { material XWingMetal  scale [0.12, 0.015, 0.10]  translate [-4.35, 0.885, 0.08] }
+        object XWingRod(-4.50, -4.02, 0.03) { material XWingDark  translate [0, 0.90, -0.12] }
+        cylinder { min Y 0.79  max Y 0.84  material XWingMetal  scale [0.34, 1, 0.34]  translate X -3.32 }
+        torus { radii 0.32, 0.025  material XWingGray  translate [-3.32, 0.845, 0] }
+        cylinder { min Y 0.79  max Y 0.885  material XWingGray  scale [0.09, 1, 0.09]  translate X -3.32 }
+        for spoke in [0, 5] {
+            cube { material XWingGray  scale [0.13, 0.015, 0.02]  translate [0.20, 0.85, 0]  rotate Y spoke * 60
+                   translate X -3.32 }
+        }
+        cube { material XWingGray  scale [0.07, 0.035, 0.12]  translate [-2.88, 0.825, 0.12] }
+        object XWingRod(-2.80, -2.62, 0.05) { material XWingMetal  translate [0, 0.84, -0.12] }
+        cylinder { min Y 0.79  max Y 0.87  material XWingGray  scale [0.20, 1, 0.20]  translate X -2.41 }
+        cylinder { min Y 0.87  max Y 0.89  material XWingMetal  scale [0.12, 1, 0.12]  translate X -2.41 }
+        cylinder { min Y 0.80  max Y 0.91  material XWingDark  scale [0.255, 1, 0.255]  translate X -1.815 }
+
+        // In either flank's bay, pipes along it and the S-foil actuator, its piston forward.
+        for side in [-1, 1] by 2 {
+            object XWingRod(-5.00, -2.55, 0.035) { material XWingMetal  translate [0, 0.26, 0.76 * side] }
+            object XWingRod(-4.90, -2.70, 0.025) { material XWingGray  translate [0, 0.12, 0.75 * side] }
+            object XWingRod(-4.90, -2.70, 0.025) { material XWingGray  translate [0, -0.28, 0.75 * side] }
+            object XWingRod(-4.95, -3.65, 0.07) { material XWingMetal  translate [0, -0.08, 0.79 * side] }
+            object XWingRod(-3.65, -2.90, 0.035) { material XWingBare  translate [0, -0.08, 0.79 * side] }
+            cube { material XWingGray  scale [0.12, 0.06, 0.03]  translate [-3.10, 0.20, 0.75 * side] }
+            cube { material XWingGray  scale [0.08, 0.05, 0.03]  translate [-4.40, -0.20, 0.75 * side] }
+        }
+
+        // Set back in its end, the machinery: a panel 0.17 inside the rim with a gap round it 7 cm wide and as
+        // deep again, and on it the shield generator's drum and ring, pipes up either side, and two rows of
+        // fittings below, so that it lies in shadow round its edges.
+        loft {
+            section { path XWingRearPanel  translate Z -5.30 }
+            section { path XWingRearPanel  translate Z -5.16 }
+            straight
+            material XWingGray
+            rotate Y 90
+        }
+        object XWingRod(-5.34, -5.16, 0.50) { material XWingGray  translate Y 0.115 }
+        torus { radii 0.46, 0.045  material XWingGray  rotate Z 90  translate [-5.345, 0.115, 0] }
+        disc { center [-5.342, 0.115, 0]  normal [-1, 0, 0]  radius 0.42  material XWingIntake }
+        cube { material XWingGray  scale [0.01, 0.05, 0.38]  rotate X 45  translate [-5.348, 0.115, 0] }
+        object XWingRod(-5.374, -5.34, 0.075) { material XWingMetal  translate [0, 0.115, -0.26] }
+        object XWingRod(-5.374, -5.34, 0.075) { material XWingMetal  translate [0, 0.115, 0] }
+        object XWingRod(-5.374, -5.34, 0.075) { material XWingMetal  translate [0, 0.115, 0.26] }
+        for side in [-1, 1] by 2 {
+            cylinder { min Y -0.35  max Y 0.45  material XWingMetal  scale [0.05, 1, 0.05]
+                       translate [-5.328, 0, 0.55 * side] }
+            cylinder { min Y -0.25  max Y 0.40  material XWingGray  scale [0.035, 1, 0.035]
+                       translate [-5.26, 0, 0.635 * side] }
+            cube { material XWingDark  scale [0.06, 0.12, 0.05]  translate [-5.317, 0.28, 0.55 * side] }
+            cube {
+                material { pigment [0.36, 0.20, 0.11]  diffuse 0.8  specular 0.1 }
+                scale [0.06, 0.07, 0.08]  translate [-5.306, -0.45, 0.50 * side]
+            }
+        }
+        for knob in [0, 5] {
+            object XWingRod(-5.385 + 0.023 * (knob % 2), -5.13, 0.075) {
+                material XWingMetal  translate [0, -0.57, -0.40 + knob * 0.16]
+            }
+        }
+        for knob in [0, 6] {
+            object XWingRod(-5.351, -5.13, 0.05) {
+                material XWingGray  translate [0, -0.78, -0.33 + knob * 0.11]
+            }
+        }
+    }
+}
+
+// The canopy, its sills on the fuselage's chamfer 0.58 out.  Behind the post (foot -0.70, head -0.52) a solid top
+// lies level at 1.045 back to its trailing edge, -0.97, from which the rear window slopes down to the deck at the
+// hinge, -1.25, with a rear pane either side whose foot runs from the post's up over the deck.  Forward of the
+// post's head the top is one plane falling to the hull's own top at the tip, 1.45: glass to 1.10, ahead of it the
+// nose, solid and lying in the canopy's own surface so that it runs into the hull; either side of the glass a
+// three-cornered window, the post, the top's edge and a straight lower edge both running to the top window's
+// leading corner, above a solid panel down to the sill.  Every window is flat, its frame one plate following its
+// outline, so frames meet one another and the solid parts flush.  Hinged at the rear window's foot and swung
+// `open` degrees up.  Its glass casts no shadow, so the cockpit under it is lit; its frame is the model's
+// blue-gray.
+primitive XWingCanopy(open) -> group {
+    return group {
+        // the port side window: its lower edge, the top's edge and the post
+        group {
+            extrusion {
+                path { move to 0, 0  line to 1.8299, 0  line to 0.2465, 0.4514  close  move to 0.0731, 0.04
+                       line to 1.5801, 0.04  line to 0.2761, 0.4117  close }
+                min Y -0.012  max Y 0
+                material XWingFrame
+            }
+            group {
+                triangle { points [0.0366, -0.014, 0.02], [1.705, -0.014, 0.02], [0.2613, -0.014, 0.4315] }
+                material XWingGlass
+                no shadow
+            }
+            matrix [0.983663, 0.115047, -0.138464, -0.7,
+                    0.074366, 0.440769, 0.894535, 0.622709,
+                    -0.163944, 0.890217, -0.425012, 0.58,
+                    0, 0, 0, 1]
+        }
+        // the starboard side window: its lower edge, the top's edge and the post
+        group {
+            extrusion {
+                path { move to 0, 0  line to 1.8299, 0  line to 0.2465, 0.4514  close  move to 0.0731, 0.04
+                       line to 1.5801, 0.04  line to 0.2761, 0.4117  close }
+                min Y -0.012  max Y 0
+                material XWingFrame
+            }
+            group {
+                triangle { points [0.0366, -0.014, 0.02], [1.705, -0.014, 0.02], [0.2613, -0.014, 0.4315] }
+                material XWingGlass
+                no shadow
+            }
+            matrix [0.983663, 0.115047, -0.138464, -0.7,
+                    0.074366, 0.440769, 0.894535, 0.622709,
+                    0.163944, -0.890217, 0.425012, -0.58,
+                    0, 0, 0, 1]
+        }
+        // the top window, from the post's head to the nose
+        group {
+            extrusion {
+                path { move to 0, 0  line to 1.6464, 0  line to 1.6695, 0.5595  line to 0.0286, 0.6949  close
+                       move to 0.0313, 0.03  line to 1.6177, 0.03  line to 1.6383, 0.532
+                       line to 0.0573, 0.6624  close }
+                min Y -0.012  max Y 0
+                material XWingFrame
+            }
+            group {
+                triangle { points [0.0156, -0.014, 0.015], [1.6321, -0.014, 0.015], [1.6539, -0.014, 0.5458] }
+                triangle { points [0.0156, -0.014, 0.015], [1.6539, -0.014, 0.5458], [0.043, -0.014, 0.6787] }
+                material XWingGlass
+                no shadow
+            }
+            matrix [0.983936, 0.173859, -0.040523, -0.52,
+                    -0.173712, 0.98477, 0.007154, 1.0448,
+                    -0.041149, 0, -0.999153, 0.34775,
+                    0, 0, 0, 1]
+        }
+        // the port rear pane: the post, the solid top's side, the rear window's side and its foot on the deck
+        group {
+            extrusion {
+                path { move to 0, 0  line to 0.5143, 0  line to 0.3513, 0.4196  line to 0.117, 0.6311  close
+                       move to 0.049, 0.045  line to 0.4646, 0.045  line to 0.3259, 0.4021
+                       line to 0.1455, 0.565  close }
+                min Y -0.012  max Y 0
+                material XWingFrame
+            }
+            group {
+                triangle { points [0.0245, -0.014, 0.0225], [0.4895, -0.014, 0.0225], [0.3386, -0.014, 0.4109] }
+                triangle { points [0.0245, -0.014, 0.0225], [0.3386, -0.014, 0.4109], [0.1313, -0.014, 0.598] }
+                material XWingGlass
+                no shadow
+            }
+            matrix [0.349993, 0.02396, -0.936446, -0.7,
+                    0.820715, 0.474077, 0.318869, 0.622709,
+                    -0.451588, 0.880157, -0.146259, 0.58,
+                    0, 0, 0, 1]
+        }
+        // the starboard rear pane: the post, the solid top's side, the rear window's side and its foot on the deck
+        group {
+            extrusion {
+                path { move to 0, 0  line to 0.5143, 0  line to 0.3513, 0.4196  line to 0.117, 0.6311  close
+                       move to 0.049, 0.045  line to 0.4646, 0.045  line to 0.3259, 0.4021
+                       line to 0.1455, 0.565  close }
+                min Y -0.012  max Y 0
+                material XWingFrame
+            }
+            group {
+                triangle { points [0.0245, -0.014, 0.0225], [0.4895, -0.014, 0.0225], [0.3386, -0.014, 0.4109] }
+                triangle { points [0.0245, -0.014, 0.0225], [0.3386, -0.014, 0.4109], [0.1313, -0.014, 0.598] }
+                material XWingGlass
+                no shadow
+            }
+            matrix [0.349993, 0.02396, -0.936446, -0.7,
+                    0.820715, 0.474077, 0.318869, 0.622709,
+                    0.451588, -0.880157, 0.146259, -0.58,
+                    0, 0, 0, 1]
+        }
+        // the rear window, from the solid top's trailing edge down to the deck
+        group {
+            extrusion {
+                path { move to 0, 0  line to 0.3156, 0  line to 0.1093, 0.8449  line to -0.1708, 0.6995  close
+                       move to 0.0236, 0.03  line to 0.2671, 0.03  line to 0.0801, 0.7959
+                       line to -0.136, 0.6837  close }
+                min Y -0.012  max Y 0
+                material XWingFrame
+            }
+            group {
+                triangle { points [0.0118, -0.014, 0.015], [0.2913, -0.014, 0.015], [0.0947, -0.014, 0.8204] }
+                triangle { points [0.0118, -0.014, 0.015], [0.0947, -0.014, 0.8204], [-0.1534, -0.014, 0.6916] }
+                material XWingGlass
+                no shadow
+            }
+            matrix [-0.887319, -0.407107, -0.216633, -0.97,
+                    -0.395491, 0.913381, -0.096556, 1.0448,
+                    0.237177, 0, -0.971466, 0.36,
+                    0, 0, 0, 1]
+        }
+        // the solid top, level
+        group {
+            extrusion {
+                path { move to 0, 0  line to 0.4502, 0  line to 0.4306, 0.7197  line to -0.0189, 0.6952  close }
+                min Y -0.012  max Y 0
+                material XWingFrame
+            }
+            matrix [-0.99963, 0, -0.027212, -0.52,
+                    0, 1, 0, 1.0448,
+                    0.027212, 0, -0.99963, 0.34775,
+                    0, 0, 0, 1]
+        }
+        // Below each side window, solid, from the hull up to the window's lower edge; and ahead
+        // of the windows the nose, its sides and top, lying in the canopy's own surface and running into the
+        // hull.
+        loft {
+            section { path { move to 0.5865, 0.535  line to 0.5858, 0.5823
+                             line to 0.5798, 0.6223  line to 0.5783, 0.6235 }
+                      translate Z -0.69 }
+            section { path { move to 0.583, 0.52  line to 0.5826, 0.5754
+                             line to 0.5766, 0.6154  line to 0.55, 0.6363 }
+                      translate Z -0.52 }
+            section { path { move to 0.5715, 0.458  line to 0.571, 0.5501
+                             line to 0.565, 0.5901  line to 0.4467, 0.6832 }
+                      translate Z 0.1 }
+            section { path { move to 0.5265, 0.452  line to 0.526, 0.5527
+                             line to 0.52, 0.5927  line to 0.3383, 0.7323 }
+                      translate Z 0.75 }
+            section { path { move to 0.396, 0.62  line to 0.396, 0.6574
+                             line to 0.39, 0.6974  line to 0.28, 0.7588 }
+                      translate Z 1.1 }
+            straight
+            open
+            material XWingFrame
+            rotate Y 90
+        }
+        loft {
+            section { path { move to -0.5865, 0.535  line to -0.5858, 0.5823
+                             line to -0.5798, 0.6223  line to -0.5783, 0.6235 }
+                      translate Z -0.69 }
+            section { path { move to -0.583, 0.52  line to -0.5826, 0.5754
+                             line to -0.5766, 0.6154  line to -0.55, 0.6363 }
+                      translate Z -0.52 }
+            section { path { move to -0.5715, 0.458  line to -0.571, 0.5501
+                             line to -0.565, 0.5901  line to -0.4467, 0.6832 }
+                      translate Z 0.1 }
+            section { path { move to -0.5265, 0.452  line to -0.526, 0.5527
+                             line to -0.52, 0.5927  line to -0.3383, 0.7323 }
+                      translate Z 0.75 }
+            section { path { move to -0.396, 0.62  line to -0.396, 0.6574
+                             line to -0.39, 0.6974  line to -0.28, 0.7588 }
+                      translate Z 1.1 }
+            straight
+            open
+            material XWingFrame
+            rotate Y 90
+        }
+        loft {
+            section { path { move to 0.396, 0.6574  line to 0.39, 0.6974  line to 0.28, 0.7588 }
+                      translate Z 1.1 }
+            section { path { move to 0.276, 0.657  line to 0.27, 0.697  line to 0.2654, 0.697 }
+                      translate Z 1.45 }
+            straight
+            open
+            material XWingFrame
+            rotate Y 90
+        }
+        loft {
+            section { path { move to -0.396, 0.6574  line to -0.39, 0.6974  line to -0.28, 0.7588 }
+                      translate Z 1.1 }
+            section { path { move to -0.276, 0.657  line to -0.27, 0.697  line to -0.2654, 0.697 }
+                      translate Z 1.45 }
+            straight
+            open
+            material XWingFrame
+            rotate Y 90
+        }
+        loft {
+            section { path { move to 0.28, 0.7588  line to -0.28, 0.7588 }
+                      translate Z 1.1 }
+            section { path { move to 0.2654, 0.697  line to -0.2654, 0.697 }
+                      translate Z 1.45 }
+            straight
+            open
+            material XWingFrame
+            rotate Y 90
+        }
+        translate [1.25, -0.92, 0]
+        rotate Z open
+        translate [-1.25, 0.92, 0]
+    }
+}
+
+// The pilot in his seat: helmet and visor, shoulders, chest and his arms reaching forward to the controls, his
+// helmet under the top's window.
+primitive XWingPilot() -> group {
+    return group {
+        sphere { material XWingHelmet  scale [0.135, 0.14, 0.125]  translate [-0.30, 0.78, 0] }
+        sphere { material XWingVisor  scale [0.06, 0.05, 0.10]  translate [-0.19, 0.76, 0] }
+        cylinder { min Y 0  max Y 0.12  material XWingDark  scale 0.07  translate [-0.32, 0.60, 0] }
+        cube { material XWingSuit  scale [0.15, 0.24, 0.21]  translate [-0.35, 0.38, 0] }
+        sphere { material XWingSuit  scale [0.13, 0.09, 0.26]  translate [-0.35, 0.60, 0] }
+        tube {
+            discontinuous
+            radius 0.06 at [-0.30, 0.58, 0.22]  radius 0.055 at [-0.08, 0.42, 0.20]
+            radius 0.05 at [0.17, 0.42, 0.10]
+            material XWingSuit
+        }
+        tube {
+            discontinuous
+            radius 0.06 at [-0.30, 0.58, -0.22]  radius 0.055 at [-0.08, 0.42, -0.20]
+            radius 0.05 at [0.17, 0.42, -0.10]
+            material XWingSuit
+        }
+        cube { material XWingDark  scale [0.03, 0.34, 0.3]  translate [-0.56, 0.46, 0] }
+    }
+}
+
+// -- The fighter --
+//
+// `foils` is how far the S-foils are open: nought folds them flat, one locks them in attack position.  `gear` is
+// how far the landing gear is down, nought to one, its doors opening over the first third and its legs dropping
+// after; down, the ship stands on y = -2.05.  `canopy` is how far the canopy is open, its front swinging up about
+// its back to forty degrees.  `weathered` is how long it has flown, from nought, factory clean, to one: grime in
+// its seams and round its fittings, the paint worn through to the metal on its edges, and streaks of dirt run aft
+// over its wings and fuselage.  `red` is its number in Red Squadron, one to five, and so how many stripes its
+// wings carry.  `thrust` lights its engines, nought to one.
+primitive XWing(foils = 1, gear = 0, canopy = 0, weathered = 0, red = 5, thrust = 0) -> group {
+    open = foils * XWingAttack
+    return group {
+        object XWingFuselage(weathered, XWingDoors(gear))
+        object XWingPilot()
+        object XWingCanopy(canopy * 40)
+        object R2Dome { translate Y -R2DomeMiddle  scale 0.0254  rotate Y -90  translate [-1.815, 0.95, 0] }
+        object XWingWing(open, 0, red, weathered, thrust)
+        object XWingWing(open, gear, red, weathered, thrust) { scale [1, -1, 1] }
+        object XWingWing(open, 0, red, weathered, thrust) { scale [1, 1, -1] }
+        object XWingWing(open, gear, red, weathered, thrust) { scale [1, -1, -1] }
+        if (XWingLegsOut(gear) > 0) {
+            object XWingNoseGear((XWingGround - 0.55) / cos(6 degrees) + 0.09, XWingLegsOut(gear)) {
+                rotate Z -6
+                translate [3.3, -0.46, 0]
+            }
+        }
+        weather {
+            grime weathered  color [0.22, 0.21, 0.20]
+            wear weathered * 0.35 to XWingBare
+            radius 0.2
         }
     }
 }

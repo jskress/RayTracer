@@ -1828,6 +1828,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/showcase/the-tower-that-turns.igl">The Tower That Turns</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/showcase/the-trench-run.png">
+      <img alt="The Trench Run" height="120" src="Local/showcase/the-trench-run.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/showcase/the-trench-run.igl">The Trench Run</a>
+    </td>
+  </tr>
 </table>
 
 </details>
