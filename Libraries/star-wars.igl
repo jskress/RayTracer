@@ -1,16 +1,21 @@
-// Star Wars: R2-D2, built part by part from published measurements and the plans that agree with them, and Luke's
-// X-wing, Red Five, measured from photographs of the studio model (its own section, below, says how).
+// Star Wars: R2-D2, built part by part from published measurements and the plans that agree with them; Luke's
+// X-wing, Red Five, measured from photographs of the studio model; and the Empire's TIE fighter and Darth Vader's
+// TIE Advanced, from the studio models' measures and photographs (their own sections, below, say how).
 //
-//     import 'star-wars' { R2D2, XWing }
+//     import 'star-wars' { R2D2, XWing, TIEFighter, TIEAdvanced }
 //
 //     object R2D2()             // standing on his two outer legs
 //     object R2D2(3, 40)        // on three, as he rolls, his dome turned 40 degrees to his right
 //     object R2D2(2, 0, 0.6)    // after a few days in the desert
 //     object XWing()            // Red Five, its S-foils locked in attack position
 //     object XWing(0, 1, 1)     // folded, standing on its gear, the canopy up
+//     object TIEFighter(1)      // a TIE fighter, its engines lit
+//     object TIEAdvanced(1)     // Vader's, likewise
 //
 // | `R2D2` | The astromech droid: dome, body, the two outer legs and the center leg and foot. |
 // | `XWing` | Red Five, the T-65B X-wing of A New Hope, in meters, R2-D2 in its socket, a pilot under its glass. |
+// | `TIEFighter` | The Empire's TIE/ln of A New Hope, in meters, a pilot in its ball. |
+// | `TIEAdvanced` | Darth Vader's TIE Advanced x1 of A New Hope, in meters. |
 //
 // **`legs` is two or three.**  On two he stands upright with his center foot tucked up under him; on
 // three his body tips back eighteen degrees about his shoulders -- the angle builders set, there being no
@@ -3283,6 +3288,1402 @@ primitive XWing(foils = 1, gear = 0, canopy = 0, weathered = 0, red = 5, thrust 
             grime weathered  color [0.22, 0.21, 0.20]
             wear weathered * 0.35 to XWingBare
             radius 0.2
+        }
+    }
+}
+
+// -- The TIE fighter ------------------------------------------------------------------------------------
+//
+// The Empire's TIE/ln as it flew in A New Hope.  **It is written in meters**, as the X-wing is: its wings 8.99 m
+// tall, the length StarWars.com gives it, which is the studio model's 48 cm at about 1:18.7.  **+X is its front,
+// +Y up and +Z its port side**; the origin is the middle of the cockpit ball, which the pylons and the wings' hubs
+// lie level with.
+//
+// Where the shape comes from: the studio model's own measures, 36 x 38 x 48 cm across, long and tall (Vaz and
+// Hata, From Star Wars to Indiana Jones, 1994), which eFX's replica, scanned from a Lucasfilm Archives model,
+// repeats to within a few percent; the ILM photograph of a wing square on, which gives the hexagon, its hub and
+// its spars; the replica photographed from in front, behind and three-quarters, which gives the ball against the
+// wings and the pylons' profile; and archive models photographed at exhibitions, which give the window's frame,
+// the chin guns' muzzles and the solar panels' lines.  None of these is reproduced here.
+
+TIEGray = material { pigment [0.60, 0.63, 0.66]  diffuse 0.85  specular 0.12  shininess 25 }
+TIEFrame = material { pigment [0.21, 0.19, 0.17]  diffuse 0.8  specular 0.25  shininess 40 }
+TIEHole = material { pigment [0.025, 0.025, 0.03]  diffuse 0.6  specular 0.05 }
+TIECockpit = material { pigment [0.09, 0.09, 0.10]  diffuse 0.8  specular 0.1 }
+TIEGlass = material {
+    pigment [0.02, 0.025, 0.03]
+    transparency 0.7
+    reflective 0.08
+    fresnel
+    specular 0.9
+    shininess 300
+}
+
+TIERadius = 1.17
+TIEWingAt = 3.10
+
+// -- The ball --
+//
+// The cockpit ball, 2.34 m across, hollow, the pilot at its middle.  In front, cut flat 0.93 ahead of its middle,
+// the window: a ring 0.71 in radius and 0.09 wide standing proud, round a recess open on the cockpit, framed by an
+// octagon half the ring's size, a corner at its top, and eight spokes from its corners to the ring; either side of
+// it an H-shaped plate.  Behind, cut flat 0.97 back, a boss 0.38 in radius round a hexagonal port 0.26 to its
+// corners, its flat sides top and bottom, ringed by raised tiles.  On top, cut flat 1.0 up, the hatch, a shallow
+// dome 0.6 in radius in a raised collar, four slots running fore and aft through it either side of a broad middle
+// bar; `hatch` swings it up about its back edge.  Underneath, cut flat 1.09 down, a round hatch 0.42 in
+// radius.  Under the window, the chin guns' two muzzles, 0.4 either side and 0.85 down.  The seams between its
+// panels are fine dark lines laid on it.
+TIEWindowAt = 0.93
+TIEHatchAt = 1.0045
+
+// A bar of the window's frame in the window's plane, `along` long and `wide` across, its middle `out` from the
+// window's middle straight up, turned `angle` about the ball's axis toward its port side.
+primitive TIEWindowBar(angle, out, along, wide) -> cube {
+    return cube {
+        scale [0.025, along / 2, wide / 2]
+        translate [TIEWindowAt - 0.005, out, 0]
+        rotate X angle
+    }
+}
+
+primitive TIEWindow() -> group {
+    return group {
+        lathe {
+            path {
+                move to 0.62, -0.12  line to 0.715, -0.12  line to 0.715, 0.03  quad 0.715, 0.065 to 0.68, 0.065
+                line to 0.645, 0.065  quad 0.62, 0.065 to 0.62, 0.04  close
+            }
+            rotate Z -90
+            translate X TIEWindowAt
+        }
+        for k in [0, 7] {
+            object TIEWindowBar(k * 45, 0.4675, 0.315, 0.036)
+            cube {
+                scale [0.025, 0.018, 0.135]
+                translate [TIEWindowAt - 0.005, 0.2864, 0]
+                rotate X 22.5 + k * 45
+            }
+        }
+        material TIEFrame
+    }
+}
+
+// The rear port, a hexagon 0.26 to its corners, its flat sides top and bottom, in the ball's Y/Z.
+TIERearPort = path {
+    move to 0.26, 0  line to 0.13, 0.2252  line to -0.13, 0.2252  line to -0.26, 0  line to -0.13, -0.2252
+    line to 0.13, -0.2252  close
+}
+
+// The seams between the ball's panels, laid on it as fine dark lines: in front, a ring round the window and four
+// seams running out from it on the diagonals; behind, a ring round the collar and the diagonals; on top, a ring
+// round the hatch's collar and four seams from it fore, aft and to either side.  Each in the plane it is laid
+// from.
+TIESeamsFront = path {
+    move to 0.9370, 0.0000  line to 0.9290, 0.1223  line to 0.9051, 0.2425  line to 0.8657, 0.3586
+    line to 0.8115, 0.4685  line to 0.7434, 0.5704  line to 0.6626, 0.6626  line to 0.5704, 0.7434
+    line to 0.4685, 0.8115  line to 0.3586, 0.8657  line to 0.2425, 0.9051  line to 0.1223, 0.9290
+    line to 0.0000, 0.9370  line to -0.1223, 0.9290  line to -0.2425, 0.9051  line to -0.3586, 0.8657
+    line to -0.4685, 0.8115  line to -0.5704, 0.7434  line to -0.6626, 0.6626  line to -0.7434, 0.5704
+    line to -0.8115, 0.4685  line to -0.8657, 0.3586  line to -0.9051, 0.2425  line to -0.9290, 0.1223
+    line to -0.9370, 0.0000  line to -0.9290, -0.1223  line to -0.9051, -0.2425  line to -0.8657, -0.3586
+    line to -0.8115, -0.4685  line to -0.7434, -0.5704  line to -0.6626, -0.6626  line to -0.5704, -0.7434
+    line to -0.4685, -0.8115  line to -0.3586, -0.8657  line to -0.2425, -0.9051  line to -0.1223, -0.9290
+    line to -0.0000, -0.9370  line to 0.1223, -0.9290  line to 0.2425, -0.9051  line to 0.3586, -0.8657
+    line to 0.4685, -0.8115  line to 0.5704, -0.7434  line to 0.6626, -0.6626  line to 0.7434, -0.5704
+    line to 0.8115, -0.4685  line to 0.8657, -0.3586  line to 0.9051, -0.2425  line to 0.9290, -0.1223  close
+    move to 0.9230, 0.0000  line to 0.9151, 0.1205  line to 0.8915, 0.2389  line to 0.8527, 0.3532
+    line to 0.7993, 0.4615  line to 0.7323, 0.5619  line to 0.6527, 0.6527  line to 0.5619, 0.7323
+    line to 0.4615, 0.7993  line to 0.3532, 0.8527  line to 0.2389, 0.8915  line to 0.1205, 0.9151
+    line to 0.0000, 0.9230  line to -0.1205, 0.9151  line to -0.2389, 0.8915  line to -0.3532, 0.8527
+    line to -0.4615, 0.7993  line to -0.5619, 0.7323  line to -0.6527, 0.6527  line to -0.7323, 0.5619
+    line to -0.7993, 0.4615  line to -0.8527, 0.3532  line to -0.8915, 0.2389  line to -0.9151, 0.1205
+    line to -0.9230, 0.0000  line to -0.9151, -0.1205  line to -0.8915, -0.2389  line to -0.8527, -0.3532
+    line to -0.7993, -0.4615  line to -0.7323, -0.5619  line to -0.6527, -0.6527  line to -0.5619, -0.7323
+    line to -0.4615, -0.7993  line to -0.3532, -0.8527  line to -0.2389, -0.8915  line to -0.1205, -0.9151
+    line to -0.0000, -0.9230  line to 0.1205, -0.9151  line to 0.2389, -0.8915  line to 0.3532, -0.8527
+    line to 0.4615, -0.7993  line to 0.5619, -0.7323  line to 0.6527, -0.6527  line to 0.7323, -0.5619
+    line to 0.7993, -0.4615  line to 0.8527, -0.3532  line to 0.8915, -0.2389  line to 0.9151, -0.1205  close
+    move to 0.6576, 0.6675  line to 0.8224, 0.8323  line to 0.8323, 0.8224  line to 0.6675, 0.6576  close
+    move to -0.6675, 0.6576  line to -0.8323, 0.8224  line to -0.8224, 0.8323  line to -0.6576, 0.6675  close
+    move to -0.6576, -0.6675  line to -0.8224, -0.8323  line to -0.8323, -0.8224  line to -0.6675, -0.6576
+    close
+    move to 0.6675, -0.6576  line to 0.8323, -0.8224  line to 0.8224, -0.8323  line to 0.6576, -0.6675  close
+}
+
+TIESeamsRear = path {
+    move to 0.8670, 0.0000  line to 0.8596, 0.1132  line to 0.8375, 0.2244  line to 0.8010, 0.3318
+    line to 0.7508, 0.4335  line to 0.6878, 0.5278  line to 0.6131, 0.6131  line to 0.5278, 0.6878
+    line to 0.4335, 0.7508  line to 0.3318, 0.8010  line to 0.2244, 0.8375  line to 0.1132, 0.8596
+    line to 0.0000, 0.8670  line to -0.1132, 0.8596  line to -0.2244, 0.8375  line to -0.3318, 0.8010
+    line to -0.4335, 0.7508  line to -0.5278, 0.6878  line to -0.6131, 0.6131  line to -0.6878, 0.5278
+    line to -0.7508, 0.4335  line to -0.8010, 0.3318  line to -0.8375, 0.2244  line to -0.8596, 0.1132
+    line to -0.8670, 0.0000  line to -0.8596, -0.1132  line to -0.8375, -0.2244  line to -0.8010, -0.3318
+    line to -0.7508, -0.4335  line to -0.6878, -0.5278  line to -0.6131, -0.6131  line to -0.5278, -0.6878
+    line to -0.4335, -0.7508  line to -0.3318, -0.8010  line to -0.2244, -0.8375  line to -0.1132, -0.8596
+    line to -0.0000, -0.8670  line to 0.1132, -0.8596  line to 0.2244, -0.8375  line to 0.3318, -0.8010
+    line to 0.4335, -0.7508  line to 0.5278, -0.6878  line to 0.6131, -0.6131  line to 0.6878, -0.5278
+    line to 0.7508, -0.4335  line to 0.8010, -0.3318  line to 0.8375, -0.2244  line to 0.8596, -0.1132  close
+    move to 0.8530, 0.0000  line to 0.8457, 0.1113  line to 0.8239, 0.2208  line to 0.7881, 0.3264
+    line to 0.7387, 0.4265  line to 0.6767, 0.5193  line to 0.6032, 0.6032  line to 0.5193, 0.6767
+    line to 0.4265, 0.7387  line to 0.3264, 0.7881  line to 0.2208, 0.8239  line to 0.1113, 0.8457
+    line to 0.0000, 0.8530  line to -0.1113, 0.8457  line to -0.2208, 0.8239  line to -0.3264, 0.7881
+    line to -0.4265, 0.7387  line to -0.5193, 0.6767  line to -0.6032, 0.6032  line to -0.6767, 0.5193
+    line to -0.7387, 0.4265  line to -0.7881, 0.3264  line to -0.8239, 0.2208  line to -0.8457, 0.1113
+    line to -0.8530, 0.0000  line to -0.8457, -0.1113  line to -0.8239, -0.2208  line to -0.7881, -0.3264
+    line to -0.7387, -0.4265  line to -0.6767, -0.5193  line to -0.6032, -0.6032  line to -0.5193, -0.6767
+    line to -0.4265, -0.7387  line to -0.3264, -0.7881  line to -0.2208, -0.8239  line to -0.1113, -0.8457
+    line to -0.0000, -0.8530  line to 0.1113, -0.8457  line to 0.2208, -0.8239  line to 0.3264, -0.7881
+    line to 0.4265, -0.7387  line to 0.5193, -0.6767  line to 0.6032, -0.6032  line to 0.6767, -0.5193
+    line to 0.7387, -0.4265  line to 0.7881, -0.3264  line to 0.8239, -0.2208  line to 0.8457, -0.1113  close
+    move to 0.4617, 0.4716  line to 0.5982, 0.6081  line to 0.6081, 0.5982  line to 0.4716, 0.4617  close
+    move to -0.4716, 0.4617  line to -0.6081, 0.5982  line to -0.5982, 0.6081  line to -0.4617, 0.4716  close
+    move to -0.4617, -0.4716  line to -0.5982, -0.6081  line to -0.6081, -0.5982  line to -0.4716, -0.4617
+    close
+    move to 0.4716, -0.4617  line to 0.6081, -0.5982  line to 0.5982, -0.6081  line to 0.4617, -0.4716  close
+    move to 0.6081, 0.6180  line to 0.8224, 0.8323  line to 0.8323, 0.8224  line to 0.6180, 0.6081  close
+    move to -0.6180, 0.6081  line to -0.8323, 0.8224  line to -0.8224, 0.8323  line to -0.6081, 0.6180  close
+    move to -0.6081, -0.6180  line to -0.8224, -0.8323  line to -0.8323, -0.8224  line to -0.6180, -0.6081
+    close
+    move to 0.6180, -0.6081  line to 0.8323, -0.8224  line to 0.8224, -0.8323  line to 0.6081, -0.6180  close
+}
+
+TIESeamsTop = path {
+    move to 0.8070, 0.0000  line to 0.8001, 0.1053  line to 0.7795, 0.2089  line to 0.7456, 0.3088
+    line to 0.6989, 0.4035  line to 0.6402, 0.4913  line to 0.5706, 0.5706  line to 0.4913, 0.6402
+    line to 0.4035, 0.6989  line to 0.3088, 0.7456  line to 0.2089, 0.7795  line to 0.1053, 0.8001
+    line to 0.0000, 0.8070  line to -0.1053, 0.8001  line to -0.2089, 0.7795  line to -0.3088, 0.7456
+    line to -0.4035, 0.6989  line to -0.4913, 0.6402  line to -0.5706, 0.5706  line to -0.6402, 0.4913
+    line to -0.6989, 0.4035  line to -0.7456, 0.3088  line to -0.7795, 0.2089  line to -0.8001, 0.1053
+    line to -0.8070, 0.0000  line to -0.8001, -0.1053  line to -0.7795, -0.2089  line to -0.7456, -0.3088
+    line to -0.6989, -0.4035  line to -0.6402, -0.4913  line to -0.5706, -0.5706  line to -0.4913, -0.6402
+    line to -0.4035, -0.6989  line to -0.3088, -0.7456  line to -0.2089, -0.7795  line to -0.1053, -0.8001
+    line to -0.0000, -0.8070  line to 0.1053, -0.8001  line to 0.2089, -0.7795  line to 0.3088, -0.7456
+    line to 0.4035, -0.6989  line to 0.4913, -0.6402  line to 0.5706, -0.5706  line to 0.6402, -0.4913
+    line to 0.6989, -0.4035  line to 0.7456, -0.3088  line to 0.7795, -0.2089  line to 0.8001, -0.1053  close
+    move to 0.7930, 0.0000  line to 0.7862, 0.1035  line to 0.7660, 0.2052  line to 0.7326, 0.3035
+    line to 0.6868, 0.3965  line to 0.6291, 0.4827  line to 0.5607, 0.5607  line to 0.4827, 0.6291
+    line to 0.3965, 0.6868  line to 0.3035, 0.7326  line to 0.2052, 0.7660  line to 0.1035, 0.7862
+    line to 0.0000, 0.7930  line to -0.1035, 0.7862  line to -0.2052, 0.7660  line to -0.3035, 0.7326
+    line to -0.3965, 0.6868  line to -0.4827, 0.6291  line to -0.5607, 0.5607  line to -0.6291, 0.4827
+    line to -0.6868, 0.3965  line to -0.7326, 0.3035  line to -0.7660, 0.2052  line to -0.7862, 0.1035
+    line to -0.7930, 0.0000  line to -0.7862, -0.1035  line to -0.7660, -0.2052  line to -0.7326, -0.3035
+    line to -0.6868, -0.3965  line to -0.6291, -0.4827  line to -0.5607, -0.5607  line to -0.4827, -0.6291
+    line to -0.3965, -0.6868  line to -0.3035, -0.7326  line to -0.2052, -0.7660  line to -0.1035, -0.7862
+    line to -0.0000, -0.7930  line to 0.1035, -0.7862  line to 0.2052, -0.7660  line to 0.3035, -0.7326
+    line to 0.3965, -0.6868  line to 0.4827, -0.6291  line to 0.5607, -0.5607  line to 0.6291, -0.4827
+    line to 0.6868, -0.3965  line to 0.7326, -0.3035  line to 0.7660, -0.2052  line to 0.7862, -0.1035  close
+    move to 0.8070, 0.0070  line to 1.0000, 0.0070  line to 1.0000, -0.0070  line to 0.8070, -0.0070  close
+    move to -0.0070, 0.8070  line to -0.0070, 1.0000  line to 0.0070, 1.0000  line to 0.0070, 0.8070  close
+    move to -0.8070, -0.0070  line to -1.0000, -0.0070  line to -1.0000, 0.0070  line to -0.8070, 0.0070
+    close
+    move to 0.0070, -0.8070  line to 0.0070, -1.0000  line to -0.0070, -1.0000  line to -0.0070, -0.8070
+    close
+}
+
+
+// The hatch on top, in its own frame: its middle at the origin on the plane the ball is cut flat by, front +X: a
+// shallow dome 0.6 in radius rising 0.13, with four slots through it, two broad either side of the middle bar and
+// two narrow beyond them, cut short by its rim, so that from behind and a little above the slots show on its
+// slope, as the replica's back shows them; and the middle bar crossed by grooves.  `TIEHatchSlots` are the slots,
+// to be cut.
+TIEHatchSlots = group {
+    cube { scale [0.40, 0.2, 0.10]  translate [0, 0, 0.20] }
+    cube { scale [0.40, 0.2, 0.10]  translate [0, 0, -0.20] }
+    cube { scale [0.27, 0.2, 0.05]  translate [0, 0, 0.41] }
+    cube { scale [0.27, 0.2, 0.05]  translate [0, 0, -0.41] }
+}
+
+primitive TIEHatch() -> difference {
+    return difference {
+        lathe {
+            path { move to 0, -0.02  line to 0.60, -0.02  line to 0.60, 0.03  quad 0.48, 0.12 to 0.30, 0.125
+                   quad 0.15, 0.13 to 0, 0.13  close }
+        }
+        group {
+            object TIEHatchSlots
+            for k in [-4, 4] {
+                cube { scale [0.008, 0.03, 0.085]  translate [k * 0.08, 0.135, 0] }
+            }
+            material TIEHole
+        }
+        material TIEGray
+    }
+}
+
+// The collar behind, in the ball's own frame: a boss 0.38 in radius standing 0.085 off the flat the ball is cut
+// to, round the port, and on its face a ring of eighteen raised tiles, as the replica's back shows it.
+primitive TIERearCollar() -> group {
+    return group {
+        difference {
+            lathe {
+                path { move to 0, -0.95  line to 0.38, -0.95  line to 0.38, -1.03  quad 0.38, -1.05 to 0.36, -1.05
+                       line to 0, -1.05  close }
+                rotate Z -90
+            }
+            extrusion { path TIERearPort  material TIEHole  min Y -1.2  max Y -0.80  rotate Z -90  rotate X 90 }
+        }
+        for k in [0, 17] {
+            cube { scale [0.012, 0.035, 0.048]  translate [-1.055, 0.315, 0]  rotate X k * 20 + 10 }
+        }
+        material TIEGray
+    }
+}
+
+// One of the raised plates either side of the window, `side` +1 to port: an H, a tall block nearest the window and
+// a lower one beyond it joined by a bar, 0.42 across and 0.40 tall, standing 0.03 off the ball 48 degrees round
+// from straight ahead, as the replica's front shows it.
+TIESidePlateOutline = path {
+    move to -0.20, -0.21  line to -0.20, -0.07  line to -0.06, -0.07  line to -0.06, 0.07  line to -0.17, 0.07
+    line to -0.17, 0.21  line to 0.17, 0.21  line to 0.17, 0.07  line to 0.06, 0.07  line to 0.06, -0.07
+    line to 0.20, -0.07  line to 0.20, -0.21  close
+}
+
+primitive TIESidePlate(side) -> intersection {
+    return intersection {
+        sphere { scale TIERadius + 0.03 }
+        extrusion { path TIESidePlateOutline  min Y TIERadius - 0.1  max Y TIERadius + 0.1  rotate Z -90 }
+        material TIEGray
+        scale [1, 1, side]
+        rotate Y -48 * side
+    }
+}
+
+// A raised panel on the ball, `az` round from straight ahead toward port and `el` up: `wide` across and `tall`
+// along the meridian, following the ball `rise` off it.
+primitive TIEPanelPlate(az, el, wide, tall, rise) -> intersection {
+    return intersection {
+        sphere { scale TIERadius + rise }
+        cube { scale [0.08, tall / 2, wide / 2]  translate X TIERadius  rotate Z el  rotate Y -az }
+    }
+}
+
+// A block standing on the ball, `az` round from straight ahead toward port and `el` up: `wide` across, `tall`
+// along the meridian and standing `high` off the ball, turned `turn` about the ball's radius there.
+primitive TIEFitting(az, el, wide, tall, high, turn = 0) -> cube {
+    return cube {
+        scale [high / 2 + 0.03, tall / 2, wide / 2]
+        rotate X turn
+        translate X TIERadius + high / 2 - 0.03
+        rotate Z el
+        rotate Y -az
+    }
+}
+
+// The fittings on the ball, as the replica's front and back and the archive models show them: a box over the
+// window, a box under it between the guns; raised panels fore, aft and either side of the hatch's collar; and
+// underneath, a round hatch and five panels in a ring round it.
+TIEBallFittings = group {
+    object TIEFitting(0, 43, 0.32, 0.20, 0.08)
+    object TIEFitting(0, 45.5, 0.14, 0.08, 0.16)
+    object TIEFitting(0, -48.5, 0.16, 0.12, 0.07)
+    object TIEPanelPlate(0, 51, 0.62, 0.18, 0.02)
+    object TIEPanelPlate(180, 52, 0.50, 0.16, 0.02)
+    object TIEPanelPlate(90, 50, 0.36, 0.24, 0.02)
+    object TIEPanelPlate(-90, 50, 0.36, 0.24, 0.02)
+    for k in [1, 5] {
+        object TIEPanelPlate(k * 60, -57, 0.46, 0.28, 0.025)
+    }
+    lathe {
+        path { move to 0, 0.02  line to 0.42, 0.02  line to 0.42, -0.01  line to 0.40, -0.025  line to 0, -0.025
+               close }
+        translate Y -1.092
+    }
+    lathe { path { move to 0.28, -0.02  line to 0.31, -0.02  line to 0.31, -0.04  line to 0.28, -0.04  close }
+            translate Y -1.092 }
+    cylinder { min Y -1.135  max Y -1.10  scale [0.08, 1, 0.08] }
+    material TIEGray
+}
+
+// The pilot, in the black flight suit and helmet of the Empire's pilots, sitting at the ball's middle facing
+// ahead, the gray box of his life support on his chest, his hands forward on the yoke; his seat behind him and the
+// console before him.
+TIEPilotBlack = material { pigment [0.03, 0.03, 0.035]  diffuse 0.7  specular 0.5  shininess 60 }
+TIEPilot = group {
+    sphere { scale [0.15, 0.155, 0.145]  translate [0.08, 0.40, 0] }
+    cube { scale [0.05, 0.07, 0.10]  translate [0.20, 0.33, 0] }
+    cube { scale [0.13, 0.24, 0.20]  translate [-0.02, 0.02, 0] }
+    cube { material TIEGray  scale [0.05, 0.08, 0.11]  translate [0.12, 0.08, 0] }
+    cube { scale [0.22, 0.06, 0.06]  translate [0.20, -0.05, 0.17] }
+    cube { scale [0.22, 0.06, 0.06]  translate [0.20, -0.05, -0.17] }
+    cube { scale [0.25, 0.08, 0.17]  translate [0.12, -0.28, 0] }
+    cube { material TIECockpit  scale [0.06, 0.40, 0.26]  translate [-0.22, 0.02, 0] }
+    cube { material TIECockpit  scale [0.12, 0.20, 0.40]  translate [0.60, -0.45, 0]  rotate Z 20 }
+    material TIEPilotBlack
+}
+
+// The TIE fighter's ball behind, round its collar: a block over the collar with two short drums on it, a lamp
+// plate either side and a bank of five ribs over each shoulder; under the collar a box of two doors, three slats
+// on each, and a raised ridge down either lower diagonal, as the replica's back and underside show them.
+TIERearFittings = group {
+    object TIEFitting(180, -37, 0.42, 0.30, 0.07)
+    object TIEFitting(180, -37, 0.012, 0.28, 0.076) { material TIEHole }
+    for k in [0, 2] {
+        object TIEFitting(180 - 5.5, -39 + k * 3, 0.10, 0.035, 0.09)
+        object TIEFitting(180 + 5.5, -39 + k * 3, 0.10, 0.035, 0.09)
+    }
+    for pair in [0, 1] {
+        side = 2 * pair - 1
+        object TIEFitting(180 - side * 26, -30, 0.035, 0.42, 0.045, side * 40)
+    }
+    object TIEFitting(180, 42, 0.26, 0.24, 0.12)
+    object TIEFitting(180, 45, 0.12, 0.10, 0.24)
+    cylinder { min Y 0  max Y 0.10  scale [0.035, 1, 0.035]  rotate Z -90
+               translate [TIERadius + 0.12, 0, 0.07]  rotate Z 40  rotate Y 180 }
+    cylinder { min Y 0  max Y 0.10  scale [0.035, 1, 0.035]  rotate Z -90
+               translate [TIERadius + 0.12, 0, -0.07]  rotate Z 40  rotate Y 180 }
+    for pair in [0, 1] {
+        side = 2 * pair - 1
+        object TIEFitting(180 - side * 52, 0, 0.26, 0.30, 0.05)
+        cylinder { material TIEFrame  min Y 0  max Y 0.07  scale [0.055, 1, 0.055]  rotate Z -90
+                   translate X TIERadius  rotate Y -(180 - side * 52) }
+        for k in [0, 4] {
+            object TIEFitting(180 - side * (24 + k * 3.2), 28 + k * 2.2, 0.03, 0.30, 0.05)
+        }
+    }
+    material TIEGray
+}
+
+// The ball of Vader's TIE Advanced behind, where its tail and deck meet it, as the archive's photographs from
+// behind and below show it: low either side a red lamp in a round housing on a bracket, two small fittings between
+// them, and under them a band round the ball's foot holding a box with four slots and a bank of ribs either side;
+// higher, over the deck either side, a round port in a boss.
+TIEAdvancedFittings = group {
+    for pair in [0, 1] {
+        side = 2 * pair - 1
+        object TIEFitting(180 - side * 34, -24, 0.26, 0.16, 0.05, side * 35)
+        object TIEFitting(180 - side * 30, -32, 0.05, 0.22, 0.07, side * 20)
+        cylinder { min Y 0  max Y 0.10  scale [0.085, 1, 0.085]  rotate Z -90  translate X TIERadius - 0.02
+                   rotate Z -22  rotate Y -(180 - side * 36) }
+        cylinder { min Y 0  max Y 0.11  scale [0.055, 1, 0.055]  rotate Z -90  translate X TIERadius - 0.02
+                   rotate Z -22  rotate Y -(180 - side * 36)
+                   material { pigment [0.55, 0.03, 0.02]  emission 0.6  specular 0.6  shininess 120 } }
+        object TIEFitting(180 - side * 13, -30, 0.06, 0.16, 0.05)
+        object TIEFitting(180 - side * 13, -35, 0.10, 0.05, 0.07)
+        difference {
+            cylinder { min Y 0  max Y 0.08  scale [0.10, 1, 0.10]  rotate Z -90 }
+            cylinder { material TIEHole  min Y 0.02  max Y 0.12  scale [0.055, 1, 0.055]  rotate Z -90 }
+            translate X TIERadius - 0.02
+            rotate Z 22  rotate Y -(180 - side * 40)
+        }
+        for k in [0, 4] {
+            object TIEFitting(180 - side * (18 + k * 2.6), -58, 0.025, 0.20, 0.05)
+        }
+    }
+    object TIEPanelPlate(180, -58, 1.10, 0.24, 0.03)
+    object TIEFitting(180, -58, 0.36, 0.22, 0.07)
+    for k in [0, 3] {
+        object TIEFitting(180 - 4.5 + k * 3, -58, 0.025, 0.12, 0.08) { material TIEHole }
+    }
+    material TIEGray
+}
+
+primitive TIEBall(hatch = 0, thrust = 0, damage = 0, advanced = 0) -> group {
+    burn = min(1, damage * 1.6)
+    blot = damage * 0.4 + 0.01
+    return group {
+        difference {
+            intersection {
+                sphere { scale TIERadius }
+                cube { scale [0.948, 1.04825, 1.2]  translate [-0.018, -0.04375, 0] }
+            }
+            intersection {
+                sphere { scale 1.07 }
+                cube { scale [1.1, 1.2, 1.2]  translate X 0.17 }
+                material TIECockpit
+            }
+            cylinder { material TIECockpit  min Y 0.50  max Y 1.2  scale [0.62, 1, 0.62]  rotate Z -90 }
+            extrusion { path TIERearPort  material TIEHole  min Y -1.2  max Y -0.85  rotate Z -90  rotate X 90
+                        translate X advanced > 0 ? 60 : 0 }
+            cylinder { material TIECockpit  min Y 0.80  max Y 1.2  scale [0.52, 1, 0.52] }
+            material {
+                pigment [0.60, 0.63, 0.66]  diffuse 0.85  specular 0.12  shininess 25
+                decal { path TIESeamsFront  color [0.36, 0.38, 0.40]  planar  min Y 0  max Y 1.3  rotate Z -90 }
+                decal { path TIESeamsRear  color [0.36, 0.38, 0.40]  planar  min Y 0  max Y 1.3  rotate Z 90 }
+                decal { path TIESeamsTop  color [0.36, 0.38, 0.40]  planar  min Y 0  max Y 1.3 }
+                decal { path TIEScorch  color [0.10, 0.09, 0.08, burn * 0.45]  planar  min Y -1.3  max Y 0
+                        scale [1.5 * blot, 1, 1.5 * blot]  rotate Y 30  translate [-0.35, 0, 0.45]  rotate X -90 }
+                decal { path TIEScorch  color [0.10, 0.09, 0.08, burn]  planar  min Y -1.3  max Y 0
+                        scale [blot, 1, blot]  rotate Y 30  translate [-0.35, 0, 0.45]  rotate X -90 }
+                decal { path TIEScorch  color [0.10, 0.09, 0.08, burn * 0.45]  planar  min Y 0  max Y 1.3
+                        scale [1.5 * blot * 0.8, 1, 1.5 * blot * 0.8]  rotate Y 110  translate [0.30, 0, 0.30] }
+                decal { path TIEScorch  color [0.10, 0.09, 0.08, burn]  planar  min Y 0  max Y 1.3
+                        scale [blot * 0.8, 1, blot * 0.8]  rotate Y 110  translate [0.30, 0, 0.30] }
+                decal { path TIEScorch  color [0.10, 0.09, 0.08, burn * 0.45]  planar  min Y -1.3  max Y 0
+                        scale [1.5 * blot * 0.7, 1, 1.5 * blot * 0.7]  rotate Y 200  translate [-0.55, 0, -0.35]
+                        rotate X 90 }
+                decal { path TIEScorch  color [0.10, 0.09, 0.08, burn]  planar  min Y -1.3  max Y 0
+                        scale [blot * 0.7, 1, blot * 0.7]  rotate Y 200  translate [-0.55, 0, -0.35]  rotate X 90 }
+            }
+        }
+        object TIEPilot
+        object TIEWindow()
+        cylinder { material TIEGlass  min Y TIEWindowAt - 0.03  max Y TIEWindowAt - 0.02  scale [0.625, 1, 0.625]
+                   rotate Z -90 }
+        object TIESidePlate(1)
+        object TIESidePlate(-1)
+        object TIEBallFittings
+        if (advanced > 0) {
+            object TIEAdvancedFittings
+        } else {
+            object TIERearCollar()
+            object TIERearFittings
+            // The engines' light behind the port.
+            cylinder {
+                min Y -0.97  max Y -0.94  scale [0.36, 1, 0.36]  rotate Z -90
+                material {
+                    pigment [0.04 + 0.96 * thrust, 0.04 + 0.92 * thrust, 0.045 + 0.85 * thrust]
+                    diffuse 0.6 - 0.4 * thrust
+                    emission 4 * thrust
+                }
+            }
+        }
+        object TIEHatch() {
+            translate X 0.60
+            rotate Z hatch * 100
+            translate [-0.60, TIEHatchAt, 0]
+        }
+        // The raised collar the hatch sits in.
+        lathe {
+            path { move to 0.60, 0.03  line to 0.71, 0.03  line to 0.76, -0.08  line to 0.60, -0.08  close }
+            material TIEGray
+            translate Y TIEHatchAt
+        }
+        // The chin guns' muzzles.
+        for pair in [0, 1] {
+            side = 2 * pair - 1
+            difference {
+                cylinder { min Y 0.55  max Y 0.84  scale [0.075, 1, 0.075]  rotate Z -90 }
+                cylinder { material TIEHole  min Y 0.70  max Y 0.9  scale [0.04, 1, 0.04]  rotate Z -90 }
+                material TIEGray
+                translate [0, -0.85, side * 0.40]
+            }
+        }
+    }
+}
+
+// -- A pylon and a wing --
+//
+// A tapering eight-sided block along Z from `z0` to `z1`, `h0` to `h1` up and down from its axis and `w0` to `w1`
+// fore and aft, its corners cut square to the diagonals.
+primitive TIEFrustum(z0, z1, h0, h1, w0, w1) -> intersection {
+    c0 = (h0 + w0) / 2 * 0.97
+    c1 = (h1 + w1) / 2 * 0.97
+    return intersection {
+        extrusion { path { move to -w0, z0  line to w0, z0  line to w1, z1  line to -w1, z1  close }
+                    min Y -2  max Y 2 }
+        extrusion { path { move to -h0, z0  line to h0, z0  line to h1, z1  line to -h1, z1  close }
+                    min Y -2  max Y 2  rotate Z 90 }
+        extrusion { path { move to -c0, z0  line to c0, z0  line to c1, z1  line to -c1, z1  close }
+                    min Y -2  max Y 2  rotate Z 45 }
+        extrusion { path { move to -c0, z0  line to c0, z0  line to c1, z1  line to -c1, z1  close }
+                    min Y -2  max Y 2  rotate Z -45 }
+    }
+}
+
+// The port pylon, out along +Z from inside the ball to the wing's hub, as the replica's front, back and
+// three-quarter views give it: a root block standing off the ball, then a long taper to 2.06, both eight-sided --
+// an upright band down the front and back, faces sloping in from it to a narrow top and bottom -- the taper's band
+// raised along its middle, and a fin standing on the root's top and under its bottom; a collar; a flaring block to
+// 2.78, a flat rail along its front and back; and the round boss the hub sits on.
+primitive TIEPylon() -> group {
+    return group {
+        loft {
+            section { path { move to 0.56, -0.30  line to 0.56, 0.30  line to 0.32, 0.62  line to -0.32, 0.62
+                             line to -0.56, 0.30  line to -0.56, -0.30  line to -0.32, -0.62  line to 0.32, -0.62
+                             close }
+                      translate Z 0.85 }
+            section { path { move to 0.53, -0.29  line to 0.53, 0.29  line to 0.31, 0.60  line to -0.31, 0.60
+                             line to -0.53, 0.29  line to -0.53, -0.29  line to -0.31, -0.60  line to 0.31, -0.60
+                             close }
+                      translate Z 1.34 }
+            straight
+        }
+        loft {
+            section { path { move to 0.50, -0.24  line to 0.50, 0.24  line to 0.26, 0.52  line to -0.26, 0.52
+                             line to -0.50, 0.24  line to -0.50, -0.24  line to -0.26, -0.52  line to 0.26, -0.52
+                             close }
+                      translate Z 1.30 }
+            section { path { move to 0.36, -0.17  line to 0.36, 0.17  line to 0.19, 0.40  line to -0.19, 0.40
+                             line to -0.36, 0.17  line to -0.36, -0.17  line to -0.19, -0.40  line to 0.19, -0.40
+                             close }
+                      translate Z 2.06 }
+            straight
+        }
+        loft {
+            section { path { move to 0.53, -0.16  line to 0.53, 0.16  line to -0.53, 0.16  line to -0.53, -0.16
+                             close }
+                      translate Z 1.36 }
+            section { path { move to 0.39, -0.10  line to 0.39, 0.10  line to -0.39, 0.10  line to -0.39, -0.10
+                             close }
+                      translate Z 2.04 }
+            straight
+        }
+        extrusion {
+            path { move to 0.95, 0.50  line to 0.95, 0.80  line to 1.22, 0.80  line to 1.45, 0.50  close }
+            min Y -0.035  max Y 0.035
+            rotate Z -90  rotate X -90
+        }
+        extrusion {
+            path { move to 0.95, -0.50  line to 0.95, -0.76  line to 1.18, -0.76  line to 1.40, -0.50  close }
+            min Y -0.035  max Y 0.035
+            rotate Z -90  rotate X -90
+        }
+        cylinder { min Y 2.04  max Y 2.26  scale [0.30, 1, 0.30]  rotate X 90 }
+        cylinder { min Y 2.06  max Y 2.14  scale [0.33, 1, 0.33]  rotate X 90 }
+        cylinder { min Y 2.36  max Y 2.42  scale [0.315, 1, 0.315]  rotate X 90 }
+        object TIEFrustum(2.24, 2.78, 0.30, 0.375, 0.30, 0.375)
+        cylinder { min Y 2.76  max Y 3.10  scale [0.25, 1, 0.25]  rotate X 90 }
+        cube { scale [0.07, 0.02, 0.36]  translate [0.40, 0, 2.48] }
+        cube { scale [0.07, 0.02, 0.36]  translate [-0.40, 0, 2.48] }
+        material TIEGray
+    }
+}
+
+// The wing, in its own X/Y: a hexagon 8.99 tall and 7.15 long, its top and bottom 4.92 long, as the ILM photograph
+// of a wing square on draws it at the studio model's height and length; a rim 0.18 wide round it and six spars
+// 0.28 wide from its hub to its corners, 0.22 thick; the hub, a hexagon 1.23 to its corners, fore and aft, 0.34
+// thick; and between them the solar panels, dark, their fine lines running square to the wing's edge.
+TIEWingOutline = path {
+    move to 3.575, 0  line to 2.46, 4.495  line to -2.46, 4.495  line to -3.575, 0  line to -2.46, -4.495
+    line to 2.46, -4.495  close
+}
+TIEWingInside = path {
+    move to 3.3895, 0  line to 2.3192, 4.315  line to -2.3192, 4.315  line to -3.3895, 0  line to -2.3192, -4.315
+    line to 2.3192, -4.315  close
+}
+TIEWingOutlineSetIn = path {
+    move to 3.5595, 0  line to 2.4483, 4.48  line to -2.4483, 4.48  line to -3.5595, 0  line to -2.4483, -4.48
+    line to 2.4483, -4.48  close
+}
+TIEHubOutline = path {
+    move to 1.23, 0  line to 0.615, 1.0652  line to -0.615, 1.0652  line to -1.23, 0  line to -0.615, -1.0652
+    line to 0.615, -1.0652  close
+}
+
+// A jagged hole a shot has torn, about 1 across its middle, and a scorch round one, in the outline's own plane.
+TIEHoleShape = path {
+    move to 0.952, -0.040  line to 0.592, 0.312  line to 0.634, 0.809  line to 0.313, 0.913  line to -0.119, 1.045
+    line to -0.368, 0.574  line to -1.062, 0.535  line to -0.769, 0.070  line to -1.093, -0.568
+    line to -0.542, -0.706  line to -0.101, -0.911  line to 0.250, -0.778  line to 0.522, -0.783
+    line to 1.034, -0.558  close
+}
+TIEScorch = path {
+    move to 0.969, -0.076  line to 0.887, 0.467  line to 0.342, 0.648  line to 0.163, 1.107  line to -0.356, 0.735
+    line to -0.870, 0.342  line to -0.933, -0.095  line to -0.655, -0.415  line to -0.527, -1.004
+    line to 0.007, -1.071  line to 0.398, -0.614  line to 0.898, -0.430  close
+}
+
+// A solar panel, the triangle from the hub's middle to two corners of the wing, its lines running square to the
+// edge between them, at `along` from straight ahead.  Hit (`damage`), it may be holed -- whether, where and how
+// badly drawn from `seed` -- the hole's edge scorched.
+primitive TIEPanel(x0, y0, x1, y1, along, seed = 0, damage = 0) -> difference {
+    size = max(0, random(seed, 1) - 0.45) * damage
+    f = 0.5 + 0.3 * random(seed, 2)
+    t = 0.6 * random(seed, 3) - 0.3
+    hx = f * ((x0 + x1) / 2 + t * (x1 - x0))
+    hy = f * ((y0 + y1) / 2 + t * (y1 - y0))
+    return difference {
+        extrusion { path { move to 0, 0  line to x0, y0  line to x1, y1  close }  min Y -0.015  max Y 0.015 }
+        extrusion {
+            path TIEHoleShape  min Y -0.1  max Y 0.1  material TIEHole
+            scale [max(size, 0.01), 1, max(size, 0.01)]  rotate Y 90 * random(seed, 4)
+            translate [size > 0 ? hx : 60, 0, hy]
+        }
+        material {
+            pigment linear X gradient {
+                [0, [0.085, 0.08, 0.08], 0.03, [0.085, 0.08, 0.08], 0.08, [0.03, 0.028, 0.03],
+                 0.95, [0.03, 0.028, 0.03], 1, [0.085, 0.08, 0.08]]
+                scale 0.12
+                rotate Y -along
+            }
+            diffuse 0.8  specular 0.5  shininess 80  reflective 0.03
+            decal { path TIEScorch  color [0.055, 0.045, 0.04, min(1, size * 5)]  planar  min Y -0.1  max Y 0.1
+                    scale [size * 2.6 + 0.01, 1, size * 2.6 + 0.01]  translate [hx, 0, hy] }
+        }
+        rotate X -90
+    }
+}
+
+// A spar from the hub out to a corner of the wing, `long` and turned `angle` from straight ahead, with a rib down
+// its middle on either face and a ram along it near the hub, standing off one side of the rib, and on the wing's
+// inner face (-Z) a long bracket out from the hub, where the pylon's mounting runs along it.
+primitive TIESpar(long, angle) -> group {
+    return group {
+        cube { scale [long / 2, 0.14, 0.08]  translate X long / 2 }
+        cube { scale [long / 2 - 0.15, 0.04, 0.105]  translate X long / 2 }
+        for pair in [0, 1] {
+            side = 2 * pair - 1
+            cylinder { min Y 1.35  max Y 2.30  scale [0.045, 1, 0.045]  rotate Z -90
+                       translate [0, 0.085, 0.125 * side] }
+            cylinder { min Y 2.30  max Y 2.75  scale [0.03, 1, 0.03]  rotate Z -90
+                       translate [0, 0.085, 0.125 * side] }
+            cube { scale [0.12, 0.06, 0.04]  translate [1.40, -0.07, 0.10 * side] }
+            cube { scale [0.08, 0.05, 0.03]  translate [long - 0.6, -0.08, 0.10 * side] }
+        }
+        // The pylon's mounting along the spar on the wing's inner face.
+        cube { scale [0.55, 0.09, 0.05]  translate [1.75, 0, -0.13] }
+        cube { scale [0.30, 0.05, 0.035]  translate [1.55, 0, -0.21] }
+        rotate Z angle
+    }
+}
+
+// The details on a hub's face, standing out of it toward +Z from z = 0: an eight-sided plate 0.62 to its corners
+// and, on the outer face (`outer`), the wheel of a hatch on it, a ring 0.34 in radius on six spokes; on the inner
+// face, the round boss the pylon meets.  Round them both, blocks and drums of all sizes, as the models' hubs are
+// crowded with kit parts, drawn from `seed`.
+TIEHubPlate = path {
+    move to 0.62, 0  line to 0.4384, 0.4384  line to 0, 0.62  line to -0.4384, 0.4384  line to -0.62, 0
+    line to -0.4384, -0.4384  line to 0, -0.62  line to 0.4384, -0.4384  close
+}
+
+primitive TIEHubFace(outer, seed) -> group {
+    return group {
+        extrusion { path TIEHubPlate  min Y -0.06  max Y 0  rotate X -90  rotate Z 22.5 }
+        if (outer > 0) {
+            difference {
+                cylinder { min Y 0  max Y 0.16  scale [0.34, 1, 0.34]  rotate X 90 }
+                cylinder { min Y 0  max Y 0.2  scale [0.29, 1, 0.29]  rotate X 90 }
+            }
+            for k in [0, 5] {
+                cube { scale [0.145, 0.022, 0.05]  translate [0.145, 0, 0.09]  rotate Z k * 60 + 30 }
+            }
+            cylinder { min Y 0  max Y 0.15  scale [0.075, 1, 0.075]  rotate X 90 }
+        } else {
+            cylinder { min Y 0  max Y 0.10  scale [0.42, 1, 0.42]  rotate X 90 }
+        }
+        for k in [0, 39] {
+            cube {
+                scale [0.04 + 0.09 * random(seed, k, 1), 0.03 + 0.07 * random(seed, k, 2),
+                       0.02 + 0.05 * random(seed, k, 3)]
+                translate [0, 0.68 + 0.24 * random(seed, k, 4), 0.02 + 0.05 * random(seed, k, 3)]
+                rotate Z k * 9 + 7 * random(seed, k, 5)
+            }
+        }
+        for k in [0, 11] {
+            cylinder {
+                min Y 0  max Y 0.04 + 0.06 * random(seed, k, 6)
+                scale [0.04 + 0.04 * random(seed, k, 7), 1, 0.04 + 0.04 * random(seed, k, 7)]
+                rotate X 90
+                translate Y 0.66 + 0.24 * random(seed, k, 8)
+                rotate Z k * 30 + 15 * random(seed, k, 9)
+            }
+        }
+    }
+}
+
+primitive TIEWing(seed = 0, damage = 0) -> group {
+    return group {
+        difference {
+            extrusion { path TIEWingOutline  min Y 0.025  max Y 0.08  rotate X -90 }
+            extrusion { path TIEWingInside  min Y -0.2  max Y 0.2  rotate X -90 }
+        }
+        difference {
+            extrusion { path TIEWingOutlineSetIn  min Y -0.025  max Y 0.025  rotate X -90 }
+            extrusion { path TIEWingInside  min Y -0.2  max Y 0.2  rotate X -90 }
+        }
+        difference {
+            extrusion { path TIEWingOutline  min Y -0.08  max Y -0.025  rotate X -90 }
+            extrusion { path TIEWingInside  min Y -0.2  max Y 0.2  rotate X -90 }
+        }
+        object TIESpar(3.475, 0)
+        object TIESpar(5.02, 61.3092)
+        object TIESpar(5.02, 118.6908)
+        object TIESpar(3.475, 180)
+        object TIESpar(5.02, -118.6908)
+        object TIESpar(5.02, -61.3092)
+        extrusion { path TIEHubOutline  min Y -0.17  max Y 0.17  rotate X -90 }
+        object TIEHubFace(1, seed * 10 + 7) { translate Z 0.17 }
+        object TIEHubFace(0, seed * 10 + 8) { scale [1, 1, -1]  translate Z -0.17 }
+        object TIEPanel(3.575, 0, 2.46, 4.495, 103.931, seed * 10 + 1, damage)
+        object TIEPanel(2.46, 4.495, -2.46, 4.495, 180, seed * 10 + 2, damage)
+        object TIEPanel(-2.46, 4.495, -3.575, 0, -103.931, seed * 10 + 3, damage)
+        object TIEPanel(-3.575, 0, -2.46, -4.495, -76.069, seed * 10 + 4, damage)
+        object TIEPanel(-2.46, -4.495, 2.46, -4.495, 0, seed * 10 + 5, damage)
+        object TIEPanel(2.46, -4.495, 3.575, 0, 76.069, seed * 10 + 6, damage)
+        material TIEGray
+        translate Z TIEWingAt
+    }
+}
+
+// -- The fighter --
+//
+// `thrust` lights the engines behind the rear port, nought to one.  `weathered` is how long it has flown.  `hatch`
+// swings the hatch on top open, nought to one.  `damage` is how hard it has been hit, nought to one.
+primitive TIEFighter(thrust = 0, weathered = 0, hatch = 0, damage = 0) -> group {
+    return group {
+        object TIEBall(hatch, thrust, damage)
+        object TIEPylon()
+        object TIEPylon() { scale [1, 1, -1] }
+        object TIEWing(1, damage)
+        object TIEWing(2, damage) { scale [1, 1, -1] }
+        weather {
+            grime weathered  color [0.24, 0.24, 0.25]
+            wear weathered * 0.1 to XWingBare
+            radius 0.08
+        }
+    }
+}
+
+// -- Vader's TIE Advanced --
+//
+// Darth Vader's TIE Advanced x1 as it flew in A New Hope, from the Lucasfilm Archives' photographs of the studio
+// model.  It is built about the same ball as the TIE fighter's: the two studio models were not made to one scale
+// -- the archive's measures are 46 cm across Vader's wings, 33 tall and 32 long, and his ball is a third of his
+// span, where the TIE's is a quarter of its wings' height -- and on screen the two fly together, one cockpit to
+// another.  So, measured against its ball, it spans 6.6 m across its hubs, stands 4.7 m tall and runs 4.75 m long.
+//
+// Behind the ball, at its middle, a flat deck runs back between the wings, its rear edge a circle 3.48 m about a
+// point just ahead of the ball's middle, thicker toward its middle, an open bay along its underside; a tail runs
+// down the deck's middle from the ball to its rear edge, open along its top, its after face holding the two
+// engines' lights; and two pylons, tapering from the ball to the wings, carry the wings, a ridge along their
+// fronts with a cutout across it onto machinery, plated and seamed all over.  Each wing is three flat sections: a
+// middle one upright, 1.5 m tall, and above and below it one 2.0 m across, bent in 40 degrees toward the ball, its
+// ends leaning in by a third of that by its tip, so that the wing laid flat would be the TIE fighter's hexagon;
+// each wears a broad frame round two dark panels, their grill a fine square waffle, either side of a bar in line
+// with the hub, which stands on the middle one's outer face at the pylon, three tenths of the way back -- the
+// middle one solid on its inner face, crowded with kit parts where the pylon meets it, two dark openings near its
+// after end.  The wings run from 1.3 ahead of the ball's middle to 3.3 behind it.  The archive's photographs were
+// taken close and disagree with one another about the bend by several degrees; the proportions are those the
+// photographs from ahead and the square-on ones of single sections agree on.
+TIEAdvancedFront = 1.30
+TIEAdvancedRear = -3.30
+TIEAdvancedAt = 3.05
+TIEAdvancedBend = 0.75
+TIEAdvancedReach = 2.0
+TIEAdvancedLean = 40
+TIEAdvancedHub = -0.08
+
+// A panel of a section, between the bar at the hub and one end of the section, `wide` the frame round it: the
+// section's outline from its foot to `tall` up, its end at `x0` at the foot leaning `slant` in toward the hub by
+// the top, inset by the frame.  In the section's X/Z, 0.04 thick, to be stood up.  `hit` holes it a third of the
+// way along, its edge scorched.
+primitive TIEAdvancedPanel(x0, slant, tall, wide, hit = 0) -> difference {
+    way = x0 > TIEAdvancedHub ? 1 : -1
+    k = sqrt(1 + slant * slant / (tall * tall))
+    near = TIEAdvancedHub + way * 0.13
+    hx = near + (x0 - near) * 0.62
+    return difference {
+        extrusion {
+            path {
+                move to near, wide  line to x0 - way * (slant * wide / tall + wide * k), wide
+                line to x0 - way * (slant * (tall - wide) / tall + wide * k), tall - wide
+                line to near, tall - wide
+                close
+            }
+            min Y -0.02  max Y 0.02
+        }
+        extrusion {
+            path TIEHoleShape  min Y -0.1  max Y 0.1  material TIEHole
+            scale [max(hit, 0.01) * 0.6, 1, max(hit, 0.01) * 0.6]
+            translate [hit > 0 ? hx : 60, 0, tall * 0.55]
+        }
+        material {
+            pigment blend {
+                linear X gradient { [0, [0.11, 0.10, 0.095], 0.18, [0.11, 0.10, 0.095], 0.30, [0.02, 0.018, 0.018],
+                                     0.88, [0.02, 0.018, 0.018], 1, [0.11, 0.10, 0.095]]  scale 0.055 },
+                linear Z gradient { [0, [0.11, 0.10, 0.095], 0.18, [0.11, 0.10, 0.095], 0.30, [0.02, 0.018, 0.018],
+                                     0.88, [0.02, 0.018, 0.018], 1, [0.11, 0.10, 0.095]]  scale 0.055 }
+            }
+            diffuse 0.85  specular 0.3  shininess 40
+            decal { path TIEScorch  color [0.05, 0.045, 0.04, min(1, hit * 3)]  planar  min Y -0.1  max Y 0.1
+                    scale [hit * 1.5 + 0.01, 1, hit * 1.5 + 0.01]  translate [hx, 0, tall * 0.55] }
+        }
+    }
+}
+
+// The opening a panel sits in, cut through its section's frame: the panel's outline, 0.24 thick.
+primitive TIEAdvancedOpening(x0, slant, tall, wide) -> extrusion {
+    way = x0 > TIEAdvancedHub ? 1 : -1
+    k = sqrt(1 + slant * slant / (tall * tall))
+    near = TIEAdvancedHub + way * 0.13
+    return extrusion {
+        path {
+            move to near, wide  line to x0 - way * (slant * wide / tall + wide * k), wide
+            line to x0 - way * (slant * (tall - wide) / tall + wide * k), tall - wide  line to near, tall - wide
+            close
+        }
+        min Y -0.12  max Y 0.12
+    }
+}
+
+// A section of a wing, in its own frame: fore and aft along X, `tall` up Y from its foot, 0.2 thick about z = 0;
+// its foot runs the wing's length, and its ends lean in by `slant` at its top (nought for the middle one).  A
+// frame 0.18 wide round two panels sunk to its middle, either side of the bar at the hub, which stands up out of
+// it.  `hit` holes the after panel.  `solid` keeps its inner face (-Z) whole, the panels showing only outside, as
+// the middle section's do.  Along its leading and trailing edges, on the inner half of its thickness, a rib 0.07
+// wide stands 0.03 proud, mitered where one section meets the next, so that it runs on round the bends.
+primitive TIEAdvancedSection(tall, slant, hit = 0, solid = 0) -> group {
+    f = TIEAdvancedFront
+    r = TIEAdvancedRear
+    edge = sqrt(slant * slant + tall * tall)
+    return group {
+        difference {
+            extrusion {
+                path { move to r, 0  line to f, 0  line to f - slant, tall  line to r + slant, tall  close }
+                min Y -0.10  max Y 0.10
+                rotate X -90
+            }
+            object TIEAdvancedOpening(f, slant, tall, 0.18) { scale [1, solid > 0 ? 0.5 : 1, 1]
+                                                               translate Y solid > 0 ? -0.06 : 0  rotate X -90 }
+            object TIEAdvancedOpening(r, slant, tall, 0.18) { scale [1, solid > 0 ? 0.5 : 1, 1]
+                                                               translate Y solid > 0 ? -0.06 : 0  rotate X -90 }
+        }
+        object TIEAdvancedPanel(f, slant, tall, 0.18) { rotate X -90 }
+        object TIEAdvancedPanel(r, slant, tall, 0.18, hit) { rotate X -90 }
+        cube { scale [0.07, tall / 2, 0.13]  translate [TIEAdvancedHub, tall / 2, 0] }
+        intersection {
+            union {
+                cube { scale [0.015, edge / 2 + 0.05, 0.035]  rotate Z toDegrees(atan2(slant, tall))
+                       translate [f - slant / 2 + 0.015 * tall / edge, tall / 2 + 0.015 * slant / edge, -0.06] }
+                cube { scale [0.015, edge / 2 + 0.05, 0.035]  rotate Z -toDegrees(atan2(slant, tall))
+                       translate [r + slant / 2 - 0.015 * tall / edge, tall / 2 + 0.015 * slant / edge, -0.06] }
+            }
+            cube { scale [4, 1.5, 1]  translate Y 1.5  rotate X TIEAdvancedLean / 2 }
+            cube { scale [4, 1.5, 1]  translate Y -1.5  rotate X solid > 0 ? -TIEAdvancedLean / 2 : 0
+                   translate Y tall }
+        }
+    }
+}
+
+// The port wing, its middle plane at z = 3.05: the middle section and the two bent ones, a round fillet along each
+// bend.  On the middle one's outer face, at the pylon, the hub: a tall plate, its ends cut to points, the wheel of
+// a hatch on it, a ring 0.34 in radius on six spokes, and kit parts above and below it.  Its inner face is solid,
+// crowded where the pylon meets it and crossed by rails fore and aft, as the archive's photographs from ahead show
+// it.
+primitive TIEAdvancedWing(seed = 0, damage = 0) -> group {
+    up = TIEAdvancedBend
+    lean = TIEAdvancedReach * 0.35
+    hub = TIEAdvancedHub
+    return group {
+        object TIEAdvancedSection(2 * up, 0, 0, 1) { translate Y -up }
+        object TIEAdvancedSection(TIEAdvancedReach, lean, damage * (random(seed, 1) > 0.5 ? 1 : 0)) {
+            rotate X -TIEAdvancedLean  translate Y up
+        }
+        object TIEAdvancedSection(TIEAdvancedReach, lean, damage * (random(seed, 2) > 0.5 ? 0.7 : 0)) {
+            rotate X -TIEAdvancedLean  translate Y up  scale [1, -1, 1]
+        }
+        cylinder { min Y TIEAdvancedRear  max Y TIEAdvancedFront  scale [0.10, 1, 0.10]  rotate Z -90
+                   translate Y up }
+        cylinder { min Y TIEAdvancedRear  max Y TIEAdvancedFront  scale [0.10, 1, 0.10]  rotate Z -90
+                   translate Y -up }
+        // The hub outside.
+        extrusion {
+            path { move to -0.16, -0.74  line to 0.16, -0.74  line to 0.37, -0.50  line to 0.37, 0.50
+                   line to 0.16, 0.74  line to -0.16, 0.74  line to -0.37, 0.50  line to -0.37, -0.50  close }
+            min Y -0.16  max Y -0.08
+            rotate X -90  translate X hub
+        }
+        difference {
+            cylinder { min Y 0.15  max Y 0.25  scale [0.34, 1, 0.34]  rotate X 90 }
+            cylinder { min Y 0.10  max Y 0.30  scale [0.29, 1, 0.29]  rotate X 90 }
+            translate X hub
+        }
+        for k in [0, 5] {
+            cube { scale [0.145, 0.018, 0.03]  translate [0.15, 0, 0.19]  rotate Z k * 60  translate X hub }
+        }
+        cylinder { min Y 0.15  max Y 0.24  scale [0.06, 1, 0.06]  rotate X 90  translate X hub }
+        for k in [0, 13] {
+            cube {
+                scale [0.04 + 0.08 * random(seed, k, 11), 0.025 + 0.04 * random(seed, k, 12),
+                       0.02 + 0.03 * random(seed, k, 13)]
+                translate [hub - 0.22 + 0.44 * random(seed, k, 14),
+                           (k % 2 * 2 - 1) * (0.40 + 0.26 * random(seed, k, 15)),
+                           0.17 + 0.02 * random(seed, k, 13)]
+            }
+        }
+        // At the middle section's after end, on its outer face where the frame meets the panel, two columns of
+        // dark blocks standing 0.045 proud, at the waffle's pitch, either side of a gap at its middle.
+        group {
+            for i in [0, 15] {
+                cube { scale [0.022, 0.0235, 0.0225]
+                       translate [TIEAdvancedRear + 0.155, (i < 8 ? 1 : -1) * (0.1575 + (i % 8) * 0.055), 0.1225] }
+            }
+            material { pigment [0.07, 0.065, 0.06]  diffuse 0.85  specular 0.3  shininess 40 }
+        }
+        // The middle section's inner face: a crowded plate where the pylon meets it, kit parts round it, and
+        // rails.
+        extrusion {
+            path { move to -0.55, -0.62  line to 0.45, -0.62  line to 0.45, 0.62  line to -0.55, 0.62  close }
+            min Y 0.08  max Y 0.14
+            rotate X -90  translate X hub
+        }
+        for k in [0, 33] {
+            cube {
+                scale [0.04 + 0.10 * random(seed, k, 21), 0.03 + 0.07 * random(seed, k, 22),
+                       0.02 + 0.05 * random(seed, k, 23)]
+                translate [hub - 0.9 + 1.8 * random(seed, k, 24), -0.60 + 1.2 * random(seed, k, 25),
+                           -0.14 - 0.03 * random(seed, k, 23)]
+            }
+        }
+        cube { material TIEHole  scale [0.11, 0.10, 0.02]  translate [TIEAdvancedRear + 0.42, 0.30, -0.10] }
+        cube { material TIEHole  scale [0.11, 0.10, 0.02]  translate [TIEAdvancedRear + 0.42, -0.30, -0.10] }
+        cube { scale [0.50, 0.025, 0.025]  translate [hub + 0.80, 0.35, -0.12] }
+        cube { scale [0.50, 0.025, 0.025]  translate [hub + 0.80, -0.35, -0.12] }
+        cube { scale [1.00, 0.025, 0.025]  translate [hub - 1.90, 0.35, -0.12] }
+        cube { scale [1.00, 0.025, 0.025]  translate [hub - 1.90, -0.35, -0.12] }
+        material TIEGray
+        translate Z TIEAdvancedAt
+    }
+}
+
+// The port pylon, from inside the ball to the wing, tapering: at the ball 1.40 tall and 1.10 fore and aft, at the
+// wing 0.76 and 0.58, as the archive's photographs from ahead and from above measure it.  Its leading edge is a
+// ridge at half its height, two faces sloping back from it to a top and a bottom half its depth; behind, faces
+// slope down from them to an upright face half its height.  Across the ridge a long cutout, square at the ball end
+// and pointed at the wing end, opens on machinery: a long tank with a tapered nose, a pipe over it with a valve, a
+// hose curving down to the floor and fittings there.  Along the back a recess with slanted ends opens on piping,
+// and slots run along the top.  The ridge and the back slope 6.74 degrees as the pylon tapers, the top 8.28.
+TIEAdvancedPylonCutout = path {
+    move to 1.45, -0.20  line to 2.03, -0.17  line to 2.28, 0  line to 2.03, 0.17  line to 1.45, 0.20  close
+}
+
+TIEAdvancedPylonRecess = path {
+    move to 1.48, -0.19  line to 2.58, -0.14  line to 2.74, 0.14  line to 1.32, 0.19  close
+}
+
+// The machinery in the cutout, in the frame of the ridge: X out of it, Z along it.  The cutout's floor is 0.30 in.
+primitive TIEAdvancedPylonWorks() -> group {
+    return group {
+        cylinder { min Y 1.46  max Y 2.01  scale [0.072, 1, 0.072]  rotate X 90  translate [-0.19, 0.02, 0] }
+        tube { radius 0.072 at [-0.19, 0.02, 2.01]  radius 0.028 at [-0.19, 0.02, 2.19] }
+        cylinder { min Y 1.56  max Y 1.60  scale [0.085, 1, 0.085]  rotate X 90  translate [-0.19, 0.02, 0] }
+        cylinder { min Y 1.87  max Y 1.91  scale [0.085, 1, 0.085]  rotate X 90  translate [-0.19, 0.02, 0] }
+        cube { scale [0.05, 0.075, 0.05]  translate [-0.14, 0.02, 1.71] }
+        cylinder { min Y 0.06  max Y 0.10  scale [0.024, 1, 0.024]  rotate Z 90  translate [0, 0.05, 1.71] }
+        cylinder { min Y 0.06  max Y 0.10  scale [0.024, 1, 0.024]  rotate Z 90  translate [0, -0.01, 1.71] }
+        cylinder { min Y 1.46  max Y 1.95  scale [0.02, 1, 0.02]  rotate X 90  translate [-0.21, 0.14, 0] }
+        cube { scale [0.035, 0.028, 0.035]  translate [-0.18, 0.14, 1.89] }
+        cylinder { min Y 0.11  max Y 0.15  scale [0.028, 1, 0.028]  rotate Z 90  translate [0, 0.14, 1.89] }
+        tube {
+            radius 0.019 at [-0.17, 0.10, 1.93]
+            curve radius 0.019 at [-0.13, 0.10, 2.15]  radius 0.019 at [-0.13, -0.13, 2.11]
+                  radius 0.019 at [-0.15, -0.15, 1.79]
+        }
+        cube { scale [0.08, 0.03, 0.06]  translate [-0.20, -0.18, 1.55] }
+        cube { scale [0.06, 0.03, 0.035]  translate [-0.19, -0.17, 1.93] }
+        cube { scale [0.04, 0.10, 0.05]  translate [-0.28, -0.04, 2.11] }
+        cube { scale [0.04, 0.05, 0.04]  translate [-0.27, 0.13, 2.07] }
+        material TIEGray
+    }
+}
+
+// The pylon's skin and the plates on it, as the archive's photographs from ahead, above and below show them: each
+// face stood in its own frame by a matrix through the middle of its corners (x out of the face, y across it, z
+// along it).  The seams are fine lines laid on the skin, lengthwise and across apart so that where they cross the
+// line stays whole; the plates stand 12 mm proud, the larger ones with a smaller plate on them.
+TIEAdvancedPylonSkin = material {
+    pigment [0.60, 0.63, 0.66]  diffuse 0.85  specular 0.12  shininess 25
+    // the upper face ahead, lengthwise
+    decal {
+        path {
+            move to -0.005, -0.856  line to -0.005, 0.805  line to 0.005, 0.805  line to 0.005, -0.856  close
+            move to -0.268, -0.985  line to -0.154, 1.052  line to -0.144, 1.051  line to -0.258, -0.986  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [0.92652, -0.365795, -0.088059, 0.245,
+                0.360313, 0.930029, -0.072254, 0.27,
+                0.108328, 0.035216, 0.993491, 1.95,
+                0, 0, 0, 1]
+    }
+    // the upper face ahead, across
+    decal {
+        path {
+            move to -0.014, -0.841  line to -0.354, -0.853  line to -0.355, -0.843  line to -0.014, -0.831  close
+            move to -0.012, -0.076  line to -0.200, -0.083  line to -0.201, -0.073  line to -0.012, -0.066  close
+            move to 0.252, 0.477  line to 0.009, 0.519  line to 0.011, 0.529  line to 0.253, 0.487  close
+            move to 0.223, 0.859  line to -0.223, 0.843  line to -0.223, 0.853  line to 0.223, 0.869  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [0.92652, -0.365795, -0.088059, 0.245,
+                0.360313, 0.930029, -0.072254, 0.27,
+                0.108328, 0.035216, 0.993491, 1.95,
+                0, 0, 0, 1]
+    }
+    // the lower face ahead, lengthwise
+    decal {
+        path {
+            move to -0.077, -0.903  line to -0.046, 1.058  line to -0.036, 1.058  line to -0.067, -0.903  close
+            move to 0.053, -0.978  line to 0.029, 1.005  line to 0.039, 1.005  line to 0.063, -0.978  close
+            move to 0.214, -0.984  line to 0.119, 1.052  line to 0.129, 1.053  line to 0.224, -0.984  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [0.92652, 0.365795, -0.088059, 0.245,
+                -0.360313, 0.930029, 0.072254, -0.27,
+                0.108328, -0.035216, 0.993491, 1.95,
+                0, 0, 0, 1]
+    }
+    // the lower face ahead, across
+    decal {
+        path {
+            move to -0.068, -0.667  line to 0.342, -0.681  line to 0.342, -0.691  line to -0.069, -0.677  close
+            move to 0.049, -0.168  line to 0.303, -0.177  line to 0.303, -0.187  line to 0.048, -0.178  close
+            move to -0.242, 0.618  line to 0.243, 0.600  line to 0.242, 0.590  line to -0.243, 0.608  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [0.92652, 0.365795, -0.088059, 0.245,
+                -0.360313, 0.930029, 0.072254, -0.27,
+                0.108328, -0.035216, 0.993491, 1.95,
+                0, 0, 0, 1]
+    }
+    // the top, lengthwise
+    decal {
+        path {
+            move to -0.005, -1.011  line to -0.005, 1.061  line to 0.005, 1.061  line to 0.005, -1.011  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [0, -1, 0, -0.07,
+                0.989586, 0, -0.14394, 0.54,
+                0.14394, 0, 0.989586, 1.95,
+                0, 0, 0, 1]
+    }
+    // the top, across
+    decal {
+        path {
+            move to 0.251, -0.702  line to -0.251, -0.702  line to -0.251, -0.692  line to 0.251, -0.692  close
+            move to 0.167, 0.733  line to -0.167, 0.733  line to -0.167, 0.743  line to 0.167, 0.743  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [0, -1, 0, -0.07,
+                0.989586, 0, -0.14394, 0.54,
+                0.14394, 0, 0.989586, 1.95,
+                0, 0, 0, 1]
+    }
+    // the bottom, lengthwise
+    decal {
+        path {
+            move to -0.005, -1.011  line to -0.005, 1.061  line to 0.005, 1.061  line to 0.005, -1.011  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [0, 1, 0, -0.07,
+                -0.989586, 0, 0.14394, -0.54,
+                0.14394, 0, 0.989586, 1.95,
+                0, 0, 0, 1]
+    }
+    // the bottom, across
+    decal {
+        path {
+            move to -0.248, -0.652  line to 0.248, -0.652  line to 0.248, -0.662  line to -0.248, -0.662  close
+            move to -0.207, 0.056  line to 0.207, 0.056  line to 0.207, 0.046  line to -0.207, 0.046  close
+            move to -0.166, 0.763  line to 0.166, 0.763  line to 0.166, 0.753  line to -0.166, 0.753  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [0, 1, 0, -0.07,
+                -0.989586, 0, 0.14394, -0.54,
+                0.14394, 0, 0.989586, 1.95,
+                0, 0, 0, 1]
+    }
+    // the upper face behind, lengthwise
+    decal {
+        path {
+            move to -0.005, -1.010  line to -0.005, 1.060  line to 0.005, 1.060  line to 0.005, -1.010  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [-0.779212, -0.620586, 0.087763, -0.385,
+                0.611718, -0.783511, -0.109141, 0.40625,
+                0.136494, -0.031358, 0.990144, 1.95,
+                0, 0, 0, 1]
+    }
+    // the upper face behind, across
+    decal {
+        path {
+            move to 0.200, -0.668  line to -0.200, -0.655  line to -0.200, -0.645  line to 0.200, -0.658  close
+            move to 0.158, 0.242  line to -0.159, 0.253  line to -0.158, 0.263  line to 0.159, 0.252  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [-0.779212, -0.620586, 0.087763, -0.385,
+                0.611718, -0.783511, -0.109141, 0.40625,
+                0.136494, -0.031358, 0.990144, 1.95,
+                0, 0, 0, 1]
+    }
+    // the lower face behind, lengthwise
+    decal {
+        path {
+            move to -0.005, -1.010  line to -0.005, 1.060  line to 0.005, 1.060  line to 0.005, -1.010  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [-0.779212, 0.620586, 0.087763, -0.385,
+                -0.611718, -0.783511, 0.109141, -0.40625,
+                0.136494, 0.031358, 0.990144, 1.95,
+                0, 0, 0, 1]
+    }
+    // the lower face behind, across
+    decal {
+        path {
+            move to -0.200, -0.658  line to 0.200, -0.645  line to 0.200, -0.655  line to -0.200, -0.668  close
+            move to -0.159, 0.252  line to 0.158, 0.263  line to 0.159, 0.253  line to -0.158, 0.242  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [-0.779212, 0.620586, 0.087763, -0.385,
+                -0.611718, -0.783511, 0.109141, -0.40625,
+                0.136494, 0.031358, 0.990144, 1.95,
+                0, 0, 0, 1]
+    }
+    // the back, across
+    decal {
+        path {
+            move to 0.332, -0.811  line to -0.332, -0.811  line to -0.332, -0.801  line to 0.332, -0.801  close
+            move to 0.203, 0.931  line to -0.203, 0.931  line to -0.203, 0.941  line to 0.203, 0.941  close
+        }
+        color [0.40, 0.42, 0.44]  planar  min Y -0.015  max Y 0.015  rotate Z -90
+        matrix [-0.993089, 0, 0.117365, -0.49,
+                0, -1, 0, 0,
+                0.117365, 0, 0.993089, 1.95,
+                0, 0, 0, 1]
+    }
+}
+
+primitive TIEAdvancedPylonPlates() -> group {
+    return group {
+        // the upper face ahead
+        group {
+            cube { scale [0.0060, 0.0726, 0.1411]  translate [0.0041, 0.1397, 0.1259] }
+            cube { scale [0.0040, 0.0335, 0.1008]  translate [0.0141, 0.1397, 0.1259] }
+            cube { scale [0.0060, 0.0146, 0.0126]  translate [0.0040, 0.0964, -0.0361] }
+            cube { scale [0.0060, 0.0146, 0.0126]  translate [0.0040, 0.1490, -0.0380] }
+            cube { scale [0.0060, 0.0146, 0.0126]  translate [0.0040, 0.2015, -0.0399] }
+            cube { scale [0.0060, 0.0413, 0.0402]  translate [0.0041, -0.0551, -0.7026] }
+            cube { scale [0.0060, 0.0407, 0.0101]  translate [0.0041, -0.0542, -0.6322] }
+            cube { scale [0.0060, 0.0499, 0.0603]  translate [0.0037, -0.1347, 0.5182] }
+            cube { scale [0.0040, 0.0352, 0.0151]  translate [0.0137, -0.1358, 0.4930] }
+            cube { scale [0.0070, 0.1396, 0.0201]  translate [0.0054, -0.1927, -0.5418] }
+            cube { scale [0.0080, 0.0241, 0.0303]  translate [0.0052, 0.3203, -0.7159] }
+            cube { scale [0.0080, 0.0214, 0.0303]  translate [0.0058, 0.2838, -0.2113] }
+            cube { scale [0.0050, 0.0349, 0.0755]  translate [0.0032, 0.0582, 0.7277] }
+            matrix [0.92652, -0.365795, -0.088059, 0.245,
+                    0.360313, 0.930029, -0.072254, 0.27,
+                    0.108328, 0.035216, 0.993491, 1.95,
+                    0, 0, 0, 1]
+        }
+        // the lower face ahead
+        group {
+            cube { scale [0.0060, 0.0908, 0.1360]  translate [0.0041, -0.0908, 0.1830] }
+            cube { scale [0.0040, 0.0578, 0.1058]  translate [0.0141, -0.0908, 0.1830] }
+            cube { scale [0.0050, 0.0215, 0.0201]  translate [0.0150, -0.0322, 0.2706] }
+            cube { scale [0.0060, 0.0624, 0.0403]  translate [0.0036, -0.1456, -0.7399] }
+            cube { scale [0.0060, 0.0657, 0.1008]  translate [0.0045, -0.1095, 0.9020] }
+            cube { scale [0.0070, 0.1396, 0.0201]  translate [0.0054, 0.1927, -0.5418] }
+            matrix [0.92652, 0.365795, -0.088059, 0.245,
+                    -0.360313, 0.930029, 0.072254, -0.27,
+                    0.108328, -0.035216, 0.993491, 1.95,
+                    0, 0, 0, 1]
+        }
+        // the top
+        group {
+            cube { scale [0.0060, 0.1656, 0.0758]  translate [0.0040, 0.0000, -0.8337] }
+            cube { scale [0.0060, 0.0698, 0.0808]  translate [0.0040, -0.0000, 0.8792] }
+            cube { scale [0.0040, 0.0317, 0.0404]  translate [0.0140, -0.0000, 0.8792] }
+            matrix [0, -1, 0, -0.07,
+                    0.989586, 0, -0.14394, 0.54,
+                    0.14394, 0, 0.989586, 1.95,
+                    0, 0, 0, 1]
+        }
+        // the bottom
+        group {
+            cube { scale [0.0060, 0.0624, 0.1869]  translate [0.0040, 0.0802, -0.2173] }
+            cube { scale [0.0060, 0.0518, 0.1263]  translate [0.0040, -0.0740, 0.4295] }
+            matrix [0, 1, 0, -0.07,
+                    -0.989586, 0, 0.14394, -0.54,
+                    0.14394, 0, 0.989586, 1.95,
+                    0, 0, 0, 1]
+        }
+        // the upper face behind
+        group {
+            cube { scale [0.0060, 0.0444, 0.2021]  translate [0.0042, -0.0761, 0.2501] }
+            matrix [-0.779212, -0.620586, 0.087763, -0.385,
+                    0.611718, -0.783511, -0.109141, 0.40625,
+                    0.136494, -0.031358, 0.990144, 1.95,
+                    0, 0, 0, 1]
+        }
+        // the lower face behind
+        group {
+            cube { scale [0.0060, 0.0551, 0.1514]  translate [0.0042, -0.0735, -0.3007] }
+            matrix [-0.779212, 0.620586, 0.087763, -0.385,
+                    -0.611718, -0.783511, 0.109141, -0.40625,
+                    0.136494, 0.031358, 0.990144, 1.95,
+                    0, 0, 0, 1]
+        }
+        material TIEGray
+    }
+}
+
+primitive TIEAdvancedPylon() -> group {
+    return group {
+        difference {
+            loft {
+                section { path { move to 0.48, 0  line to 0.205, 0.70  line to -0.345, 0.70  line to -0.62, 0.355
+                                 line to -0.62, -0.355  line to -0.345, -0.70  line to 0.205, -0.70  close }
+                          translate Z 0.85 }
+                section { path { move to 0.22, 0  line to 0.075, 0.38  line to -0.215, 0.38  line to -0.36, 0.19
+                                 line to -0.36, -0.19  line to -0.215, -0.38  line to 0.075, -0.38  close }
+                          translate Z 3.05 }
+                straight
+                material TIEAdvancedPylonSkin
+            }
+            extrusion { path TIEAdvancedPylonCutout  min Y -0.30  max Y 0.12  rotate Z -90  rotate X -90
+                        rotate Y -6.74  translate X 0.5805  material TIEGray }
+            group {
+                extrusion { path TIEAdvancedPylonRecess  min Y -0.3  max Y 0.16  rotate Z -90  rotate X -90
+                            rotate Y 6.74  translate X -0.7205 }
+                group {
+                    for k in [0, 5] {
+                        cube { scale [0.05, 0.08, 0.10]
+                               translate [-0.07 + (k % 2 * 2 - 1) * 0.08, 0, 1.40 + k * 0.22] }
+                    }
+                    rotate X 8.28  translate Y 0.8236
+                }
+                material TIEHole
+            }
+        }
+        object TIEAdvancedPylonWorks() { rotate Y -6.74  translate X 0.5805 }
+        object TIEAdvancedPylonPlates()
+        group {
+            for k in [0, 3] {
+                cylinder { min Y 1.45  max Y 2.62  scale [0.033, 1, 0.033]  rotate X 90
+                           translate [0.09, -0.10 + k * 0.065, 0] }
+            }
+            material TIEFrame
+            rotate Y 6.74  translate X -0.7205
+        }
+        material TIEGray
+    }
+}
+
+// The deck and the tail: the deck turned about Y, its top falling from 0.24 at its middle to 0.11 near its rim and
+// beveled to its edge, cut to lie behind the pylons and between the wings, an open bay along its underside; the
+// tail along its middle on top, 1.04 across and 0.9 tall, its after face carrying the two engines' lights either
+// side of a slot.  The deck's seams, in its own X/Z: lines fore and aft and across, and a hatch either side.
+TIEDeckSeams = path {
+    move to -0.6, 1.20  line to -3.4, 1.20  line to -3.4, 1.23  line to -0.6, 1.23  close
+    move to -0.6, -1.20  line to -3.4, -1.20  line to -3.4, -1.23  line to -0.6, -1.23  close
+    move to -0.6, 2.25  line to -2.6, 2.25  line to -2.6, 2.28  line to -0.6, 2.28  close
+    move to -0.6, -2.25  line to -2.6, -2.25  line to -2.6, -2.28  line to -0.6, -2.28  close
+    move to -1.60, 0.55  line to -1.63, 0.55  line to -1.63, 2.9  line to -1.60, 2.9  close
+    move to -1.60, -0.55  line to -1.63, -0.55  line to -1.63, -2.9  line to -1.60, -2.9  close
+    move to -2.60, 0.55  line to -2.63, 0.55  line to -2.63, 2.5  line to -2.60, 2.5  close
+    move to -2.60, -0.55  line to -2.63, -0.55  line to -2.63, -2.5  line to -2.60, -2.5  close
+    move to -0.9, 1.6  line to -1.4, 1.6  line to -1.4, 2.0  line to -0.9, 2.0  close
+    move to -0.95, 1.65  line to -1.35, 1.65  line to -1.35, 1.95  line to -0.95, 1.95  close
+    move to -0.9, -1.6  line to -1.4, -1.6  line to -1.4, -2.0  line to -0.9, -2.0  close
+    move to -0.95, -1.65  line to -1.35, -1.65  line to -1.35, -1.95  line to -0.95, -1.95  close
+}
+
+primitive TIEAdvancedBody(thrust = 0) -> group {
+    return group {
+        difference {
+            intersection {
+                lathe {
+                    path { move to 0, -0.24  line to 3.30, -0.11  line to 3.48, -0.03  line to 3.48, 0.03
+                           line to 3.30, 0.11  line to 0, 0.24  close }
+                    translate X 0.18
+                }
+                cube { scale [2, 1, 2.95]  translate X -2.55 }
+            }
+            group {
+                cube { scale [1.05, 0.15, 0.36]  translate [-2.25, -0.22, 0] }
+                cube { scale [0.25, 0.1, 0.12]  translate [-0.85, 0.2, 2.5] }
+                cube { scale [0.25, 0.1, 0.12]  translate [-0.85, 0.2, -2.5] }
+                cube { scale [0.12, 0.1, 0.30]  translate [-2.1, 0.17, 1.7] }
+                cube { scale [0.12, 0.1, 0.30]  translate [-2.1, 0.17, -1.7] }
+                material TIEHole
+            }
+            material {
+                pigment [0.60, 0.63, 0.66]  diffuse 0.85  specular 0.12  shininess 25
+                decal { path TIEDeckSeams  color [0.40, 0.42, 0.44]  planar  min Y 0  max Y 0.4 }
+            }
+        }
+        for k in [0, 13] {
+            cube {
+                scale [0.06 + 0.16 * random(k, 61), 0.03 + 0.03 * random(k, 62), 0.05 + 0.12 * random(k, 63)]
+                translate [-0.8 - 2.4 * random(k, 64), 0.2 - 0.02 * k / 13,
+                           (k % 2 * 2 - 1) * (0.7 + 1.9 * random(k, 65))]
+            }
+        }
+        // The tail on the deck, 0.9 tall: two walls with a deep open channel between them along the top, a
+        // column of slotted plates and kit parts in it; closed behind by a block whose after face carries the
+        // engines' lights either side of a slot over a sunken bay, kit parts in it, as the archive's photographs
+        // from behind show it.  Under the deck, beneath it, an open bay with kit parts hanging in it.
+        for pair in [0, 1] {
+            side = 2 * pair - 1
+            extrusion {
+                path { move to 0.40, 0.0  line to 0.52, 0.0  line to 0.52, 0.72  line to 0.44, 0.90
+                       line to 0.40, 0.90  close }
+                min Y TIEAdvancedRear - 0.1  max Y -0.6
+                rotate Z -90  rotate X -90
+                scale [1, 1, side]
+            }
+        }
+        difference {
+            group {
+                cube { scale [1.40, 0.16, 0.40]  translate [-2.0, 0.16, 0] }
+                extrusion {
+                    path { move to -0.52, 0.0  line to 0.52, 0.0  line to 0.52, 0.72  line to 0.44, 0.90
+                           line to -0.44, 0.90  line to -0.52, 0.72  close }
+                    min Y TIEAdvancedRear - 0.1  max Y TIEAdvancedRear + 0.26
+                    rotate Z -90  rotate X -90
+                }
+            }
+            group {
+                cube { scale [0.08, 0.17, 0.045]  translate [TIEAdvancedRear - 0.12, 0.66, 0] }
+                cube { scale [0.10, 0.16, 0.38]  translate [TIEAdvancedRear - 0.12, 0.24, 0] }
+                material TIEHole
+            }
+        }
+        cube { scale [1.05, 0.10, 0.20]  translate [-2.15, 0.42, 0] }
+        difference {
+            cube { scale [0.95, 0.15, 0.16]  translate [-2.15, 0.66, 0] }
+            group {
+                for k in [0, 6] {
+                    cube { scale [0.085, 0.10, 0.06]  translate [-2.95 + k * 0.27, 0.80, -0.08] }
+                    cube { scale [0.085, 0.10, 0.06]  translate [-2.95 + k * 0.27, 0.80, 0.08] }
+                }
+                material TIEHole
+            }
+        }
+        sphere { scale [0.34, 0.20, 0.24]  translate [-1.05, 0.64, 0] }
+        for k in [0, 9] {
+            cube {
+                scale [0.05 + 0.10 * random(k, 71), 0.03 + 0.05 * random(k, 72), 0.04 + 0.05 * random(k, 73)]
+                translate [-1.3 - 1.8 * random(k, 74), 0.56, (k % 2 * 2 - 1) * (0.26 + 0.06 * random(k, 75))]
+            }
+        }
+        for k in [0, 5] {
+            cube { scale [0.08, 0.05, 0.08]  translate [-1.4 - k * 0.32, -0.12, (k % 2 * 2 - 1) * 0.18] }
+        }
+        for k in [0, 4] {
+            cube { scale [0.05, 0.05 + 0.04 * random(k, 81), 0.05]
+                   translate [TIEAdvancedRear - 0.06, 0.13, -0.28 + k * 0.14] }
+        }
+        for pair in [0, 1] {
+            side = 2 * pair - 1
+            cube {
+                scale [0.03, 0.14, 0.13]  translate [TIEAdvancedRear - 0.11, 0.66, side * 0.25]
+                material {
+                    pigment [0.78 + 0.22 * thrust, 0.80 + 0.18 * thrust, 0.80 + 0.15 * thrust]
+                    diffuse 0.85 - 0.5 * thrust
+                    specular 0.3
+                    emission 5 * thrust
+                }
+            }
+        }
+        material TIEGray
+    }
+}
+
+// `thrust` lights the engines on the tail's after face, nought to one.  `weathered` is how long it has
+// flown.  `hatch` swings the hatch on top open, nought to one.  `damage` is how hard it has been hit, nought to
+// one, as when Han Solo's shot sent it spinning away.
+primitive TIEAdvanced(thrust = 0, weathered = 0, hatch = 0, damage = 0) -> group {
+    return group {
+        object TIEBall(hatch, thrust, damage, 1)
+        object TIEAdvancedBody(thrust)
+        object TIEAdvancedPylon()
+        object TIEAdvancedPylon() { scale [1, 1, -1] }
+        object TIEAdvancedWing(3, damage)
+        object TIEAdvancedWing(4, damage) { scale [1, 1, -1] }
+        weather {
+            grime weathered  color [0.24, 0.24, 0.25]
+            wear weathered * 0.1 to XWingBare
+            radius 0.08
         }
     }
 }

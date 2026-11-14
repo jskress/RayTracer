@@ -5107,4 +5107,120 @@ public class TestShippedLibraries
             Assert.AreEqual(red, runs, $"Red {red} should carry {red} stripes");
         }
     }
+
+    /// <summary>
+    /// Renders TIE fighters from the star-wars library through <see cref="OrthographicView"/>, lit dimly from above.
+    /// </summary>
+    private Canvas TieView(IEnumerable<string> things, (double X, double Y, double Z) at,
+        (double X, double Y, double Z) back, string up, double size, int wide, int high)
+    {
+        UseDroids();
+
+        return OrthographicView("import 'star-wars' { TIEFighter, TIEAdvanced, TIEWing }", things, at, back, up, size,
+            wide, high, "[0.3, -1, 0.2]");
+    }
+
+    [TestMethod]
+    public void TestATieFightersWingIsTheStudioModelsHexagon()
+    {
+        // Seen from port, the wing is a hexagon 8.99 tall and 7.15 long, the studio model's height and length at the
+        // scale its height takes; and from ahead its hubs stand 6.9 apart outside, the model's span.  Five centimeters
+        // to a pixel.
+        const double Size = 0.05;
+        Canvas side = TieView(["object TIEFighter()"], (0, 0, 0), (0, 0, 1), "[0, 1, 0]", Size, 200, 200);
+        (double left, double right, double bottom, double top) = ReachIn(side, 0, side.Width, Size);
+
+        Assert.AreEqual(7.15, right - left, 0.1, "from the wing's front corner to its back");
+        Assert.AreEqual(8.99, top - bottom, 0.1, "from the wing's top to its bottom");
+
+        Canvas ahead = TieView(["object TIEFighter()"], (0, 0, 0), (1, 0, 0), "[0, 1, 0]", Size, 200, 200);
+        (left, right, _, _) = ReachIn(ahead, 0, ahead.Width, Size);
+
+        Assert.AreEqual(6.9, right - left, 0.15, "from hub to hub");
+    }
+
+    [TestMethod]
+    public void TestATieFightersHatchSwingsOpen()
+    {
+        // Shut, the hatch's shallow dome is the top of the ball, 1.13 over its middle; open, it stands up off its back
+        // edge, over two meters.  From ahead, between the wings, two centimeters to a pixel.
+        const double Size = 0.02;
+
+        double Top(string hatch)
+        {
+            Canvas ahead = TieView([$"object TIEFighter(0, 0, {hatch})"], (0, 1, 0), (1, 0, 0), "[0, 1, 0]", Size, 120,
+                200);
+            (_, _, _, double up) = ReachIn(ahead, 0, ahead.Width, Size);
+
+            return 1 + up;
+        }
+
+        Assert.AreEqual(1.13, Top("0"), 0.03, "the hatch shut");
+        Assert.IsTrue(Top("1") > 2, $"the hatch open reached {Top("1"):F2}");
+    }
+
+    [TestMethod]
+    public void TestABatteredTieFighterIsHoled()
+    {
+        // Hit, its solar panels are holed through: a wing on its own, seen square on from port, shows the backdrop
+        // through inside its outline where an untouched wing shows none.  Five centimeters to a pixel.
+        const double Size = 0.05;
+
+        int Through(string damage)
+        {
+            Canvas side = TieView([$"object TIEWing(1, {damage})"], (0, 0, 0), (0, 0, 1), "[0, 1, 0]", Size, 200, 200);
+            int count = 0;
+
+            // Within the hexagon's inner frame, and clear of its hub.
+            for (int y = 30; y < 170; y++)
+            for (int x = 40; x < 160; x++)
+            {
+                double across = (x - 100) * Size, up = (100 - y) * Size;
+
+                if (Math.Abs(up) < 4.2 && Math.Abs(across) < 3.3 - Math.Abs(up) * 0.24 && across * across + up * up > 4 &&
+                    IsTheBackdrop(side.GetPixel(x, y)))
+                    count++;
+            }
+
+            return count;
+        }
+
+        Assert.AreEqual(0, Through("0"), "an untouched wing");
+        Assert.IsTrue(Through("1") > 20, $"a battered wing showed {Through("1")} pixels through");
+    }
+
+    [TestMethod]
+    public void TestVadersTieAdvancedBendsItsWingsIn()
+    {
+        // From ahead: its hubs stand 6.6 apart outside, and the tips of its bent wings 4.7 apart up and down, 4 apart
+        // across, well in from the bends; from port it runs 4.75 from its wings' fronts to its engines.  Five
+        // centimeters to a pixel.
+        const double Size = 0.05;
+        Canvas ahead = TieView(["object TIEAdvanced()"], (0, 0, 0), (1, 0, 0), "[0, 1, 0]", Size, 200, 200);
+        (double left, double right, double bottom, double top) = ReachIn(ahead, 0, ahead.Width, Size);
+
+        Assert.AreEqual(6.6, right - left, 0.1, "from hub to hub");
+        Assert.AreEqual(4.74, top - bottom, 0.1, "from tip to tip");
+
+        // Across its top few rows, its upper tips.
+        int highest = (int) Math.Round(ahead.Height / 2.0 - top / Size), near = int.MaxValue, far = -1;
+
+        for (int y = highest; y < highest + 4; y++)
+        for (int x = 0; x < ahead.Width; x++)
+        {
+            if (IsTheBackdrop(ahead.GetPixel(x, y)))
+                continue;
+
+            near = Math.Min(near, x);
+            far = Math.Max(far, x);
+        }
+
+        Assert.IsTrue((far + 1 - near) * Size < 0.7 * (right - left),
+            $"its tips were {(far + 1 - near) * Size:F2} apart, its hubs {right - left:F2}");
+
+        Canvas side = TieView(["object TIEAdvanced()"], (0, 0, 0), (0, 0, 1), "[0, 1, 0]", Size, 200, 200);
+        (left, right, _, _) = ReachIn(side, 0, side.Width, Size);
+
+        Assert.AreEqual(4.75, right - left, 0.1, "from the wings' fronts to the engines");
+    }
 }
