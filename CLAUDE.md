@@ -889,6 +889,22 @@ fire is the films' (the Empire's green, the Rebellion's red), each bolt a nearly
 as an emitting medium in a clear `no shadow` ellipsoid -- a bright core alone came out white whatever its hue, every
 channel past the film curve's shoulder (19 min at 1920x1080).
 
+The `star-wars` library's `TIEFighter(thrust, weathered, hatch, damage)` and `TIEAdvanced(...)` (2026-11-13) are in
+METERS, +X front, +Y up, +Z port, origin the ball's middle; both share `TIEBall` (R 1.17, window ring 0.71 cut flat at
+0.93, its octagon a corner up, eight spokes; `advanced` drops the rear collar and port for Vader's tail).  The TIE's
+wing is a hexagon 8.99 tall (StarWars.com's "length" = the studio wing's 48 cm at 1:18.7) and 7.15 long, its panels
+lined square to each outer edge (`linear X gradient` turned per panel).  Saxton's size table does not say which number
+is which: the TIE's 48 is its HEIGHT, but Vader's 46 is his SPAN (front photos: span 1.4x height), and his ball is a
+third of his span where the TIE's is a quarter of its height -- the two studio models are not one scale, so Vader's is
+built to the shared ball.  His wing sections are trapezoids (ends leaning in 0.35 of their width, a hexagon folded
+twice), bent 40 degrees, the middle 1.5 m tall and the bent ones 2.0 across: the close-range archive photos disagreed
+by +-8 degrees about the bend (the model sits pitched on its stand) and camera fits of one, two and four of them were
+underdetermined or ran a camera off to infinity, so the proportions are the front photo's and the waffle cells' (the
+same size on every panel, a ruler across photos), checked by render-beside-photo (`tools/pair.py` in the scratchpad).
+A `for side in [-1, 1]` runs -1, 0 AND 1: loop `[0, 1]` and say `side = 2 * pair - 1`.
+`gallery/Local/showcase/vaders-flight.igl` reuses the trench run's trench; its bolts' glow reaches 0.2 out (0.6,
+seen end-on from behind, read as fat ovals) (43 min at 1920x1080).
+
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with
 `Material.WithoutDiffuse()` (swapped onto `Intersection.Material` for the light loop) and adds the walk's light; the

@@ -2945,7 +2945,8 @@ never sees that frame.  It is there for a scene that wants one part on its own:
 
 #### Star Wars
 
-Star Wars' machines: the astromech droid R2-D2, and Luke's X-wing, Red Five, with him in its socket.
+Star Wars' machines: the astromech droid R2-D2, Luke's X-wing, Red Five, with him in its socket, and the
+Empire's TIE fighter and Darth Vader's TIE Advanced.
 
 ```
 import 'star-wars' { R2D2 }
@@ -3051,6 +3052,59 @@ which the filming model never had, is the full-sized prop's, from StarWars.com's
 are the trench run's, from StarWars.com's still of the studio model seen from above.  None of them is reproduced here.
 
 `gallery/Local/showcase/the-trench-run.igl` flies it down the Death Star's trench.
+
+##### The TIE fighters
+
+```
+import 'star-wars' { TIEFighter, TIEAdvanced }
+
+object TIEAdvanced(1)
+object TIEFighter(1) { translate [-8, -1.5, 9.5] }
+object TIEFighter(1) { translate [-9, -2, -9.5] }
+```
+
+| | |
+| --- | --- |
+| `TIEFighter` | The Empire's TIE/ln as it flew in A New Hope: the cockpit ball with its window, hatch and chin guns, the pylons, and two hexagonal wings of solar panels on their hubs. |
+| `TIEAdvanced` | Darth Vader's TIE Advanced x1 as it flew in A New Hope: the same ball on a flat deck with a tail carrying its engines, tapering pylons, and wings bent in three. |
+| `TIEBall`, `TIEPylon`, `TIEWing` | The TIE fighter's ball, its port pylon, and its port wing on its own. |
+
+**They are written in meters**, as the X-wing is, with **`+X` their fronts, `+Y` up and `+Z` their port sides**, and
+the origin the middle of the cockpit ball, which the pylons and the wings' hubs lie level with.  The TIE fighter's
+wings are 8.99 tall, the length StarWars.com gives for it, 7.15 long, and 6.9 apart outside their hubs; Vader's
+spans 6.6, stands 4.7 tall from the tip of one bent wing to the other and runs 4.75 from its wings' fronts to its
+engines.  The two share one ball, 2.34 across.
+
+Both take the same four numbers, every one of them optional and running from 0 to 1, so that each may be turned
+part way in an animation: `TIEFighter(thrust, weathered, hatch, damage)`, and `TIEAdvanced` alike.
+
+- **`thrust`** lights the engines: the TIE fighter's through the hexagonal port at the back of its ball, Vader's in
+  the two panels on his tail's after face, white, as the studio model's lamps photograph.
+- **`weathered`** is how long it has flown: grime in its seams and round its fittings, and the paint worn to the metal
+  on its edges.  The models were kept clean, and a little goes a long way.
+- **`hatch`** swings the round hatch on top of the ball open about its back edge, to stand a little past upright.
+- **`damage`** is how hard it has been hit: scorches on the ball, and solar panels holed through, their edges burnt
+  -- which panels drawn from each wing's own seed, so the two wings differ and every ship of a squadron is holed
+  alike.
+
+##### Measured from the studio models
+
+The TIE fighter's shape comes from the studio model's own measures, 36 by 38 by 48 cm (Vaz and Hata, *From Star Wars
+to Indiana Jones*, 1994, as tabled by Curtis Saxton's Star Wars Technical Commentaries); the ILM photograph of a wing
+square on, which gives the hexagon, its hub and spars; eFX Collectibles' licensed replica, scanned from a Lucasfilm
+Archives model and photographed for Rebelscum's review from ahead, behind and three-quarters, which gives the ball
+against the wings and the pylons' profile; and archive models photographed at exhibitions, which give the window's
+frame, the chin guns' muzzles and the solar panels' fine lines.
+
+Vader's comes from photographs of his studio model in the Lucasfilm Archives, taken for Master Replicas and shared by
+Jason Eaton at Modelers Miniatures & Magic, and from the archive's measures, 46 cm across its wings, 33 tall and 32
+long.  The two studio models were not built to one scale -- his ball is about a third of his span, where the TIE
+fighter's is a quarter of its wings' height -- and on screen they fly together, so his is built about the same ball
+and measured against it.  His wings are each three flat sections, the upper and lower bent in 40 degrees, their ends
+leaning in so that a wing laid flat would be the TIE fighter's hexagon; the photographs, taken close, disagree with
+one another about the bend by a few degrees either way.  None of the photographs is reproduced here.
+
+`gallery/Local/showcase/vaders-flight.igl` flies Vader and two wingmen down the Death Star's trench.
 
 #### Hogwarts
 
